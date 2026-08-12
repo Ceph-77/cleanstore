@@ -5,6 +5,7 @@ import { LoginPage } from "./routes/LoginPage";
 import { StoresListPage } from "./routes/StoresListPage";
 import { StoreFormPage } from "./routes/StoreFormPage";
 import { StoreDetailPage } from "./routes/StoreDetailPage";
+import { StoreMapPage } from "./routes/StoreMapPage";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <StoreFormPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/stores/map"
+        element={
+          <ProtectedRoute>
+            <StoreMapPage />
           </ProtectedRoute>
         }
       />

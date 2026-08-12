@@ -9,6 +9,13 @@ export function useStores() {
   });
 }
 
+export function useStoreMapPoints() {
+  return useQuery({
+    queryKey: ["stores", "map-points"],
+    queryFn: () => storesApi.listStoreMapPoints().then((r) => r.stores),
+  });
+}
+
 export function useStore(id: string | undefined) {
   return useQuery({
     queryKey: ["stores", id],

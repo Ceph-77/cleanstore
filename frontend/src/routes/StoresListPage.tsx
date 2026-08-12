@@ -26,7 +26,13 @@ export function StoresListPage() {
       {stores && stores.length > 0 && (
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
           <StatCard label="Magasins enregistrés" value={stores.length} icon={<IconStore />} accent="flow" />
-          <StatCard label="Villes desservies" value={villesDesservies} icon={<IconMapPin />} accent="linen" />
+          <StatCard
+            label="Villes desservies"
+            value={villesDesservies}
+            icon={<IconMapPin />}
+            accent="linen"
+            to="/stores/map"
+          />
           <StatCard
             label="Avec sous-traitant assigné"
             value={sousTraitesAssignes}

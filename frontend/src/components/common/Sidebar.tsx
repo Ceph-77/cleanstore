@@ -19,7 +19,7 @@ function NavItem({
     return (
       <div className="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm text-canvas-0/30">
         <span className="flex items-center gap-3">
-          <span className="h-4 w-4">{icon}</span>
+          <span className="[&>svg]:h-4 [&>svg]:w-4">{icon}</span>
           {label}
         </span>
         <span className="rounded-full bg-white/5 px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-canvas-0/40">
@@ -40,7 +40,7 @@ function NavItem({
         }`
       }
     >
-      <span className="h-4.5 w-4.5">{icon}</span>
+      <span className="[&>svg]:h-4 [&>svg]:w-4">{icon}</span>
       {label}
     </NavLink>
   );

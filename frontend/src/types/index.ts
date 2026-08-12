@@ -44,6 +44,16 @@ export interface Store {
   tasks?: Task[];
 }
 
+export interface StoreMapPoint {
+  id: string;
+  name: string;
+  banner: string | null;
+  city: string | null;
+  address: string | null;
+  latitude: string;
+  longitude: string;
+}
+
 export type TaskStatus = "open" | "claimed" | "completed" | "inspected" | "cancelled";
 
 export interface Task {

@@ -7,6 +7,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+/// Managed at runtime by connect-pg-simple (createTableIfMissing), declared here only
+/// so Prisma's migration diffing doesn't try to drop it. Never queried via Prisma Client.
+model Session {
+  sid    String   @id @db.VarChar
+  sess   Json     @db.Json
+  expire DateTime @db.Timestamp(6)
+
+  @@index([expire], map: "IDX_session_expire")
+  @@map("session")
+}
+
 enum RoleKey {
   admin
   grande_compagnie
@@ -92,6 +103,8 @@ model Store {
   address                  String?
   city                     String?
   postalCode               String?   @map("postal_code")
+  latitude                 Decimal?  @db.Decimal(9, 6)
+  longitude                Decimal?  @db.Decimal(9, 6)
   storeManagerName         String?   @map("store_manager_name")
   storeManagerPhone        String?   @map("store_manager_phone")
   storeManagerEmail        String?   @map("store_manager_email")

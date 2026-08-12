@@ -9,6 +9,7 @@ storesRouter.use(requireRole("admin"));
 
 storesRouter.get("/", storesController.list);
 storesRouter.post("/", storesController.create);
+storesRouter.get("/map-points", storesController.listMapPoints);
 storesRouter.get("/:id", storesController.getOne);
 storesRouter.patch("/:id", storesController.update);
 storesRouter.patch("/:id/archive", storesController.archive);

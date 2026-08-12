@@ -1,8 +1,12 @@
 import { apiClient } from "./client";
-import type { Store } from "../types";
+import type { Store, StoreMapPoint } from "../types";
 
 export function listStores() {
   return apiClient.get<{ stores: Store[] }>("/stores");
+}
+
+export function listStoreMapPoints() {
+  return apiClient.get<{ stores: StoreMapPoint[] }>("/stores/map-points");
 }
 
 export function getStore(id: string) {

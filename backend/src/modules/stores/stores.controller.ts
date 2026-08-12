@@ -7,6 +7,11 @@ export async function list(req: Request, res: Response) {
   res.json({ stores });
 }
 
+export async function listMapPoints(req: Request, res: Response) {
+  const stores = await storesService.listStoresWithCoordinates();
+  res.json({ stores });
+}
+
 export async function getOne(req: Request, res: Response) {
   const store = await storesService.getStoreById(req.params.id);
   if (!store) {
