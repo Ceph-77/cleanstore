@@ -77,9 +77,12 @@ export function StoreForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8">
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Identité / contact</h2>
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <section className="rounded-2xl border border-canvas-200 bg-white p-6 shadow-sm shadow-canvas-900/5">
+        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-canvas-900">
+          <span className="h-2 w-2 rounded-full bg-flow-500" />
+          Identité / contact
+        </h2>
         <div className="grid grid-cols-2 gap-4">
           <Field label="Nom du magasin">
             <Input required value={values.name} onChange={(e) => set("name", e.target.value)} />
@@ -112,8 +115,11 @@ export function StoreForm({
         </div>
       </section>
 
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Caractéristiques physiques</h2>
+      <section className="rounded-2xl border border-canvas-200 bg-white p-6 shadow-sm shadow-canvas-900/5">
+        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-canvas-900">
+          <span className="h-2 w-2 rounded-full bg-linen-400" />
+          Caractéristiques physiques
+        </h2>
         <div className="grid grid-cols-2 gap-4">
           <Field label="Superficie (pi²)">
             <Input
@@ -140,8 +146,11 @@ export function StoreForm({
         </div>
       </section>
 
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Contrat / fréquence</h2>
+      <section className="rounded-2xl border border-canvas-200 bg-white p-6 shadow-sm shadow-canvas-900/5">
+        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-canvas-900">
+          <span className="h-2 w-2 rounded-full bg-flow-500" />
+          Contrat / fréquence
+        </h2>
         <div className="grid grid-cols-2 gap-4">
           <Field label="Fréquence de nettoyage">
             <Input
@@ -178,12 +187,15 @@ export function StoreForm({
         </div>
       </section>
 
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">Assignation</h2>
+      <section className="rounded-2xl border border-canvas-200 bg-white p-6 shadow-sm shadow-canvas-900/5">
+        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-canvas-900">
+          <span className="h-2 w-2 rounded-full bg-linen-400" />
+          Assignation
+        </h2>
         <div className="grid grid-cols-2 gap-4">
           <Field label="Grande compagnie">
             <select
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
               value={values.grandeCompagnieId}
               onChange={(e) => set("grandeCompagnieId", e.target.value)}
             >
@@ -197,7 +209,7 @@ export function StoreForm({
           </Field>
           <Field label="Sous-traitant assigné">
             <select
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
               value={values.assignedSubcontractorId}
               onChange={(e) => set("assignedSubcontractorId", e.target.value)}
             >
@@ -213,7 +225,7 @@ export function StoreForm({
       </section>
 
       <div className="flex justify-end">
-        <Button type="submit" disabled={submitting}>
+        <Button type="submit" variant="accent" disabled={submitting}>
           {submitting ? "Enregistrement..." : "Enregistrer le magasin"}
         </Button>
       </div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { AppLayout } from "../components/common/AppLayout";
 import { useStore } from "../hooks/useStores";
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from "../hooks/useTasks";
@@ -7,6 +7,15 @@ import { TaskList } from "../components/tasks/TaskList";
 import { TaskForm, type TaskFormValues } from "../components/tasks/TaskForm";
 import { Button } from "../components/common/Button";
 import type { Task } from "../types";
+
+function InfoItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs font-semibold uppercase tracking-wide text-canvas-600">{label}</p>
+      <p className="mt-0.5 text-sm text-canvas-900">{value}</p>
+    </div>
+  );
+}
 
 export function StoreDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -23,7 +32,7 @@ export function StoreDetailPage() {
   if (isLoading || !store) {
     return (
       <AppLayout>
-        <p className="text-sm text-gray-500">Chargement...</p>
+        <p className="text-sm text-canvas-600">Chargement...</p>
       </AppLayout>
     );
   }
@@ -54,25 +63,40 @@ export function StoreDetailPage() {
 
   return (
     <AppLayout>
-      <h1 className="text-xl font-semibold text-gray-900">{store.name}</h1>
-      <div className="mt-2 grid grid-cols-2 gap-x-8 gap-y-1 text-sm text-gray-600">
-        <p>Bannière : {store.banner ?? "—"}</p>
-        <p>Adresse : {store.address ?? "—"}, {store.city ?? ""}</p>
-        <p>Gérant : {store.storeManagerName ?? "—"}</p>
-        <p>Fréquence : {store.cleaningFrequency ?? "—"}</p>
-        <p>Grande compagnie : {store.grandeCompagnie?.name ?? "—"}</p>
-        <p>Sous-traitant : {store.assignedSubcontractor?.name ?? "—"}</p>
+      <Link to="/stores" className="text-sm text-flow-700 hover:text-flow-900">
+        ← Tous les magasins
+      </Link>
+
+      <div className="mt-3 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-canvas-900">{store.name}</h1>
+          {store.banner && (
+            <span className="mt-1 inline-block rounded-full bg-linen-100 px-2 py-0.5 text-xs font-medium text-linen-800">
+              {store.banner}
+            </span>
+          )}
+        </div>
       </div>
 
-      <div className="mt-8 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900">Tâches</h2>
+      <div className="mt-6 grid grid-cols-2 gap-x-8 gap-y-4 rounded-2xl border border-canvas-200 bg-white p-6 shadow-sm shadow-canvas-900/5 sm:grid-cols-3">
+        <InfoItem label="Adresse" value={[store.address, store.city].filter(Boolean).join(", ") || "—"} />
+        <InfoItem label="Gérant" value={store.storeManagerName ?? "—"} />
+        <InfoItem label="Fréquence" value={store.cleaningFrequency ?? "—"} />
+        <InfoItem label="Grande compagnie" value={store.grandeCompagnie?.name ?? "—"} />
+        <InfoItem label="Sous-traitant" value={store.assignedSubcontractor?.name ?? "—"} />
+        <InfoItem label="Superficie" value={store.squareFootage ? `${store.squareFootage} pi²` : "—"} />
+      </div>
+
+      <div className="mt-10 flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-canvas-900">Tâches</h2>
         <Button
+          variant="accent"
           onClick={() => {
             setEditingTask(null);
             setShowForm(true);
           }}
         >
-          Ajouter une tâche
+          + Ajouter une tâche
         </Button>
       </div>
 
@@ -90,15 +114,17 @@ export function StoreDetailPage() {
         </div>
       )}
 
-      <div className="mt-4">
-        <TaskList
-          tasks={tasks ?? []}
-          onEdit={(task) => {
-            setEditingTask(task);
-            setShowForm(true);
-          }}
-          onDelete={handleDelete}
-        />
+      <div className="mt-4 overflow-hidden rounded-2xl border border-canvas-200 bg-white shadow-sm shadow-canvas-900/5">
+        <div className="p-5">
+          <TaskList
+            tasks={tasks ?? []}
+            onEdit={(task) => {
+              setEditingTask(task);
+              setShowForm(true);
+            }}
+            onDelete={handleDelete}
+          />
+        </div>
       </div>
     </AppLayout>
   );

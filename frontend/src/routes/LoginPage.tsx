@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { Field } from "../components/common/Field";
 import { Input } from "../components/common/Input";
 import { Button } from "../components/common/Button";
+import { Logo } from "../components/common/Logo";
 import { ApiError } from "../api/client";
 
 export function LoginPage() {
@@ -29,16 +30,29 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
-        <h1 className="text-xl font-semibold text-gray-900">KLEAN'STOR — Connexion</h1>
-        <Field label="Courriel">
-          <Input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-        </Field>
-        <Field label="Mot de passe">
-          <Input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
-        </Field>
-        {error && <p className="text-sm text-red-600">{error}</p>}
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-canvas-0">
+      <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-linen-100 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-flow-100 blur-3xl" />
+
+      <form
+        onSubmit={handleSubmit}
+        className="relative w-full max-w-sm space-y-6 rounded-2xl border border-canvas-200 bg-white p-8 shadow-xl shadow-canvas-900/5"
+      >
+        <div className="space-y-1">
+          <Logo size="lg" />
+          <p className="text-sm text-canvas-600">Portail administrateur</p>
+        </div>
+        <div className="space-y-4">
+          <Field label="Courriel">
+            <Input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </Field>
+          <Field label="Mot de passe">
+            <Input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+          </Field>
+        </div>
+        {error && (
+          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>
+        )}
         <Button type="submit" className="w-full" disabled={submitting}>
           {submitting ? "Connexion..." : "Se connecter"}
         </Button>

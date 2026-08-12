@@ -1,6 +1,47 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+
+  /* Bleu pâle — actions, liens, éléments interactifs */
+  --color-flow-50: #f2f8fb;
+  --color-flow-100: #e2eff6;
+  --color-flow-200: #c3e0ed;
+  --color-flow-300: #97c8dd;
+  --color-flow-400: #64a8c5;
+  --color-flow-500: #4488ab;
+  --color-flow-600: #366d8b;
+  --color-flow-700: #2d5871;
+  --color-flow-800: #28495e;
+  --color-flow-900: #253e50;
+
+  /* Jaune lin — accents, mise en évidence, statuts */
+  --color-linen-50: #fdf9ef;
+  --color-linen-100: #faf0d6;
+  --color-linen-200: #f3ddaa;
+  --color-linen-300: #ecc477;
+  --color-linen-400: #e3a94c;
+  --color-linen-500: #d7912f;
+  --color-linen-600: #b87424;
+  --color-linen-700: #955a20;
+  --color-linen-800: #7a4a20;
+  --color-linen-900: #683f1f;
+
+  /* Neutres chauds — fond et texte */
+  --color-canvas-0: #fdfcf9;
+  --color-canvas-50: #f9f7f2;
+  --color-canvas-100: #f2efe7;
+  --color-canvas-200: #e6e1d4;
+  --color-canvas-300: #d2ccb9;
+  --color-canvas-600: #7a7362;
+  --color-canvas-700: #5c5648;
+  --color-canvas-800: #3d3a30;
+  --color-canvas-900: #262420;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+  background: var(--color-canvas-0);
+  color: var(--color-canvas-900);
+  -webkit-font-smoothing: antialiased;
 }

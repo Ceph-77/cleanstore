@@ -9,16 +9,18 @@ const STATUS_LABELS: Record<TaskStatus, string> = {
 };
 
 const STATUS_CLASSES: Record<TaskStatus, string> = {
-  open: "bg-gray-100 text-gray-700",
-  claimed: "bg-yellow-100 text-yellow-800",
-  completed: "bg-green-100 text-green-800",
-  inspected: "bg-blue-100 text-blue-800",
-  cancelled: "bg-red-100 text-red-800",
+  open: "bg-canvas-100 text-canvas-700 ring-canvas-200",
+  claimed: "bg-linen-100 text-linen-800 ring-linen-200",
+  completed: "bg-flow-100 text-flow-800 ring-flow-200",
+  inspected: "bg-flow-600 text-white ring-flow-700",
+  cancelled: "bg-red-50 text-red-700 ring-red-200",
 };
 
 export function TaskStatusBadge({ status }: { status: TaskStatus }) {
   return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_CLASSES[status]}`}>
+    <span
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${STATUS_CLASSES[status]}`}
+    >
       {STATUS_LABELS[status]}
     </span>
   );

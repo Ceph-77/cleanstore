@@ -11,41 +11,45 @@ export function TaskList({
   onDelete: (task: Task) => void;
 }) {
   if (tasks.length === 0) {
-    return <p className="text-sm text-gray-500">Aucune tâche pour ce magasin pour l'instant.</p>;
+    return <p className="py-4 text-sm text-canvas-600">Aucune tâche pour ce magasin pour l'instant.</p>;
   }
 
   return (
     <table className="w-full text-sm">
       <thead>
-        <tr className="border-b border-gray-200 text-left text-gray-500">
-          <th className="py-2 pr-3 font-medium">Description</th>
-          <th className="py-2 pr-3 font-medium">Prix</th>
-          <th className="py-2 pr-3 font-medium">Échéance</th>
-          <th className="py-2 pr-3 font-medium">Statut</th>
-          <th className="py-2 font-medium"></th>
+        <tr className="border-b border-canvas-200 text-left text-xs font-semibold uppercase tracking-wide text-canvas-600">
+          <th className="py-2 pr-3">Description</th>
+          <th className="py-2 pr-3">Prix</th>
+          <th className="py-2 pr-3">Échéance</th>
+          <th className="py-2 pr-3">Statut</th>
+          <th className="py-2"></th>
         </tr>
       </thead>
       <tbody>
         {tasks.map((task) => (
-          <tr key={task.id} className="border-b border-gray-100">
-            <td className="py-2 pr-3">
+          <tr key={task.id} className="border-b border-canvas-100 last:border-0">
+            <td className="py-3 pr-3 text-canvas-900">
               {task.description}
-              {task.taskType && <span className="ml-1 text-gray-400">({task.taskType})</span>}
+              {task.taskType && <span className="ml-1 text-canvas-600">({task.taskType})</span>}
             </td>
-            <td className="py-2 pr-3">
-              {Number(task.price).toFixed(2)} $
-              {task.isNegotiable && <span className="ml-1 text-xs text-gray-400">négociable</span>}
+            <td className="py-3 pr-3">
+              <span className="font-medium text-canvas-900">{Number(task.price).toFixed(2)} $</span>
+              {task.isNegotiable && (
+                <span className="ml-1.5 rounded-full bg-linen-100 px-1.5 py-0.5 text-[11px] font-medium text-linen-800">
+                  négociable
+                </span>
+              )}
             </td>
-            <td className="py-2 pr-3">{task.dueDate ? task.dueDate.slice(0, 10) : "—"}</td>
-            <td className="py-2 pr-3">
+            <td className="py-3 pr-3 text-canvas-700">{task.dueDate ? task.dueDate.slice(0, 10) : "—"}</td>
+            <td className="py-3 pr-3">
               <TaskStatusBadge status={task.status} />
             </td>
-            <td className="py-2 text-right">
-              <div className="flex justify-end gap-2">
-                <button className="text-blue-600 hover:underline" onClick={() => onEdit(task)}>
+            <td className="py-3 text-right">
+              <div className="flex justify-end gap-3 text-xs font-medium">
+                <button className="text-flow-700 hover:text-flow-900" onClick={() => onEdit(task)}>
                   Modifier
                 </button>
-                <button className="text-red-600 hover:underline" onClick={() => onDelete(task)}>
+                <button className="text-red-600 hover:text-red-800" onClick={() => onDelete(task)}>
                   Supprimer
                 </button>
               </div>

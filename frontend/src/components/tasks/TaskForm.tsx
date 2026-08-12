@@ -39,7 +39,10 @@ export function TaskForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3 rounded-md border border-gray-200 bg-gray-50 p-4">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4 rounded-2xl border border-flow-200 bg-flow-50/60 p-5"
+    >
       <Field label="Description">
         <Input
           required
@@ -55,7 +58,7 @@ export function TaskForm({
           placeholder="ex: entretien général"
         />
       </Field>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-4">
         <Field label="Prix ($)">
           <Input
             required
@@ -74,9 +77,10 @@ export function TaskForm({
           />
         </Field>
       </div>
-      <label className="flex items-center gap-2 text-sm text-gray-700">
+      <label className="flex items-center gap-2 text-sm text-canvas-800">
         <input
           type="checkbox"
+          className="h-4 w-4 rounded border-canvas-300 text-flow-600 focus:ring-flow-400"
           checked={values.isNegotiable}
           onChange={(e) => setValues({ ...values, isNegotiable: e.target.checked })}
         />
@@ -84,7 +88,7 @@ export function TaskForm({
       </label>
       <Field label="Statut">
         <select
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
           value={values.status}
           onChange={(e) => setValues({ ...values, status: e.target.value as TaskStatus })}
         >
@@ -99,7 +103,7 @@ export function TaskForm({
         <Button type="button" variant="secondary" onClick={onCancel}>
           Annuler
         </Button>
-        <Button type="submit" disabled={submitting}>
+        <Button type="submit" variant="accent" disabled={submitting}>
           {submitting ? "Enregistrement..." : "Enregistrer"}
         </Button>
       </div>

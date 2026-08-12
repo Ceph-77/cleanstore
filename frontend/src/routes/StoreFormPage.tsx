@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AppLayout } from "../components/common/AppLayout";
 import { StoreForm, type StoreFormValues } from "../components/stores/StoreForm";
 import { useCreateStore } from "../hooks/useStores";
@@ -40,7 +40,10 @@ export function StoreFormPage() {
 
   return (
     <AppLayout>
-      <h1 className="mb-6 text-xl font-semibold text-gray-900">Nouveau magasin</h1>
+      <Link to="/stores" className="text-sm text-flow-700 hover:text-flow-900">
+        ← Tous les magasins
+      </Link>
+      <h1 className="mb-6 mt-3 text-2xl font-semibold tracking-tight text-canvas-900">Nouveau magasin</h1>
       <StoreForm onSubmit={handleSubmit} submitting={createStore.isPending} />
     </AppLayout>
   );
