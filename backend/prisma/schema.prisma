@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RoleKey {
+  admin
+  grande_compagnie
+  sous_traitant
+  inspecteur
+  travailleur
+}
+
+enum OrganizationType {
+  grande_compagnie
+  sous_traitant
+}
+
+enum TaskStatus {
+  open
+  claimed
+  completed
+  inspected
+  cancelled
+}
+
+model Role {
+  id        Int        @id @default(autoincrement())
+  key       RoleKey    @unique
+  label     String
+  userRoles UserRole[]
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String?  @map("password_hash")
+  fullName     String?  @map("full_name")
+  phone        String?
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  roles              UserRole[]
+  inspectedStores     StoreInspector[]
+  assignedStores      Store[]          @relation("StoreAssignedWorker")
+  createdStores       Store[]          @relation("StoreCreatedBy")
+  assignedTasks       Task[]           @relation("TaskAssignedTo")
+  createdTasks        Task[]           @relation("TaskCreatedBy")
+
+  @@map("users")
+}
+
+model UserRole {
+  userId         String        @map("user_id")
+  roleId         Int           @map("role_id")
+  organizationId String?       @map("organization_id")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role         Role          @relation(fields: [roleId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id])
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model Organization {
+  id           String           @id @default(uuid())
+  name         String
+  type         OrganizationType
+  contactName  String?          @map("contact_name")
+  contactEmail String?          @map("contact_email")
+  contactPhone String?          @map("contact_phone")
+  address      String?
+  createdAt    DateTime         @default(now()) @map("created_at")
+
+  userRoles              UserRole[]
+  storesAsGrandeCompagnie Store[]  @relation("StoreGrandeCompagnie")
+  storesAsSubcontractor   Store[]  @relation("StoreSubcontractor")
+
+  @@map("organizations")
+}
+
+model Store {
+  id                       String    @id @default(uuid())
+  name                     String
+  banner                   String?
+  address                  String?
+  city                     String?
+  postalCode               String?   @map("postal_code")
+  storeManagerName         String?   @map("store_manager_name")
+  storeManagerPhone        String?   @map("store_manager_phone")
+  storeManagerEmail        String?   @map("store_manager_email")
+  squareFootage            Decimal?  @map("square_footage")
+  surfaceType              String?   @map("surface_type")
+  zones                    String[]
+  cleaningFrequency        String?   @map("cleaning_frequency")
+  cleaningSchedule         String?   @map("cleaning_schedule")
+  contractStartDate        DateTime? @map("contract_start_date") @db.Date
+  contractEndDate          DateTime? @map("contract_end_date") @db.Date
+  contractRate             Decimal?  @map("contract_rate")
+  grandeCompagnieId        String?   @map("grande_compagnie_id")
+  assignedSubcontractorId  String?   @map("assigned_subcontractor_id")
+  assignedWorkerId         String?   @map("assigned_worker_id")
+  isActive                 Boolean   @default(true) @map("is_active")
+  createdById              String?   @map("created_by")
+  createdAt                DateTime  @default(now()) @map("created_at")
+  updatedAt                DateTime  @updatedAt @map("updated_at")
+
+  grandeCompagnie       Organization?    @relation("StoreGrandeCompagnie", fields: [grandeCompagnieId], references: [id])
+  assignedSubcontractor Organization?    @relation("StoreSubcontractor", fields: [assignedSubcontractorId], references: [id])
+  assignedWorker        User?            @relation("StoreAssignedWorker", fields: [assignedWorkerId], references: [id])
+  createdBy             User?            @relation("StoreCreatedBy", fields: [createdById], references: [id])
+  inspectors            StoreInspector[]
+  tasks                 Task[]
+
+  @@index([name])
+  @@index([isActive])
+  @@map("stores")
+}
+
+model StoreInspector {
+  storeId String @map("store_id")
+  userId  String @map("user_id")
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([storeId, userId])
+  @@map("store_inspectors")
+}
+
+model Task {
+  id           String     @id @default(uuid())
+  storeId      String     @map("store_id")
+  description  String
+  taskType     String?    @map("task_type")
+  price        Decimal
+  isNegotiable Boolean    @default(false) @map("is_negotiable")
+  dueDate      DateTime?  @map("due_date") @db.Date
+  status       TaskStatus @default(open)
+  assignedToId String?    @map("assigned_to")
+  createdById  String?    @map("created_by")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  store      Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  assignedTo User? @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
+  createdBy  User? @relation("TaskCreatedBy", fields: [createdById], references: [id])
+
+  @@index([storeId])
+  @@index([status])
+  @@map("tasks")
+}
