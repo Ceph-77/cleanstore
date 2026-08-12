@@ -43,7 +43,7 @@ export function StoreFormPage() {
       <Link to="/stores" className="text-sm text-flow-700 hover:text-flow-900">
         ← Tous les magasins
       </Link>
-      <h1 className="mb-6 mt-3 text-2xl font-semibold tracking-tight text-canvas-900">Nouveau magasin</h1>
+      <h1 className="font-heading mb-6 mt-3 text-2xl font-semibold tracking-tight text-canvas-900">Nouveau magasin</h1>
       <StoreForm onSubmit={handleSubmit} submitting={createStore.isPending} />
     </AppLayout>
   );

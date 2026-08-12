@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  --font-sans: "Inter", system-ui, -apple-system, Roboto, sans-serif;
+  --font-heading: "Sora", "Inter", system-ui, sans-serif;
 
   /* Bleu pâle — actions, liens, éléments interactifs */
   --color-flow-50: #f2f8fb;
@@ -45,3 +46,8 @@ body {
   color: var(--color-canvas-900);
   -webkit-font-smoothing: antialiased;
 }
+
+.font-heading {
+  font-family: var(--font-heading);
+}
+
