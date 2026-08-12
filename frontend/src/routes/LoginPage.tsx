@@ -31,7 +31,7 @@ export function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50">
       <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4 rounded-lg border border-gray-200 bg-white p-8 shadow-sm">
-        <h1 className="text-xl font-semibold text-gray-900">CleanStore — Connexion</h1>
+        <h1 className="text-xl font-semibold text-gray-900">KLEAN'STOR — Connexion</h1>
         <Field label="Courriel">
           <Input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </Field>

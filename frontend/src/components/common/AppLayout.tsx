@@ -16,7 +16,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <header className="border-b border-gray-200 bg-white">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
           <Link to="/stores" className="text-lg font-semibold text-gray-900">
-            CleanStore
+            KLEAN'STOR
           </Link>
           <div className="flex items-center gap-4 text-sm text-gray-600">
             <span>{user?.fullName ?? user?.email}</span>
