@@ -22,6 +22,9 @@ export interface StoreFormValues {
   contractStartDate: string;
   contractEndDate: string;
   contractRate: string;
+  securityAccessInfo: string;
+  storeHours: string;
+  specialRequirements: string;
   grandeCompagnieId: string;
   assignedSubcontractorId: string;
 }
@@ -44,6 +47,9 @@ function toFormValues(store?: Store): StoreFormValues {
     contractStartDate: store?.contractStartDate?.slice(0, 10) ?? "",
     contractEndDate: store?.contractEndDate?.slice(0, 10) ?? "",
     contractRate: store?.contractRate ?? "",
+    securityAccessInfo: store?.securityAccessInfo ?? "",
+    storeHours: store?.storeHours ?? "",
+    specialRequirements: store?.specialRequirements ?? "",
     grandeCompagnieId: store?.grandeCompagnieId ?? "",
     assignedSubcontractorId: store?.assignedSubcontractorId ?? "",
   };
@@ -141,6 +147,42 @@ export function StoreForm({
               value={values.zones}
               onChange={(e) => set("zones", e.target.value)}
               placeholder="entrée, entrepôt, toilettes"
+            />
+          </Field>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-canvas-200 bg-white p-6 shadow-sm shadow-canvas-900/5">
+        <h2 className="mb-4 flex items-center gap-2 text-sm font-semibold text-canvas-900">
+          <span className="h-2 w-2 rounded-full bg-linen-400" />
+          Sécurité & exigences
+        </h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <Field label="Horaires du magasin">
+            <textarea
+              value={values.storeHours}
+              onChange={(e) => set("storeHours", e.target.value)}
+              rows={3}
+              placeholder="ex: Lun-Ven 9h-21h, Sam-Dim 9h-17h"
+              className="w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
+            />
+          </Field>
+          <Field label="Accès et sécurité">
+            <textarea
+              value={values.securityAccessInfo}
+              onChange={(e) => set("securityAccessInfo", e.target.value)}
+              rows={3}
+              placeholder="Codes d'alarme, clés, procédure d'entrée, contact sécurité"
+              className="w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
+            />
+          </Field>
+          <Field label="Exigences spéciales">
+            <textarea
+              value={values.specialRequirements}
+              onChange={(e) => set("specialRequirements", e.target.value)}
+              rows={3}
+              placeholder="Produits interdits/requis, allergies, zones sensibles, normes du client"
+              className="w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
             />
           </Field>
         </div>

@@ -9,7 +9,11 @@ import { storesRouter } from "./modules/stores/stores.routes";
 import { tasksRouter } from "./modules/tasks/tasks.routes";
 import { organizationsRouter } from "./modules/organizations/organizations.routes";
 import { usersRouter } from "./modules/users/users.routes";
-import { requireAuth } from "./modules/auth/auth.middleware";
+import { storeContactsRouter } from "./modules/storeContacts/storeContacts.routes";
+import { storeNotesRouter } from "./modules/storeNotes/storeNotes.routes";
+import { storeDocumentsRouter } from "./modules/storeDocuments/storeDocuments.routes";
+import { storeInvoicesRouter } from "./modules/storeInvoices/storeInvoices.routes";
+import { requireAuth, requireRole } from "./modules/auth/auth.middleware";
 import { notFound } from "./middleware/notFound";
 import { errorHandler } from "./middleware/errorHandler";
 
@@ -40,6 +44,10 @@ app.use("/api/stores", storesRouter);
 app.use("/api/tasks", requireAuth, tasksRouter);
 app.use("/api/organizations", organizationsRouter);
 app.use("/api/users", usersRouter);
+app.use("/api/store-contacts", requireRole("admin"), storeContactsRouter);
+app.use("/api/store-notes", requireRole("admin"), storeNotesRouter);
+app.use("/api/store-documents", requireRole("admin"), storeDocumentsRouter);
+app.use("/api/store-invoices", requireRole("admin"), storeInvoicesRouter);
 
 app.use(notFound);
 app.use(errorHandler);

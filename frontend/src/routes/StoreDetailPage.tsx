@@ -2,34 +2,19 @@ import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { AppLayout } from "../components/common/AppLayout";
 import { useStore } from "../hooks/useStores";
-import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from "../hooks/useTasks";
-import { TaskList } from "../components/tasks/TaskList";
-import { TaskForm, type TaskFormValues } from "../components/tasks/TaskForm";
-import { Button } from "../components/common/Button";
-import { StatCard } from "../components/common/StatCard";
-import { IconStore, IconTasks, IconWallet } from "../components/common/icons";
-import type { Task } from "../types";
-
-function InfoItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-xs font-semibold uppercase tracking-wide text-canvas-600">{label}</p>
-      <p className="mt-0.5 text-sm text-canvas-900">{value}</p>
-    </div>
-  );
-}
+import { IconStore } from "../components/common/icons";
+import { StoreTabs, type StoreTabKey } from "../components/stores/StoreTabs";
+import { OverviewTab } from "../components/stores/tabs/OverviewTab";
+import { ContactsTab } from "../components/stores/tabs/ContactsTab";
+import { DocumentsTab } from "../components/stores/tabs/DocumentsTab";
+import { NotesTab } from "../components/stores/tabs/NotesTab";
+import { InvoicesTab } from "../components/stores/tabs/InvoicesTab";
 
 export function StoreDetailPage() {
   const { id } = useParams<{ id: string }>();
   const storeId = id!;
   const { data: store, isLoading } = useStore(storeId);
-  const { data: tasks } = useTasks(storeId);
-  const createTask = useCreateTask(storeId);
-  const updateTask = useUpdateTask(storeId);
-  const deleteTask = useDeleteTask(storeId);
-
-  const [showForm, setShowForm] = useState(false);
-  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [tab, setTab] = useState<StoreTabKey>("apercu");
 
   if (isLoading || !store) {
     return (
@@ -38,33 +23,6 @@ export function StoreDetailPage() {
       </AppLayout>
     );
   }
-
-  async function handleTaskSubmit(values: TaskFormValues) {
-    const payload = {
-      description: values.description,
-      taskType: values.taskType || undefined,
-      price: values.price,
-      isNegotiable: values.isNegotiable,
-      dueDate: values.dueDate || undefined,
-      status: values.status,
-    };
-    if (editingTask) {
-      await updateTask.mutateAsync({ id: editingTask.id, data: payload });
-    } else {
-      await createTask.mutateAsync(payload);
-    }
-    setShowForm(false);
-    setEditingTask(null);
-  }
-
-  async function handleDelete(task: Task) {
-    if (confirm(`Supprimer la tâche "${task.description}" ?`)) {
-      await deleteTask.mutateAsync(task.id);
-    }
-  }
-
-  const openTasks = (tasks ?? []).filter((t) => t.status === "open");
-  const totalValue = (tasks ?? []).reduce((sum, t) => sum + Number(t.price), 0);
 
   return (
     <AppLayout>
@@ -86,58 +44,16 @@ export function StoreDetailPage() {
         </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-x-8 gap-y-4 rounded-2xl border border-canvas-200 bg-white p-6 shadow-sm shadow-canvas-900/5 sm:grid-cols-3">
-        <InfoItem label="Adresse" value={[store.address, store.city].filter(Boolean).join(", ") || "—"} />
-        <InfoItem label="Gérant" value={store.storeManagerName ?? "—"} />
-        <InfoItem label="Fréquence" value={store.cleaningFrequency ?? "—"} />
-        <InfoItem label="Grande compagnie" value={store.grandeCompagnie?.name ?? "—"} />
-        <InfoItem label="Sous-traitant" value={store.assignedSubcontractor?.name ?? "—"} />
-        <InfoItem label="Superficie" value={store.squareFootage ? `${store.squareFootage} pi²` : "—"} />
+      <div className="mt-6">
+        <StoreTabs active={tab} onChange={setTab} />
       </div>
 
-      <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <StatCard label="Tâches ouvertes" value={openTasks.length} icon={<IconTasks />} accent="flow" />
-        <StatCard label="Valeur totale des tâches" value={`${totalValue.toFixed(2)} $`} icon={<IconWallet />} accent="linen" />
-      </div>
-
-      <div className="mt-10 flex items-center justify-between">
-        <h2 className="font-heading text-lg font-semibold text-canvas-900">Tâches</h2>
-        <Button
-          variant="accent"
-          onClick={() => {
-            setEditingTask(null);
-            setShowForm(true);
-          }}
-        >
-          + Ajouter une tâche
-        </Button>
-      </div>
-
-      {showForm && (
-        <div className="mt-4">
-          <TaskForm
-            initial={editingTask ?? undefined}
-            submitting={createTask.isPending || updateTask.isPending}
-            onCancel={() => {
-              setShowForm(false);
-              setEditingTask(null);
-            }}
-            onSubmit={handleTaskSubmit}
-          />
-        </div>
-      )}
-
-      <div className="mt-4 overflow-hidden rounded-2xl border border-canvas-200 bg-white shadow-sm shadow-canvas-900/5">
-        <div className="p-5">
-          <TaskList
-            tasks={tasks ?? []}
-            onEdit={(task) => {
-              setEditingTask(task);
-              setShowForm(true);
-            }}
-            onDelete={handleDelete}
-          />
-        </div>
+      <div className="mt-6">
+        {tab === "apercu" && <OverviewTab store={store} />}
+        {tab === "contacts" && <ContactsTab storeId={storeId} />}
+        {tab === "documents" && <DocumentsTab storeId={storeId} />}
+        {tab === "notes" && <NotesTab storeId={storeId} />}
+        {tab === "finances" && <InvoicesTab storeId={storeId} />}
       </div>
     </AppLayout>
   );

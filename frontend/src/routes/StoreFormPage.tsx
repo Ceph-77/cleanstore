@@ -24,6 +24,9 @@ function toPayload(values: StoreFormValues): Partial<Store> {
     contractStartDate: values.contractStartDate || undefined,
     contractEndDate: values.contractEndDate || undefined,
     contractRate: values.contractRate || undefined,
+    securityAccessInfo: values.securityAccessInfo || undefined,
+    storeHours: values.storeHours || undefined,
+    specialRequirements: values.specialRequirements || undefined,
     grandeCompagnieId: values.grandeCompagnieId || undefined,
     assignedSubcontractorId: values.assignedSubcontractorId || undefined,
   } as unknown as Partial<Store>;

@@ -31,6 +31,12 @@ export function getStoreById(id: string) {
       assignedWorker: true,
       inspectors: { include: { user: true } },
       tasks: { orderBy: { createdAt: "desc" } },
+      contacts: { orderBy: { createdAt: "asc" } },
+      notes: {
+        orderBy: { createdAt: "desc" },
+        include: { author: { select: { id: true, fullName: true, email: true } } },
+      },
+      invoices: { orderBy: { createdAt: "desc" } },
     },
   });
 }

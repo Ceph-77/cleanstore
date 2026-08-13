@@ -39,6 +39,12 @@ enum TaskStatus {
   cancelled
 }
 
+enum InvoiceStatus {
+  unpaid
+  paid
+  overdue
+}
+
 model Role {
   id        Int        @id @default(autoincrement())
   key       RoleKey    @unique
@@ -62,6 +68,8 @@ model User {
   createdStores       Store[]          @relation("StoreCreatedBy")
   assignedTasks       Task[]           @relation("TaskAssignedTo")
   createdTasks        Task[]           @relation("TaskCreatedBy")
+  storeNotes          StoreNote[]
+  uploadedDocuments   StoreDocument[]
 
   @@map("users")
 }
@@ -116,6 +124,9 @@ model Store {
   contractStartDate        DateTime? @map("contract_start_date") @db.Date
   contractEndDate          DateTime? @map("contract_end_date") @db.Date
   contractRate             Decimal?  @map("contract_rate")
+  securityAccessInfo       String?   @map("security_access_info")
+  storeHours               String?   @map("store_hours")
+  specialRequirements      String?   @map("special_requirements")
   grandeCompagnieId        String?   @map("grande_compagnie_id")
   assignedSubcontractorId  String?   @map("assigned_subcontractor_id")
   assignedWorkerId         String?   @map("assigned_worker_id")
@@ -130,6 +141,10 @@ model Store {
   createdBy             User?            @relation("StoreCreatedBy", fields: [createdById], references: [id])
   inspectors            StoreInspector[]
   tasks                 Task[]
+  contacts              StoreContact[]
+  notes                 StoreNote[]
+  documents             StoreDocument[]
+  invoices              StoreInvoice[]
 
   @@index([name])
   @@index([isActive])
@@ -168,4 +183,68 @@ model Task {
   @@index([storeId])
   @@index([status])
   @@map("tasks")
+}
+
+model StoreContact {
+  id        String   @id @default(uuid())
+  storeId   String   @map("store_id")
+  name      String
+  role      String?
+  phone     String?
+  email     String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId])
+  @@map("store_contacts")
+}
+
+model StoreNote {
+  id        String   @id @default(uuid())
+  storeId   String   @map("store_id")
+  authorId  String?  @map("author_id")
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  store  Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  author User? @relation(fields: [authorId], references: [id])
+
+  @@index([storeId])
+  @@map("store_notes")
+}
+
+model StoreDocument {
+  id           String   @id @default(uuid())
+  storeId      String   @map("store_id")
+  fileName     String   @map("file_name")
+  fileKey      String   @map("file_key")
+  mimeType     String?  @map("mime_type")
+  sizeBytes    Int?     @map("size_bytes")
+  uploadedById String?  @map("uploaded_by")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  store      Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  uploadedBy User? @relation(fields: [uploadedById], references: [id])
+
+  @@index([storeId])
+  @@map("store_documents")
+}
+
+model StoreInvoice {
+  id          String        @id @default(uuid())
+  storeId     String        @map("store_id")
+  label       String
+  amount      Decimal
+  status      InvoiceStatus @default(unpaid)
+  issuedDate  DateTime?     @map("issued_date") @db.Date
+  dueDate     DateTime?     @map("due_date") @db.Date
+  paidDate    DateTime?     @map("paid_date") @db.Date
+  createdById String?       @map("created_by")
+  createdAt   DateTime      @default(now()) @map("created_at")
+
+  store Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId])
+  @@map("store_invoices")
 }
