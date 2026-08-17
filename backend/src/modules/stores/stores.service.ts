@@ -55,8 +55,17 @@ export async function createStore(data: StoreCreateInput, createdById: string) {
 
 export async function updateStore(id: string, data: StoreUpdateInput) {
   let coords: { latitude: number; longitude: number } | null = null;
-  if (data.address !== undefined || data.city !== undefined) {
-    coords = await geocodeAddress(data.address, data.city);
+  const addressChanged = data.address !== undefined || data.city !== undefined;
+  if (addressChanged) {
+    const current = await prisma.store.findUnique({
+      where: { id },
+      select: { address: true, city: true },
+    });
+    const nextAddress = data.address ?? current?.address ?? null;
+    const nextCity = data.city ?? current?.city ?? null;
+    if (nextAddress !== current?.address || nextCity !== current?.city) {
+      coords = await geocodeAddress(nextAddress, nextCity);
+    }
   }
 
   return prisma.store.update({

@@ -9,8 +9,12 @@ export async function listMarketplace(req: Request, res: Response) {
 }
 
 export async function create(req: Request, res: Response) {
-  const claim = await taskClaimsService.createClaim(req.params.taskId, req.session.userId!);
-  res.status(201).json({ claim });
+  try {
+    const claim = await taskClaimsService.createClaim(req.params.taskId, req.session.userId!);
+    res.status(201).json({ claim });
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
+  }
 }
 
 export async function listMine(req: Request, res: Response) {

@@ -28,6 +28,11 @@ async function getSubcontractorOrganizationId(userId: string) {
 }
 
 export async function createClaim(storeId: string, userId: string) {
+  const store = await prisma.store.findUnique({ where: { id: storeId } });
+  if (!store || !store.isActive || store.assignedSubcontractorId) {
+    throw new Error("This store is not available for claiming");
+  }
+
   const organizationId = await getSubcontractorOrganizationId(userId);
   return prisma.storeClaim.create({
     data: { storeId, organizationId, requestedById: userId },

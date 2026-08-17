@@ -43,7 +43,7 @@ app.use(
 
 app.use("/api/auth", authRouter);
 app.use("/api/stores", storesRouter);
-app.use("/api/tasks", requireAuth, tasksRouter);
+app.use("/api/tasks", requireRole("admin"), tasksRouter);
 app.use("/api/organizations", organizationsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/store-contacts", requireRole("admin"), storeContactsRouter);

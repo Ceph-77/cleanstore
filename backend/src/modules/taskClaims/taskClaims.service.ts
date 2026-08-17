@@ -15,7 +15,22 @@ export function listMarketplaceTasks() {
   });
 }
 
-export function createClaim(taskId: string, workerId: string) {
+export async function createClaim(taskId: string, workerId: string) {
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    include: { store: { select: { isActive: true, assignedSubcontractorId: true } } },
+  });
+
+  if (
+    !task ||
+    task.status !== "open" ||
+    !task.isPublished ||
+    !task.store.isActive ||
+    !task.store.assignedSubcontractorId
+  ) {
+    throw new Error("This task is not available for claiming");
+  }
+
   return prisma.taskClaim.create({ data: { taskId, workerId } });
 }
 
