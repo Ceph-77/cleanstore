@@ -6,6 +6,7 @@ import { storeContactsRouterForStore } from "../storeContacts/storeContacts.rout
 import { storeNotesRouterForStore } from "../storeNotes/storeNotes.routes";
 import { storeDocumentsRouterForStore } from "../storeDocuments/storeDocuments.routes";
 import { storeInvoicesRouterForStore } from "../storeInvoices/storeInvoices.routes";
+import { storeInspectionsRouterForStore } from "../storeInspections/storeInspections.routes";
 
 export const storesRouter = Router();
 
@@ -23,3 +24,4 @@ storesRouter.use("/:storeId/contacts", storeContactsRouterForStore);
 storesRouter.use("/:storeId/notes", storeNotesRouterForStore);
 storesRouter.use("/:storeId/documents", storeDocumentsRouterForStore);
 storesRouter.use("/:storeId/invoices", storeInvoicesRouterForStore);
+storesRouter.use("/:storeId/inspections", storeInspectionsRouterForStore);

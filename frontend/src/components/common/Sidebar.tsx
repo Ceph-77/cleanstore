@@ -69,7 +69,6 @@ function AdminNav() {
       <NavItem to="/stores" icon={<IconStore />} label="Magasins" />
       <NavItem to="/admin/claims" icon={<IconInspection />} label="Demandes" />
       <NavItem to="/admin/users" icon={<IconUser />} label="Utilisateurs" />
-      <NavItem to="/inspections" icon={<IconInventory />} label="Inspections" disabled />
       <NavItem to="/inventory" icon={<IconInventory />} label="Inventaire" disabled />
     </>
   );

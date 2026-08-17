@@ -9,9 +9,11 @@ import {
 } from "../../../hooks/useTasks";
 import { TaskList } from "../../tasks/TaskList";
 import { TaskForm, type TaskFormValues } from "../../tasks/TaskForm";
+import { TaskInspectionForm } from "../../tasks/TaskInspectionForm";
 import { Button } from "../../common/Button";
 import { StatCard } from "../../common/StatCard";
 import { IconTasks, IconWallet } from "../../common/icons";
+import { useCreateTaskInspection } from "../../../hooks/useTaskInspections";
 import type { Store, Task } from "../../../types";
 
 function InfoItem({ label, value }: { label: string; value: string }) {
@@ -30,9 +32,11 @@ export function OverviewTab({ store }: { store: Store }) {
   const deleteTask = useDeleteTask(store.id);
   const publishTask = usePublishTask(store.id);
   const unpublishTask = useUnpublishTask(store.id);
+  const createInspection = useCreateTaskInspection(store.id);
 
   const [showForm, setShowForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [inspectingTask, setInspectingTask] = useState<Task | null>(null);
 
   async function handleTaskSubmit(values: TaskFormValues) {
     const payload = {
@@ -107,6 +111,20 @@ export function OverviewTab({ store }: { store: Store }) {
         </div>
       )}
 
+      {inspectingTask && (
+        <div className="mt-4">
+          <TaskInspectionForm
+            task={inspectingTask}
+            submitting={createInspection.isPending}
+            onCancel={() => setInspectingTask(null)}
+            onSubmit={async (values) => {
+              await createInspection.mutateAsync({ taskId: inspectingTask.id, ...values });
+              setInspectingTask(null);
+            }}
+          />
+        </div>
+      )}
+
       <div className="mt-4 overflow-hidden rounded-2xl border border-canvas-200 bg-white shadow-sm shadow-canvas-900/5">
         <div className="p-5">
           <TaskList
@@ -118,6 +136,7 @@ export function OverviewTab({ store }: { store: Store }) {
             onDelete={handleDelete}
             onPublish={(task) => publishTask.mutate(task.id)}
             onUnpublish={(task) => unpublishTask.mutate(task.id)}
+            onInspect={(task) => setInspectingTask(task)}
           />
         </div>
       </div>

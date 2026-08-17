@@ -99,6 +99,7 @@ export interface Store {
   contacts?: StoreContact[];
   notes?: StoreNote[];
   invoices?: StoreInvoice[];
+  inspections?: StoreInspection[];
 }
 
 export interface StoreMapPoint {
@@ -125,6 +126,45 @@ export interface Task {
   status: TaskStatus;
   assignedToId: string | null;
   store?: { id: string; name: string; city: string | null; address: string | null };
+  inspection?: { id: string; score: number } | null;
+}
+
+export type PhotoType = "before" | "after";
+
+export interface InspectionPhoto {
+  id: string;
+  fileName: string;
+  fileKey: string;
+  photoType: PhotoType;
+  createdAt: string;
+  downloadUrl?: string;
+}
+
+export interface TaskInspection {
+  id: string;
+  taskId: string;
+  score: number;
+  notes: string | null;
+  createdById: string | null;
+  createdAt: string;
+  photos: InspectionPhoto[];
+}
+
+export interface ChecklistItem {
+  zone: string;
+  item: string;
+  passed: boolean;
+}
+
+export interface StoreInspection {
+  id: string;
+  storeId: string;
+  score: number;
+  notes: string | null;
+  checklist: ChecklistItem[];
+  createdById: string | null;
+  createdAt: string;
+  photos: InspectionPhoto[];
 }
 
 export type ClaimStatus = "pending" | "approved" | "rejected";

@@ -30,13 +30,17 @@ export function getStoreById(id: string) {
       assignedSubcontractor: true,
       assignedWorker: true,
       inspectors: { include: { user: true } },
-      tasks: { orderBy: { createdAt: "desc" } },
+      tasks: {
+        orderBy: { createdAt: "desc" },
+        include: { inspection: { select: { id: true, score: true } } },
+      },
       contacts: { orderBy: { createdAt: "asc" } },
       notes: {
         orderBy: { createdAt: "desc" },
         include: { author: { select: { id: true, fullName: true, email: true } } },
       },
       invoices: { orderBy: { createdAt: "desc" } },
+      inspections: { orderBy: { createdAt: "desc" } },
     },
   });
 }

@@ -1,4 +1,4 @@
-export type StoreTabKey = "apercu" | "contacts" | "documents" | "notes" | "finances";
+export type StoreTabKey = "apercu" | "contacts" | "documents" | "notes" | "finances" | "inspections";
 
 const TABS: { key: StoreTabKey; label: string }[] = [
   { key: "apercu", label: "Aperçu" },
@@ -6,6 +6,7 @@ const TABS: { key: StoreTabKey; label: string }[] = [
   { key: "documents", label: "Documents" },
   { key: "notes", label: "Notes" },
   { key: "finances", label: "Finances" },
+  { key: "inspections", label: "Inspections" },
 ];
 
 export function StoreTabs({ active, onChange }: { active: StoreTabKey; onChange: (tab: StoreTabKey) => void }) {
