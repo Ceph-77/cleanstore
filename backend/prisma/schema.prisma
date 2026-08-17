@@ -51,6 +51,11 @@ enum ClaimStatus {
   rejected
 }
 
+enum PhotoType {
+  before
+  after
+}
+
 model Role {
   id        Int        @id @default(autoincrement())
   key       RoleKey    @unique
@@ -64,6 +69,7 @@ model User {
   passwordHash String?  @map("password_hash")
   fullName     String?  @map("full_name")
   phone        String?
+  address      String?
   isActive     Boolean  @default(true) @map("is_active")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
@@ -155,6 +161,7 @@ model Store {
   documents             StoreDocument[]
   invoices              StoreInvoice[]
   claims                StoreClaim[]
+  inspections           StoreInspection[]
 
   @@index([name])
   @@index([isActive])
@@ -191,6 +198,7 @@ model Task {
   assignedTo User? @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
   createdBy  User? @relation("TaskCreatedBy", fields: [createdById], references: [id])
   claims     TaskClaim[]
+  inspection TaskInspection?
 
   @@index([storeId])
   @@index([status])
@@ -293,4 +301,60 @@ model TaskClaim {
   @@index([taskId])
   @@index([status])
   @@map("task_claims")
+}
+
+model TaskInspection {
+  id          String   @id @default(uuid())
+  taskId      String   @unique @map("task_id")
+  score       Int
+  notes       String?
+  createdById String?  @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  task   Task                  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  photos TaskInspectionPhoto[]
+
+  @@map("task_inspections")
+}
+
+model TaskInspectionPhoto {
+  id           String    @id @default(uuid())
+  inspectionId String    @map("inspection_id")
+  fileName     String    @map("file_name")
+  fileKey      String    @map("file_key")
+  photoType    PhotoType @map("photo_type")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  inspection TaskInspection @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+
+  @@map("task_inspection_photos")
+}
+
+model StoreInspection {
+  id          String   @id @default(uuid())
+  storeId     String   @map("store_id")
+  score       Int
+  notes       String?
+  checklist   Json
+  createdById String?  @map("created_by")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  store  Store                  @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  photos StoreInspectionPhoto[]
+
+  @@index([storeId])
+  @@map("store_inspections")
+}
+
+model StoreInspectionPhoto {
+  id           String    @id @default(uuid())
+  inspectionId String    @map("inspection_id")
+  fileName     String    @map("file_name")
+  fileKey      String    @map("file_key")
+  photoType    PhotoType @map("photo_type")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  inspection StoreInspection @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+
+  @@map("store_inspection_photos")
 }

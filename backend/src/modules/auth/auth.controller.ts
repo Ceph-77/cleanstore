@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
-import { loginSchema } from "./auth.schema";
-import { authenticate, getUserById } from "./auth.service";
+import { loginSchema, registerWorkerSchema } from "./auth.schema";
+import { authenticate, getUserById, registerWorker } from "./auth.service";
 
 export async function login(req: Request, res: Response) {
   const parsed = loginSchema.safeParse(req.body);
@@ -17,6 +17,22 @@ export async function login(req: Request, res: Response) {
   req.session.roleKey = user.roleKey ?? undefined;
 
   res.json({ user });
+}
+
+export async function registerWorkerHandler(req: Request, res: Response) {
+  const parsed = registerWorkerSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.flatten() });
+  }
+
+  try {
+    const user = await registerWorker(parsed.data);
+    req.session.userId = user.id;
+    req.session.roleKey = user.roleKey;
+    res.status(201).json({ user });
+  } catch (err) {
+    res.status(409).json({ error: (err as Error).message });
+  }
 }
 
 export function logout(req: Request, res: Response) {

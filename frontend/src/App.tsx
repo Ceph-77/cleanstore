@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { LoginPage } from "./routes/LoginPage";
+import { RegisterWorkerPage } from "./routes/RegisterWorkerPage";
 import { StoresListPage } from "./routes/StoresListPage";
 import { StoreFormPage } from "./routes/StoreFormPage";
 import { StoreDetailPage } from "./routes/StoreDetailPage";
@@ -48,6 +49,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterWorkerPage />} />
 
       <Route
         path="/stores"

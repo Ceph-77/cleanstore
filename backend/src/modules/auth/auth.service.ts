@@ -1,5 +1,9 @@
 import { prisma } from "../../db/prisma";
-import { verifyPassword } from "../../utils/password";
+import { hashPassword, verifyPassword } from "../../utils/password";
+import type { registerWorkerSchema } from "./auth.schema";
+import type { z } from "zod";
+
+type RegisterWorkerInput = z.infer<typeof registerWorkerSchema>;
 
 export async function authenticate(email: string, password: string) {
   const user = await prisma.user.findUnique({
@@ -23,6 +27,34 @@ export async function authenticate(email: string, password: string) {
     email: user.email,
     fullName: user.fullName,
     roleKey: primaryRole,
+  };
+}
+
+export async function registerWorker(data: RegisterWorkerInput) {
+  const existing = await prisma.user.findUnique({ where: { email: data.email } });
+  if (existing) {
+    throw new Error("A user with this email already exists");
+  }
+
+  const role = await prisma.role.findUniqueOrThrow({ where: { key: "travailleur" } });
+  const passwordHash = await hashPassword(data.password);
+
+  const user = await prisma.user.create({
+    data: {
+      email: data.email,
+      passwordHash,
+      fullName: data.fullName,
+      phone: data.phone,
+      address: data.address,
+      roles: { create: { roleId: role.id } },
+    },
+  });
+
+  return {
+    id: user.id,
+    email: user.email,
+    fullName: user.fullName,
+    roleKey: "travailleur" as const,
   };
 }
 

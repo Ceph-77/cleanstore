@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Field } from "../components/common/Field";
 import { Input } from "../components/common/Input";
@@ -40,7 +40,7 @@ export function LoginPage() {
       >
         <div className="space-y-1">
           <Logo size="lg" />
-          <p className="text-sm text-canvas-600">Portail administrateur</p>
+          <p className="text-sm text-canvas-600">Connexion</p>
         </div>
         <div className="space-y-4">
           <Field label="Courriel">
@@ -56,6 +56,12 @@ export function LoginPage() {
         <Button type="submit" className="w-full" disabled={submitting}>
           {submitting ? "Connexion..." : "Se connecter"}
         </Button>
+        <p className="text-center text-sm text-canvas-600">
+          Travailleur autonome ?{" "}
+          <Link to="/register" className="font-medium text-flow-700 hover:text-flow-900">
+            Créer un compte
+          </Link>
+        </p>
       </form>
     </div>
   );
