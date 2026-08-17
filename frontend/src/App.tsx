@@ -6,10 +6,21 @@ import { StoresListPage } from "./routes/StoresListPage";
 import { StoreFormPage } from "./routes/StoreFormPage";
 import { StoreDetailPage } from "./routes/StoreDetailPage";
 import { StoreMapPage } from "./routes/StoreMapPage";
+import { StoreMarketplacePage } from "./routes/marketplace/StoreMarketplacePage";
+import { TaskMarketplacePage } from "./routes/marketplace/TaskMarketplacePage";
+import { ClaimsPage } from "./routes/admin/ClaimsPage";
+import { UsersPage } from "./routes/admin/UsersPage";
+import type { RoleKey } from "./types";
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function homeForRole(role: RoleKey | null | undefined) {
+  if (role === "sous_traitant") return "/marketplace/stores";
+  if (role === "travailleur") return "/marketplace/tasks";
+  return "/stores";
+}
+
+function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?: RoleKey[] }) {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -20,17 +31,27 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     return <Navigate to="/login" replace />;
   }
 
+  if (roles && !roles.includes(user.roleKey as RoleKey)) {
+    return <Navigate to={homeForRole(user.roleKey)} replace />;
+  }
+
   return <>{children}</>;
+}
+
+function HomeRedirect() {
+  const { user } = useAuth();
+  return <Navigate to={homeForRole(user?.roleKey)} replace />;
 }
 
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+
       <Route
         path="/stores"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute roles={["admin"]}>
             <StoresListPage />
           </ProtectedRoute>
         }
@@ -38,7 +59,7 @@ function AppRoutes() {
       <Route
         path="/stores/new"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute roles={["admin"]}>
             <StoreFormPage />
           </ProtectedRoute>
         }
@@ -46,7 +67,7 @@ function AppRoutes() {
       <Route
         path="/stores/map"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute roles={["admin"]}>
             <StoreMapPage />
           </ProtectedRoute>
         }
@@ -54,12 +75,54 @@ function AppRoutes() {
       <Route
         path="/stores/:id"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute roles={["admin"]}>
             <StoreDetailPage />
           </ProtectedRoute>
         }
       />
-      <Route path="*" element={<Navigate to="/stores" replace />} />
+
+      <Route
+        path="/admin/claims"
+        element={
+          <ProtectedRoute roles={["admin"]}>
+            <ClaimsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute roles={["admin"]}>
+            <UsersPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/marketplace/stores"
+        element={
+          <ProtectedRoute roles={["sous_traitant"]}>
+            <StoreMarketplacePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/marketplace/tasks"
+        element={
+          <ProtectedRoute roles={["travailleur"]}>
+            <TaskMarketplacePage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="*"
+        element={
+          <ProtectedRoute>
+            <HomeRedirect />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }

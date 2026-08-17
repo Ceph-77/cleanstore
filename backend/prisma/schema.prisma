@@ -45,6 +45,12 @@ enum InvoiceStatus {
   overdue
 }
 
+enum ClaimStatus {
+  pending
+  approved
+  rejected
+}
+
 model Role {
   id        Int        @id @default(autoincrement())
   key       RoleKey    @unique
@@ -70,6 +76,8 @@ model User {
   createdTasks        Task[]           @relation("TaskCreatedBy")
   storeNotes          StoreNote[]
   uploadedDocuments   StoreDocument[]
+  storeClaimsRequested StoreClaim[]
+  taskClaims          TaskClaim[]
 
   @@map("users")
 }
@@ -100,6 +108,7 @@ model Organization {
   userRoles              UserRole[]
   storesAsGrandeCompagnie Store[]  @relation("StoreGrandeCompagnie")
   storesAsSubcontractor   Store[]  @relation("StoreSubcontractor")
+  storeClaims             StoreClaim[]
 
   @@map("organizations")
 }
@@ -145,6 +154,7 @@ model Store {
   notes                 StoreNote[]
   documents             StoreDocument[]
   invoices              StoreInvoice[]
+  claims                StoreClaim[]
 
   @@index([name])
   @@index([isActive])
@@ -179,6 +189,7 @@ model Task {
   store      Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
   assignedTo User? @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
   createdBy  User? @relation("TaskCreatedBy", fields: [createdById], references: [id])
+  claims     TaskClaim[]
 
   @@index([storeId])
   @@index([status])
@@ -247,4 +258,38 @@ model StoreInvoice {
 
   @@index([storeId])
   @@map("store_invoices")
+}
+
+model StoreClaim {
+  id             String      @id @default(uuid())
+  storeId        String      @map("store_id")
+  organizationId String      @map("organization_id")
+  requestedById  String      @map("requested_by")
+  status         ClaimStatus @default(pending)
+  createdAt      DateTime    @default(now()) @map("created_at")
+  decidedAt      DateTime?   @map("decided_at")
+
+  store        Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id])
+  requestedBy  User         @relation(fields: [requestedById], references: [id])
+
+  @@index([storeId])
+  @@index([status])
+  @@map("store_claims")
+}
+
+model TaskClaim {
+  id        String      @id @default(uuid())
+  taskId    String      @map("task_id")
+  workerId  String      @map("worker_id")
+  status    ClaimStatus @default(pending)
+  createdAt DateTime    @default(now()) @map("created_at")
+  decidedAt DateTime?   @map("decided_at")
+
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  worker User @relation(fields: [workerId], references: [id])
+
+  @@index([taskId])
+  @@index([status])
+  @@map("task_claims")
 }

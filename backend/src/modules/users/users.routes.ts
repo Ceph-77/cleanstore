@@ -6,3 +6,4 @@ export const usersRouter = Router();
 
 usersRouter.use(requireRole("admin"));
 usersRouter.get("/", usersController.list);
+usersRouter.post("/", usersController.create);

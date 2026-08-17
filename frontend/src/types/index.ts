@@ -123,4 +123,41 @@ export interface Task {
   dueDate: string | null;
   status: TaskStatus;
   assignedToId: string | null;
+  store?: { id: string; name: string; city: string | null; address: string | null };
+}
+
+export type ClaimStatus = "pending" | "approved" | "rejected";
+
+export interface StoreClaim {
+  id: string;
+  storeId: string;
+  organizationId: string;
+  requestedById: string;
+  status: ClaimStatus;
+  createdAt: string;
+  decidedAt: string | null;
+  store?: { id: string; name: string; city?: string | null };
+  organization?: { id: string; name: string };
+  requestedBy?: { id: string; fullName: string | null; email: string };
+}
+
+export interface TaskClaim {
+  id: string;
+  taskId: string;
+  workerId: string;
+  status: ClaimStatus;
+  createdAt: string;
+  decidedAt: string | null;
+  task?: Task & { store?: { id: string; name: string } };
+  worker?: { id: string; fullName: string | null; email: string };
+}
+
+export interface AppUser {
+  id: string;
+  fullName: string | null;
+  email: string;
+  phone: string | null;
+  isActive: boolean;
+  createdAt: string;
+  roles: { role: { key: RoleKey; label: string }; organization: { id: string; name: string } | null }[];
 }

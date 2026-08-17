@@ -2,7 +2,23 @@ import type { ReactNode } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Logo } from "./Logo";
-import { IconStore, IconTasks, IconInspection, IconInventory, IconLock } from "./icons";
+import {
+  IconStore,
+  IconTasks,
+  IconInspection,
+  IconInventory,
+  IconLock,
+  IconUser,
+} from "./icons";
+import type { RoleKey } from "../../types";
+
+const ROLE_LABELS: Record<string, string> = {
+  admin: "Administrateur",
+  sous_traitant: "Sous-traitant",
+  travailleur: "Travailleur autonome",
+  grande_compagnie: "Grande compagnie",
+  inspecteur: "Inspecteur",
+};
 
 function NavItem({
   to,
@@ -46,6 +62,37 @@ function NavItem({
   );
 }
 
+function AdminNav() {
+  return (
+    <>
+      <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">Opérations</p>
+      <NavItem to="/stores" icon={<IconStore />} label="Magasins" />
+      <NavItem to="/admin/claims" icon={<IconInspection />} label="Demandes" />
+      <NavItem to="/admin/users" icon={<IconUser />} label="Utilisateurs" />
+      <NavItem to="/inspections" icon={<IconInventory />} label="Inspections" disabled />
+      <NavItem to="/inventory" icon={<IconInventory />} label="Inventaire" disabled />
+    </>
+  );
+}
+
+function SousTraitantNav() {
+  return (
+    <>
+      <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">Marketplace</p>
+      <NavItem to="/marketplace/stores" icon={<IconStore />} label="Magasins disponibles" />
+    </>
+  );
+}
+
+function TravailleurNav() {
+  return (
+    <>
+      <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">Marketplace</p>
+      <NavItem to="/marketplace/tasks" icon={<IconTasks />} label="Tâches disponibles" />
+    </>
+  );
+}
+
 export function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -55,6 +102,8 @@ export function Sidebar() {
     navigate("/login");
   }
 
+  const role = user?.roleKey as RoleKey | undefined;
+
   return (
     <aside className="flex h-screen w-64 shrink-0 flex-col bg-canvas-900 px-4 py-6">
       <div className="px-2">
@@ -62,13 +111,9 @@ export function Sidebar() {
       </div>
 
       <nav className="mt-10 flex-1 space-y-1">
-        <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">
-          Opérations
-        </p>
-        <NavItem to="/stores" icon={<IconStore />} label="Magasins" />
-        <NavItem to="/tasks" icon={<IconTasks />} label="Marketplace de tâches" disabled />
-        <NavItem to="/inspections" icon={<IconInspection />} label="Inspections" disabled />
-        <NavItem to="/inventory" icon={<IconInventory />} label="Inventaire" disabled />
+        {role === "admin" && <AdminNav />}
+        {role === "sous_traitant" && <SousTraitantNav />}
+        {role === "travailleur" && <TravailleurNav />}
       </nav>
 
       <div className="mt-auto space-y-3 border-t border-white/10 pt-4">
@@ -80,7 +125,7 @@ export function Sidebar() {
             <p className="truncate text-sm font-medium text-white">{user?.fullName ?? user?.email}</p>
             <p className="flex items-center gap-1 text-xs text-canvas-0/45">
               <IconLock className="h-3 w-3" />
-              Administrateur
+              {role ? ROLE_LABELS[role] : ""}
             </p>
           </div>
         </div>
