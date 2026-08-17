@@ -13,6 +13,14 @@ export function updateTask(id: string, data: Partial<Task>) {
   return apiClient.patch<{ task: Task }>(`/tasks/${id}`, data);
 }
 
+export function publishTask(id: string) {
+  return apiClient.patch<{ task: Task }>(`/tasks/${id}/publish`);
+}
+
+export function unpublishTask(id: string) {
+  return apiClient.patch<{ task: Task }>(`/tasks/${id}/unpublish`);
+}
+
 export function deleteTask(id: string) {
   return apiClient.delete<void>(`/tasks/${id}`);
 }

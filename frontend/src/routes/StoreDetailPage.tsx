@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { AppLayout } from "../components/common/AppLayout";
+import { Button } from "../components/common/Button";
 import { useStore } from "../hooks/useStores";
 import { IconStore } from "../components/common/icons";
 import { StoreTabs, type StoreTabKey } from "../components/stores/StoreTabs";
@@ -30,18 +31,23 @@ export function StoreDetailPage() {
         ← Tous les magasins
       </Link>
 
-      <div className="mt-3 flex items-center gap-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-flow-100 text-flow-700">
-          <IconStore className="h-5 w-5" />
-        </span>
-        <div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight text-canvas-900">{store.name}</h1>
-          {store.banner && (
-            <span className="mt-0.5 inline-block rounded-full bg-linen-100 px-2 py-0.5 text-xs font-medium text-linen-800">
-              {store.banner}
-            </span>
-          )}
+      <div className="mt-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-flow-100 text-flow-700">
+            <IconStore className="h-5 w-5" />
+          </span>
+          <div>
+            <h1 className="font-heading text-2xl font-semibold tracking-tight text-canvas-900">{store.name}</h1>
+            {store.banner && (
+              <span className="mt-0.5 inline-block rounded-full bg-linen-100 px-2 py-0.5 text-xs font-medium text-linen-800">
+                {store.banner}
+              </span>
+            )}
+          </div>
         </div>
+        <Link to={`/stores/${storeId}/edit`}>
+          <Button variant="secondary">Modifier</Button>
+        </Link>
       </div>
 
       <div className="mt-6">

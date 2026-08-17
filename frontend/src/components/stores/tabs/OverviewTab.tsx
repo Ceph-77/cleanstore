@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from "../../../hooks/useTasks";
+import {
+  useTasks,
+  useCreateTask,
+  useUpdateTask,
+  useDeleteTask,
+  usePublishTask,
+  useUnpublishTask,
+} from "../../../hooks/useTasks";
 import { TaskList } from "../../tasks/TaskList";
 import { TaskForm, type TaskFormValues } from "../../tasks/TaskForm";
 import { Button } from "../../common/Button";
@@ -21,6 +28,8 @@ export function OverviewTab({ store }: { store: Store }) {
   const createTask = useCreateTask(store.id);
   const updateTask = useUpdateTask(store.id);
   const deleteTask = useDeleteTask(store.id);
+  const publishTask = usePublishTask(store.id);
+  const unpublishTask = useUnpublishTask(store.id);
 
   const [showForm, setShowForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -107,6 +116,8 @@ export function OverviewTab({ store }: { store: Store }) {
               setShowForm(true);
             }}
             onDelete={handleDelete}
+            onPublish={(task) => publishTask.mutate(task.id)}
+            onUnpublish={(task) => unpublishTask.mutate(task.id)}
           />
         </div>
       </div>

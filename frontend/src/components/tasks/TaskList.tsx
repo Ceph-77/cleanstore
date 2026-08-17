@@ -5,10 +5,14 @@ export function TaskList({
   tasks,
   onEdit,
   onDelete,
+  onPublish,
+  onUnpublish,
 }: {
   tasks: Task[];
   onEdit: (task: Task) => void;
   onDelete: (task: Task) => void;
+  onPublish: (task: Task) => void;
+  onUnpublish: (task: Task) => void;
 }) {
   if (tasks.length === 0) {
     return <p className="py-4 text-sm text-canvas-600">Aucune tâche pour ce magasin pour l'instant.</p>;
@@ -22,6 +26,7 @@ export function TaskList({
           <th className="py-2 pr-3">Prix</th>
           <th className="py-2 pr-3">Échéance</th>
           <th className="py-2 pr-3">Statut</th>
+          <th className="py-2 pr-3">Marketplace</th>
           <th className="py-2"></th>
         </tr>
       </thead>
@@ -44,8 +49,28 @@ export function TaskList({
             <td className="py-3 pr-3">
               <TaskStatusBadge status={task.status} />
             </td>
+            <td className="py-3 pr-3">
+              {task.isPublished ? (
+                <span className="inline-flex items-center rounded-full bg-flow-100 px-2.5 py-0.5 text-xs font-medium text-flow-800 ring-1 ring-inset ring-flow-200">
+                  Publiée
+                </span>
+              ) : (
+                <span className="inline-flex items-center rounded-full bg-canvas-100 px-2.5 py-0.5 text-xs font-medium text-canvas-700 ring-1 ring-inset ring-canvas-200">
+                  Brouillon
+                </span>
+              )}
+            </td>
             <td className="py-3 text-right">
               <div className="flex justify-end gap-3 text-xs font-medium">
+                {task.isPublished ? (
+                  <button className="text-canvas-600 hover:text-canvas-900" onClick={() => onUnpublish(task)}>
+                    Dépublier
+                  </button>
+                ) : (
+                  <button className="text-flow-700 hover:text-flow-900" onClick={() => onPublish(task)}>
+                    Publier
+                  </button>
+                )}
                 <button className="text-flow-700 hover:text-flow-900" onClick={() => onEdit(task)}>
                   Modifier
                 </button>

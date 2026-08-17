@@ -17,6 +17,14 @@ export function useCreateStoreNote(storeId: string) {
   });
 }
 
+export function useUpdateStoreNote(storeId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, content }: { id: string; content: string }) => notesApi.updateNote(id, content),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["stores", storeId, "notes"] }),
+  });
+}
+
 export function useDeleteStoreNote(storeId: string) {
   const queryClient = useQueryClient();
   return useMutation({

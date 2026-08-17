@@ -120,6 +120,7 @@ export interface Task {
   taskType: string | null;
   price: string;
   isNegotiable: boolean;
+  isPublished: boolean;
   dueDate: string | null;
   status: TaskStatus;
   assignedToId: string | null;

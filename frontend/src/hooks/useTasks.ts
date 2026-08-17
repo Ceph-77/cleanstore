@@ -29,6 +29,22 @@ export function useUpdateTask(storeId: string) {
   });
 }
 
+export function usePublishTask(storeId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => tasksApi.publishTask(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["stores", storeId, "tasks"] }),
+  });
+}
+
+export function useUnpublishTask(storeId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => tasksApi.unpublishTask(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["stores", storeId, "tasks"] }),
+  });
+}
+
 export function useDeleteTask(storeId: string) {
   const queryClient = useQueryClient();
   return useMutation({

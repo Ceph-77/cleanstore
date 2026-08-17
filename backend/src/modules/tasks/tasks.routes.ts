@@ -7,4 +7,6 @@ tasksRouterForStore.post("/", tasksController.create);
 
 export const tasksRouter = Router();
 tasksRouter.patch("/:id", tasksController.update);
+tasksRouter.patch("/:id/publish", tasksController.publish);
+tasksRouter.patch("/:id/unpublish", tasksController.unpublish);
 tasksRouter.delete("/:id", tasksController.remove);

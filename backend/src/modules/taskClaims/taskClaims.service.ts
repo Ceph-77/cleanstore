@@ -5,6 +5,7 @@ export function listMarketplaceTasks() {
   return prisma.task.findMany({
     where: {
       status: "open",
+      isPublished: true,
       store: { assignedSubcontractorId: { not: null }, isActive: true },
     },
     orderBy: { createdAt: "desc" },

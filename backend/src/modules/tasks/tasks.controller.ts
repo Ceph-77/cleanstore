@@ -25,6 +25,16 @@ export async function update(req: Request, res: Response) {
   res.json({ task });
 }
 
+export async function publish(req: Request, res: Response) {
+  const task = await tasksService.publishTask(req.params.id);
+  res.json({ task });
+}
+
+export async function unpublish(req: Request, res: Response) {
+  const task = await tasksService.unpublishTask(req.params.id);
+  res.json({ task });
+}
+
 export async function remove(req: Request, res: Response) {
   await tasksService.deleteTask(req.params.id);
   res.status(204).send();

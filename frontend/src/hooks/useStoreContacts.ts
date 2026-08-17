@@ -18,6 +18,14 @@ export function useCreateStoreContact(storeId: string) {
   });
 }
 
+export function useUpdateStoreContact(storeId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<StoreContact> }) => contactsApi.updateContact(id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["stores", storeId, "contacts"] }),
+  });
+}
+
 export function useDeleteStoreContact(storeId: string) {
   const queryClient = useQueryClient();
   return useMutation({

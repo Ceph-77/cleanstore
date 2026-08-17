@@ -179,6 +179,7 @@ model Task {
   taskType     String?    @map("task_type")
   price        Decimal
   isNegotiable Boolean    @default(false) @map("is_negotiable")
+  isPublished  Boolean    @default(false) @map("is_published")
   dueDate      DateTime?  @map("due_date") @db.Date
   status       TaskStatus @default(open)
   assignedToId String?    @map("assigned_to")

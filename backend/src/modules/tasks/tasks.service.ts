@@ -25,6 +25,20 @@ export function updateTask(id: string, data: TaskUpdateInput) {
   });
 }
 
+export function publishTask(id: string) {
+  return prisma.task.update({
+    where: { id },
+    data: { isPublished: true },
+  });
+}
+
+export function unpublishTask(id: string) {
+  return prisma.task.update({
+    where: { id },
+    data: { isPublished: false },
+  });
+}
+
 export function deleteTask(id: string) {
   return prisma.task.delete({ where: { id } });
 }

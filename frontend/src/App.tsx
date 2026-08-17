@@ -5,6 +5,7 @@ import { LoginPage } from "./routes/LoginPage";
 import { StoresListPage } from "./routes/StoresListPage";
 import { StoreFormPage } from "./routes/StoreFormPage";
 import { StoreDetailPage } from "./routes/StoreDetailPage";
+import { StoreEditPage } from "./routes/StoreEditPage";
 import { StoreMapPage } from "./routes/StoreMapPage";
 import { StoreMarketplacePage } from "./routes/marketplace/StoreMarketplacePage";
 import { TaskMarketplacePage } from "./routes/marketplace/TaskMarketplacePage";
@@ -77,6 +78,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute roles={["admin"]}>
             <StoreDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/stores/:id/edit"
+        element={
+          <ProtectedRoute roles={["admin"]}>
+            <StoreEditPage />
           </ProtectedRoute>
         }
       />

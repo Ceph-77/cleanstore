@@ -2,25 +2,53 @@ import { useState, type FormEvent } from "react";
 import {
   useStoreContacts,
   useCreateStoreContact,
+  useUpdateStoreContact,
   useDeleteStoreContact,
 } from "../../../hooks/useStoreContacts";
 import { Button } from "../../common/Button";
 import { Field } from "../../common/Field";
 import { Input } from "../../common/Input";
 import { IconUser, IconTrash } from "../../common/icons";
+import type { StoreContact } from "../../../types";
+
+const emptyValues = { name: "", role: "", phone: "", email: "" };
 
 export function ContactsTab({ storeId }: { storeId: string }) {
   const { data: contacts } = useStoreContacts(storeId);
   const createContact = useCreateStoreContact(storeId);
+  const updateContact = useUpdateStoreContact(storeId);
   const deleteContact = useDeleteStoreContact(storeId);
 
   const [showForm, setShowForm] = useState(false);
-  const [values, setValues] = useState({ name: "", role: "", phone: "", email: "" });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [values, setValues] = useState(emptyValues);
+
+  function startCreate() {
+    setEditingId(null);
+    setValues(emptyValues);
+    setShowForm(true);
+  }
+
+  function startEdit(contact: StoreContact) {
+    setEditingId(contact.id);
+    setValues({
+      name: contact.name,
+      role: contact.role ?? "",
+      phone: contact.phone ?? "",
+      email: contact.email ?? "",
+    });
+    setShowForm(true);
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    await createContact.mutateAsync(values);
-    setValues({ name: "", role: "", phone: "", email: "" });
+    if (editingId) {
+      await updateContact.mutateAsync({ id: editingId, data: values });
+    } else {
+      await createContact.mutateAsync(values);
+    }
+    setValues(emptyValues);
+    setEditingId(null);
     setShowForm(false);
   }
 
@@ -30,11 +58,13 @@ export function ContactsTab({ storeId }: { storeId: string }) {
     }
   }
 
+  const saving = createContact.isPending || updateContact.isPending;
+
   return (
     <div>
       <div className="flex items-center justify-between">
         <h2 className="font-heading text-lg font-semibold text-canvas-900">Contacts</h2>
-        <Button variant="accent" onClick={() => setShowForm((v) => !v)}>
+        <Button variant="accent" onClick={startCreate}>
           + Ajouter un contact
         </Button>
       </div>
@@ -67,11 +97,18 @@ export function ContactsTab({ storeId }: { storeId: string }) {
             </Field>
           </div>
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setShowForm(false);
+                setEditingId(null);
+              }}
+            >
               Annuler
             </Button>
-            <Button type="submit" variant="accent" disabled={createContact.isPending}>
-              {createContact.isPending ? "Enregistrement..." : "Enregistrer"}
+            <Button type="submit" variant="accent" disabled={saving}>
+              {saving ? "Enregistrement..." : "Enregistrer"}
             </Button>
           </div>
         </form>
@@ -104,13 +141,18 @@ export function ContactsTab({ storeId }: { storeId: string }) {
                 {[contact.phone, contact.email].filter(Boolean).join(" · ") || "—"}
               </p>
             </div>
-            <button
-              onClick={() => handleDelete(contact.id, contact.name)}
-              className="text-canvas-600 hover:text-red-600"
-              aria-label="Supprimer"
-            >
-              <IconTrash className="h-4 w-4" />
-            </button>
+            <div className="flex shrink-0 gap-3 text-xs font-medium">
+              <button onClick={() => startEdit(contact)} className="text-flow-700 hover:text-flow-900">
+                Modifier
+              </button>
+              <button
+                onClick={() => handleDelete(contact.id, contact.name)}
+                className="text-canvas-600 hover:text-red-600"
+                aria-label="Supprimer"
+              >
+                <IconTrash className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         ))}
       </div>

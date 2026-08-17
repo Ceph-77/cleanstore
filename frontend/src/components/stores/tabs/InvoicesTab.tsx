@@ -10,7 +10,7 @@ import { Field } from "../../common/Field";
 import { Input } from "../../common/Input";
 import { StatCard } from "../../common/StatCard";
 import { IconWallet, IconTrash } from "../../common/icons";
-import type { InvoiceStatus } from "../../../types";
+import type { InvoiceStatus, StoreInvoice } from "../../../types";
 
 const STATUS_LABELS: Record<InvoiceStatus, string> = {
   unpaid: "Impayée",
@@ -24,6 +24,8 @@ const STATUS_CLASSES: Record<InvoiceStatus, string> = {
   overdue: "bg-red-50 text-red-700 ring-red-200",
 };
 
+const emptyValues = { label: "", amount: "", dueDate: "", status: "unpaid" as InvoiceStatus };
+
 export function InvoicesTab({ storeId }: { storeId: string }) {
   const { data: invoices } = useStoreInvoices(storeId);
   const createInvoice = useCreateStoreInvoice(storeId);
@@ -31,17 +33,41 @@ export function InvoicesTab({ storeId }: { storeId: string }) {
   const deleteInvoice = useDeleteStoreInvoice(storeId);
 
   const [showForm, setShowForm] = useState(false);
-  const [values, setValues] = useState({ label: "", amount: "", dueDate: "" });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [values, setValues] = useState(emptyValues);
 
   const totalUnpaid = (invoices ?? [])
     .filter((i) => i.status !== "paid")
     .reduce((sum, i) => sum + Number(i.amount), 0);
   const totalPaid = (invoices ?? []).filter((i) => i.status === "paid").reduce((sum, i) => sum + Number(i.amount), 0);
 
+  function startCreate() {
+    setEditingId(null);
+    setValues(emptyValues);
+    setShowForm(true);
+  }
+
+  function startEdit(invoice: StoreInvoice) {
+    setEditingId(invoice.id);
+    setValues({
+      label: invoice.label,
+      amount: invoice.amount,
+      dueDate: invoice.dueDate?.slice(0, 10) ?? "",
+      status: invoice.status,
+    });
+    setShowForm(true);
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    await createInvoice.mutateAsync({ ...values, dueDate: values.dueDate || undefined });
-    setValues({ label: "", amount: "", dueDate: "" });
+    const payload = { ...values, dueDate: values.dueDate || undefined };
+    if (editingId) {
+      await updateInvoice.mutateAsync({ id: editingId, data: payload });
+    } else {
+      await createInvoice.mutateAsync(payload);
+    }
+    setValues(emptyValues);
+    setEditingId(null);
     setShowForm(false);
   }
 
@@ -55,11 +81,13 @@ export function InvoicesTab({ storeId }: { storeId: string }) {
     }
   }
 
+  const saving = createInvoice.isPending || updateInvoice.isPending;
+
   return (
     <div>
       <div className="flex items-center justify-between">
         <h2 className="font-heading text-lg font-semibold text-canvas-900">Finances</h2>
-        <Button variant="accent" onClick={() => setShowForm((v) => !v)}>
+        <Button variant="accent" onClick={startCreate}>
           + Ajouter une facture
         </Button>
       </div>
@@ -74,7 +102,7 @@ export function InvoicesTab({ storeId }: { storeId: string }) {
           onSubmit={handleSubmit}
           className="mt-6 space-y-4 rounded-2xl border border-flow-200 bg-flow-50/60 p-5"
         >
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
             <Field label="Libellé">
               <Input
                 required
@@ -99,13 +127,35 @@ export function InvoicesTab({ storeId }: { storeId: string }) {
                 onChange={(e) => setValues({ ...values, dueDate: e.target.value })}
               />
             </Field>
+            {editingId && (
+              <Field label="Statut">
+                <select
+                  className="w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
+                  value={values.status}
+                  onChange={(e) => setValues({ ...values, status: e.target.value as InvoiceStatus })}
+                >
+                  {Object.entries(STATUS_LABELS).map(([key, label]) => (
+                    <option key={key} value={key}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            )}
           </div>
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setShowForm(false);
+                setEditingId(null);
+              }}
+            >
               Annuler
             </Button>
-            <Button type="submit" variant="accent" disabled={createInvoice.isPending}>
-              {createInvoice.isPending ? "Enregistrement..." : "Enregistrer"}
+            <Button type="submit" variant="accent" disabled={saving}>
+              {saving ? "Enregistrement..." : "Enregistrer"}
             </Button>
           </div>
         </form>
@@ -147,13 +197,18 @@ export function InvoicesTab({ storeId }: { storeId: string }) {
                       </select>
                     </td>
                     <td className="py-3 text-right">
-                      <button
-                        onClick={() => handleDelete(invoice.id, invoice.label)}
-                        className="text-canvas-600 hover:text-red-600"
-                        aria-label="Supprimer"
-                      >
-                        <IconTrash className="h-4 w-4" />
-                      </button>
+                      <div className="flex justify-end gap-3 text-xs font-medium">
+                        <button onClick={() => startEdit(invoice)} className="text-flow-700 hover:text-flow-900">
+                          Modifier
+                        </button>
+                        <button
+                          onClick={() => handleDelete(invoice.id, invoice.label)}
+                          className="text-canvas-600 hover:text-red-600"
+                          aria-label="Supprimer"
+                        >
+                          <IconTrash className="h-4 w-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
