@@ -22,7 +22,7 @@ export function RegisterWorkerPage() {
     setSubmitting(true);
     try {
       await registerWorker(values);
-      navigate("/marketplace/tasks");
+      navigate("/markettask/tasks");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Erreur lors de l'inscription");
     } finally {

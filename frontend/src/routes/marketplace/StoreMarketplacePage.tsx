@@ -25,7 +25,7 @@ export function StoreMarketplacePage() {
 
   return (
     <AppLayout>
-      <p className="text-xs font-semibold uppercase tracking-wider text-flow-600">Marketplace</p>
+      <p className="text-xs font-semibold uppercase tracking-wider text-flow-600">Markettask</p>
       <h1 className="font-heading text-3xl font-semibold tracking-tight text-canvas-900">Magasins disponibles</h1>
       <p className="mt-1 text-sm text-canvas-600">
         Manifeste ton intérêt pour un magasin — l'admin confirme l'assignation.

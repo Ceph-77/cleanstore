@@ -82,8 +82,8 @@ function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
 function SousTraitantNav({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <>
-      <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">Marketplace</p>
-      <NavItem to="/marketplace/stores" icon={<IconStore />} label="Magasins disponibles" onNavigate={onNavigate} />
+      <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">Markettask</p>
+      <NavItem to="/markettask/stores" icon={<IconStore />} label="Magasins disponibles" onNavigate={onNavigate} />
     </>
   );
 }
@@ -91,9 +91,9 @@ function SousTraitantNav({ onNavigate }: { onNavigate?: () => void }) {
 function TravailleurNav({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <>
-      <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">Marketplace</p>
-      <NavItem to="/marketplace/tasks" icon={<IconTasks />} label="Tâches disponibles" onNavigate={onNavigate} />
-      <NavItem to="/marketplace/my-tasks" icon={<IconInspection />} label="Mes tâches" onNavigate={onNavigate} />
+      <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">Markettask</p>
+      <NavItem to="/markettask/tasks" icon={<IconTasks />} label="Tâches disponibles" onNavigate={onNavigate} />
+      <NavItem to="/markettask/my-tasks" icon={<IconInspection />} label="Mes tâches" onNavigate={onNavigate} />
     </>
   );
 }

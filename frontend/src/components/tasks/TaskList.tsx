@@ -29,7 +29,7 @@ export function TaskList({
           <th className="py-2 pr-3">Échéance</th>
           <th className="py-2 pr-3">Statut</th>
           <th className="py-2 pr-3">Travailleur</th>
-          <th className="py-2 pr-3">Marketplace</th>
+          <th className="py-2 pr-3">Markettask</th>
           <th className="py-2"></th>
         </tr>
       </thead>

@@ -143,7 +143,7 @@ export function MyTasksPage() {
 
   return (
     <AppLayout>
-      <p className="text-xs font-semibold uppercase tracking-wider text-flow-600">Marketplace</p>
+      <p className="text-xs font-semibold uppercase tracking-wider text-flow-600">Markettask</p>
       <h1 className="font-heading text-3xl font-semibold tracking-tight text-canvas-900">Mes tâches</h1>
       <p className="mt-1 text-sm text-canvas-600">Le travail que tu as réclamé, et où tu en es.</p>
 

@@ -22,8 +22,8 @@ import type { RoleKey } from "./types";
 const queryClient = new QueryClient();
 
 function homeForRole(role: RoleKey | null | undefined) {
-  if (role === "sous_traitant") return "/marketplace/stores";
-  if (role === "travailleur") return "/marketplace/tasks";
+  if (role === "sous_traitant") return "/markettask/stores";
+  if (role === "travailleur") return "/markettask/tasks";
   return "/stores";
 }
 
@@ -125,7 +125,7 @@ function AppRoutes() {
       />
 
       <Route
-        path="/marketplace/stores"
+        path="/markettask/stores"
         element={
           <ProtectedRoute roles={["sous_traitant"]}>
             <StoreMarketplacePage />
@@ -133,7 +133,7 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/marketplace/tasks"
+        path="/markettask/tasks"
         element={
           <ProtectedRoute roles={["travailleur"]}>
             <TaskMarketplacePage />
@@ -141,7 +141,7 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/marketplace/my-tasks"
+        path="/markettask/my-tasks"
         element={
           <ProtectedRoute roles={["travailleur"]}>
             <MyTasksPage />
