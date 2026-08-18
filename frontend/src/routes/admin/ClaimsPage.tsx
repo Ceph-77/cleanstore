@@ -88,7 +88,12 @@ export function ClaimsPage() {
                 </span>
               </p>
               <p className="mt-0.5 text-xs text-canvas-600">
-                Demandé par {claim.worker?.fullName ?? claim.worker?.email} · {formatDateTime(claim.createdAt)}
+                Demandé par {claim.worker?.fullName ?? claim.worker?.email}
+                {" · "}
+                {claim.worker?._count?.assignedTasks ?? 0} tâche{(claim.worker?._count?.assignedTasks ?? 0) === 1 ? "" : "s"} complétée{(claim.worker?._count?.assignedTasks ?? 0) === 1 ? "" : "s"}
+                {claim.task?.dueDate && <> · Échéance : {claim.task.dueDate.slice(0, 10)}</>}
+                {" · "}
+                {formatDateTime(claim.createdAt)}
               </p>
             </div>
             <div className="flex shrink-0 gap-2">

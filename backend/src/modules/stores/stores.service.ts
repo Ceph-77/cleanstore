@@ -32,7 +32,10 @@ export function getStoreById(id: string) {
       inspectors: { include: { user: true } },
       tasks: {
         orderBy: { createdAt: "desc" },
-        include: { inspection: { select: { id: true, score: true } } },
+        include: {
+          inspection: { select: { id: true, score: true } },
+          assignedTo: { select: { id: true, fullName: true, email: true } },
+        },
       },
       contacts: { orderBy: { createdAt: "asc" } },
       notes: {

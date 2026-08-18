@@ -112,7 +112,7 @@ export interface StoreMapPoint {
   longitude: string;
 }
 
-export type TaskStatus = "open" | "claimed" | "completed" | "inspected" | "cancelled";
+export type TaskStatus = "open" | "claimed" | "in_progress" | "completed" | "inspected" | "cancelled";
 
 export interface Task {
   id: string;
@@ -127,6 +127,7 @@ export interface Task {
   assignedToId: string | null;
   store?: { id: string; name: string; city: string | null; address: string | null };
   inspection?: { id: string; score: number } | null;
+  assignedTo?: { id: string; fullName: string | null; email: string } | null;
 }
 
 export type PhotoType = "before" | "after";
@@ -190,7 +191,12 @@ export interface TaskClaim {
   createdAt: string;
   decidedAt: string | null;
   task?: Task & { store?: { id: string; name: string } };
-  worker?: { id: string; fullName: string | null; email: string };
+  worker?: {
+    id: string;
+    fullName: string | null;
+    email: string;
+    _count?: { assignedTasks: number };
+  };
 }
 
 export interface AppUser {

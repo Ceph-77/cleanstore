@@ -10,8 +10,10 @@ import { StoreEditPage } from "./routes/StoreEditPage";
 import { StoreMapPage } from "./routes/StoreMapPage";
 import { StoreMarketplacePage } from "./routes/marketplace/StoreMarketplacePage";
 import { TaskMarketplacePage } from "./routes/marketplace/TaskMarketplacePage";
+import { MyTasksPage } from "./routes/marketplace/MyTasksPage";
 import { ClaimsPage } from "./routes/admin/ClaimsPage";
 import { UsersPage } from "./routes/admin/UsersPage";
+import { TasksDashboardPage } from "./routes/admin/TasksDashboardPage";
 import type { RoleKey } from "./types";
 
 const queryClient = new QueryClient();
@@ -108,6 +110,14 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/admin/tasks"
+        element={
+          <ProtectedRoute roles={["admin"]}>
+            <TasksDashboardPage />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/marketplace/stores"
@@ -122,6 +132,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute roles={["travailleur"]}>
             <TaskMarketplacePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/marketplace/my-tasks"
+        element={
+          <ProtectedRoute roles={["travailleur"]}>
+            <MyTasksPage />
           </ProtectedRoute>
         }
       />

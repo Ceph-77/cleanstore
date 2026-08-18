@@ -4,7 +4,7 @@ import { Button } from "../../components/common/Button";
 import { IconTasks, IconMapPin, IconSearch } from "../../components/common/icons";
 import { useMarketplaceTasks, useMyTaskClaims, useClaimTask } from "../../hooks/useMarketplace";
 
-type SortKey = "recent" | "price_desc" | "price_asc";
+type SortKey = "recent" | "price_desc" | "price_asc" | "store_asc" | "due_date";
 
 export function TaskMarketplacePage() {
   const { data: tasks, isLoading } = useMarketplaceTasks();
@@ -33,6 +33,17 @@ export function TaskMarketplacePage() {
       result = [...result].sort((a, b) => Number(b.price) - Number(a.price));
     } else if (sort === "price_asc") {
       result = [...result].sort((a, b) => Number(a.price) - Number(b.price));
+    } else if (sort === "store_asc") {
+      result = [...result].sort((a, b) =>
+        (a.store?.name ?? "").localeCompare(b.store?.name ?? "") ||
+        (a.store?.city ?? "").localeCompare(b.store?.city ?? "")
+      );
+    } else if (sort === "due_date") {
+      result = [...result].sort((a, b) => {
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+        return a.dueDate.localeCompare(b.dueDate);
+      });
     }
     return result;
   }, [tasks, search, sort]);
@@ -64,6 +75,8 @@ export function TaskMarketplacePage() {
             <option value="recent">Plus récentes</option>
             <option value="price_desc">Prix : élevé à bas</option>
             <option value="price_asc">Prix : bas à élevé</option>
+            <option value="store_asc">Magasin / Ville (A-Z)</option>
+            <option value="due_date">Échéance (plus proche)</option>
           </select>
         </div>
       )}

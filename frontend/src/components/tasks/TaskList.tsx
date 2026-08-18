@@ -28,6 +28,7 @@ export function TaskList({
           <th className="py-2 pr-3">Prix</th>
           <th className="py-2 pr-3">Échéance</th>
           <th className="py-2 pr-3">Statut</th>
+          <th className="py-2 pr-3">Travailleur</th>
           <th className="py-2 pr-3">Marketplace</th>
           <th className="py-2"></th>
         </tr>
@@ -50,6 +51,9 @@ export function TaskList({
             <td className="py-3 pr-3 text-canvas-700">{task.dueDate ? task.dueDate.slice(0, 10) : "—"}</td>
             <td className="py-3 pr-3">
               <TaskStatusBadge status={task.status} />
+            </td>
+            <td className="py-3 pr-3 text-canvas-700">
+              {task.assignedTo?.fullName ?? task.assignedTo?.email ?? "—"}
             </td>
             <td className="py-3 pr-3">
               {task.isPublished ? (

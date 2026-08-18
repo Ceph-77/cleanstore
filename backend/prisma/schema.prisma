@@ -34,6 +34,7 @@ enum OrganizationType {
 enum TaskStatus {
   open
   claimed
+  in_progress
   completed
   inspected
   cancelled

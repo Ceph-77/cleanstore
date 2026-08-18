@@ -71,6 +71,7 @@ function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
     <>
       <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">Opérations</p>
       <NavItem to="/stores" icon={<IconStore />} label="Magasins" onNavigate={onNavigate} />
+      <NavItem to="/admin/tasks" icon={<IconTasks />} label="Suivi des travaux" onNavigate={onNavigate} />
       <NavItem to="/admin/claims" icon={<IconInspection />} label="Demandes" onNavigate={onNavigate} />
       <NavItem to="/admin/users" icon={<IconUser />} label="Utilisateurs" onNavigate={onNavigate} />
       <NavItem to="/inventory" icon={<IconInventory />} label="Inventaire" disabled />
@@ -92,6 +93,7 @@ function TravailleurNav({ onNavigate }: { onNavigate?: () => void }) {
     <>
       <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">Marketplace</p>
       <NavItem to="/marketplace/tasks" icon={<IconTasks />} label="Tâches disponibles" onNavigate={onNavigate} />
+      <NavItem to="/marketplace/my-tasks" icon={<IconInspection />} label="Mes tâches" onNavigate={onNavigate} />
     </>
   );
 }

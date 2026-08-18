@@ -47,7 +47,18 @@ export function listClaims(status?: ClaimStatus) {
     where: status ? { status } : undefined,
     include: {
       task: { include: { store: { select: { id: true, name: true } } } },
-      worker: { select: { id: true, fullName: true, email: true } },
+      worker: {
+        select: {
+          id: true,
+          fullName: true,
+          email: true,
+          _count: {
+            select: {
+              assignedTasks: { where: { status: { in: ["completed", "inspected"] } } },
+            },
+          },
+        },
+      },
     },
     orderBy: { createdAt: "desc" },
   });
