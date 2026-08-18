@@ -24,3 +24,25 @@ export function logout() {
 export function me() {
   return apiClient.get<{ user: AuthUser }>("/auth/me");
 }
+
+export interface UpdateProfileInput {
+  fullName?: string;
+  phone?: string;
+  address?: string;
+}
+
+export function updateProfile(data: UpdateProfileInput) {
+  return apiClient.patch<{ user: AuthUser }>("/auth/me", data);
+}
+
+export function changePassword(currentPassword: string, newPassword: string) {
+  return apiClient.patch<void>("/auth/me/password", { currentPassword, newPassword });
+}
+
+export function forgotPassword(email: string) {
+  return apiClient.post<{ message: string }>("/auth/forgot-password", { email });
+}
+
+export function resetPassword(token: string, newPassword: string) {
+  return apiClient.post<void>("/auth/reset-password", { token, newPassword });
+}

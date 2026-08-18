@@ -48,6 +48,12 @@ export function TaskInspectionForm({
       <p className="text-sm text-canvas-700">
         Inspection de : <span className="font-medium text-canvas-900">{task.description}</span>
       </p>
+      {task.workerNote && (
+        <div className="rounded-xl border border-linen-300 bg-linen-50 p-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-linen-800">Remarque du travailleur</p>
+          <p className="mt-1 whitespace-pre-line text-sm text-canvas-900">{task.workerNote}</p>
+        </div>
+      )}
       <Field label="Score (0-100)">
         <Input type="number" min={0} max={100} value={score} onChange={(e) => setScore(e.target.value)} />
       </Field>

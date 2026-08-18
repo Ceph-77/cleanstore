@@ -49,6 +49,11 @@ export function LoginPage() {
           <Field label="Mot de passe">
             <Input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
           </Field>
+          <p className="text-right text-xs">
+            <Link to="/forgot-password" className="text-flow-700 hover:text-flow-900">
+              Mot de passe oublié ?
+            </Link>
+          </p>
         </div>
         {error && (
           <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>

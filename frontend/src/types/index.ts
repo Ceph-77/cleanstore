@@ -4,6 +4,8 @@ export interface AuthUser {
   id: string;
   email: string;
   fullName: string | null;
+  phone?: string | null;
+  address?: string | null;
   roleKey: RoleKey | null;
 }
 
@@ -125,6 +127,7 @@ export interface Task {
   dueDate: string | null;
   status: TaskStatus;
   assignedToId: string | null;
+  workerNote: string | null;
   store?: { id: string; name: string; city: string | null; address: string | null };
   inspection?: { id: string; score: number } | null;
   assignedTo?: { id: string; fullName: string | null; email: string } | null;

@@ -13,8 +13,23 @@ export function useMyTasks() {
 export function useUpdateMyTaskStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ taskId, status }: { taskId: string; status: Extract<TaskStatus, "in_progress" | "completed"> }) =>
-      myTasksApi.updateMyTaskStatus(taskId, status),
+    mutationFn: ({
+      taskId,
+      status,
+      note,
+    }: {
+      taskId: string;
+      status: Extract<TaskStatus, "in_progress" | "completed">;
+      note?: string;
+    }) => myTasksApi.updateMyTaskStatus(taskId, status, note),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["marketplace", "my-tasks"] }),
+  });
+}
+
+export function useMyTaskInspection(taskId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: ["marketplace", "my-tasks", taskId, "inspection"],
+    queryFn: () => myTasksApi.getMyTaskInspection(taskId).then((r) => r.inspection),
+    enabled,
   });
 }

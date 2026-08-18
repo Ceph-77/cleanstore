@@ -85,6 +85,7 @@ model User {
   uploadedDocuments   StoreDocument[]
   storeClaimsRequested StoreClaim[]
   taskClaims          TaskClaim[]
+  passwordResetTokens PasswordResetToken[]
 
   @@map("users")
 }
@@ -191,6 +192,7 @@ model Task {
   dueDate      DateTime?  @map("due_date") @db.Date
   status       TaskStatus @default(open)
   assignedToId String?    @map("assigned_to")
+  workerNote   String?    @map("worker_note")
   createdById  String?    @map("created_by")
   createdAt    DateTime   @default(now()) @map("created_at")
   updatedAt    DateTime   @updatedAt @map("updated_at")
@@ -358,4 +360,18 @@ model StoreInspectionPhoto {
   inspection StoreInspection @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
 
   @@map("store_inspection_photos")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  tokenHash String    @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
 }

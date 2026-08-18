@@ -3,6 +3,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { LoginPage } from "./routes/LoginPage";
 import { RegisterWorkerPage } from "./routes/RegisterWorkerPage";
+import { ForgotPasswordPage } from "./routes/ForgotPasswordPage";
+import { ResetPasswordPage } from "./routes/ResetPasswordPage";
 import { StoresListPage } from "./routes/StoresListPage";
 import { StoreFormPage } from "./routes/StoreFormPage";
 import { StoreDetailPage } from "./routes/StoreDetailPage";
@@ -14,6 +16,7 @@ import { MyTasksPage } from "./routes/marketplace/MyTasksPage";
 import { ClaimsPage } from "./routes/admin/ClaimsPage";
 import { UsersPage } from "./routes/admin/UsersPage";
 import { TasksDashboardPage } from "./routes/admin/TasksDashboardPage";
+import { ProfilePage } from "./routes/ProfilePage";
 import type { RoleKey } from "./types";
 
 const queryClient = new QueryClient();
@@ -52,6 +55,8 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterWorkerPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
 
       <Route
         path="/stores"
@@ -140,6 +145,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute roles={["travailleur"]}>
             <MyTasksPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
           </ProtectedRoute>
         }
       />

@@ -1,4 +1,5 @@
 import { prisma } from "../../db/prisma";
+import { getInspectionWithUrls } from "../taskInspections/taskInspections.service";
 import type { TaskStatus } from "@prisma/client";
 
 const ALLOWED_TRANSITIONS: Partial<Record<TaskStatus, TaskStatus>> = {
@@ -17,7 +18,12 @@ export function listMyTasks(userId: string) {
   });
 }
 
-export async function updateMyTaskStatus(taskId: string, userId: string, nextStatus: "in_progress" | "completed") {
+export async function updateMyTaskStatus(
+  taskId: string,
+  userId: string,
+  nextStatus: "in_progress" | "completed",
+  note: string | undefined
+) {
   const task = await prisma.task.findUnique({ where: { id: taskId } });
   if (!task || task.assignedToId !== userId) {
     throw new Error("Task not found or not assigned to you");
@@ -25,5 +31,16 @@ export async function updateMyTaskStatus(taskId: string, userId: string, nextSta
   if (ALLOWED_TRANSITIONS[task.status] !== nextStatus) {
     throw new Error(`Cannot move a task from "${task.status}" to "${nextStatus}"`);
   }
-  return prisma.task.update({ where: { id: taskId }, data: { status: nextStatus } });
+  return prisma.task.update({
+    where: { id: taskId },
+    data: { status: nextStatus, ...(note !== undefined ? { workerNote: note } : {}) },
+  });
+}
+
+export async function getMyTaskInspection(taskId: string, userId: string) {
+  const task = await prisma.task.findUnique({ where: { id: taskId } });
+  if (!task || task.assignedToId !== userId) {
+    throw new Error("Task not found or not assigned to you");
+  }
+  return getInspectionWithUrls(taskId);
 }
