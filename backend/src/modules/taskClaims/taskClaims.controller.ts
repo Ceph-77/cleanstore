@@ -4,7 +4,7 @@ import { claimDecisionSchema } from "./taskClaims.schema";
 import * as taskClaimsService from "./taskClaims.service";
 
 export async function listMarketplace(req: Request, res: Response) {
-  const tasks = await taskClaimsService.listMarketplaceTasks();
+  const tasks = await taskClaimsService.listMarketplaceTasksWithUrls();
   res.json({ tasks });
 }
 

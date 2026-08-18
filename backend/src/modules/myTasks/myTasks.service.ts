@@ -1,5 +1,6 @@
 import { prisma } from "../../db/prisma";
 import { getInspectionWithUrls } from "../taskInspections/taskInspections.service";
+import { getSignedDownloadUrl } from "../../utils/storage";
 import type { TaskStatus } from "@prisma/client";
 
 const ALLOWED_TRANSITIONS: Partial<Record<TaskStatus, TaskStatus>> = {
@@ -13,9 +14,28 @@ export function listMyTasks(userId: string) {
       assignedToId: userId,
       status: { in: ["claimed", "in_progress", "completed", "inspected"] },
     },
-    include: { store: { select: { id: true, name: true, city: true, address: true } } },
+    include: {
+      store: { select: { id: true, name: true, city: true, address: true } },
+      expectedPhotos: true,
+      steps: { orderBy: { order: "asc" } },
+    },
     orderBy: { updatedAt: "desc" },
   });
+}
+
+export async function listMyTasksWithUrls(userId: string) {
+  const tasks = await listMyTasks(userId);
+  return Promise.all(
+    tasks.map(async (task) => ({
+      ...task,
+      expectedPhotos: await Promise.all(
+        task.expectedPhotos.map(async (photo) => ({
+          ...photo,
+          downloadUrl: await getSignedDownloadUrl(photo.fileKey),
+        }))
+      ),
+    }))
+  );
 }
 
 export async function updateMyTaskStatus(
@@ -33,8 +53,24 @@ export async function updateMyTaskStatus(
   }
   return prisma.task.update({
     where: { id: taskId },
-    data: { status: nextStatus, ...(note !== undefined ? { workerNote: note } : {}) },
+    data: {
+      status: nextStatus,
+      ...(nextStatus === "in_progress" ? { startedAt: new Date() } : {}),
+      ...(note !== undefined ? { workerNote: note } : {}),
+    },
   });
+}
+
+export async function toggleMyTaskStep(taskId: string, stepId: string, userId: string, isDone: boolean) {
+  const task = await prisma.task.findUnique({ where: { id: taskId } });
+  if (!task || task.assignedToId !== userId) {
+    throw new Error("Task not found or not assigned to you");
+  }
+  const step = await prisma.taskStep.findUnique({ where: { id: stepId } });
+  if (!step || step.taskId !== taskId) {
+    throw new Error("Step not found for this task");
+  }
+  return prisma.taskStep.update({ where: { id: stepId }, data: { isDone } });
 }
 
 export async function getMyTaskInspection(taskId: string, userId: string) {

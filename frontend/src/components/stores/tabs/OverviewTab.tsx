@@ -10,6 +10,7 @@ import {
 import { TaskList } from "../../tasks/TaskList";
 import { TaskForm, type TaskFormValues } from "../../tasks/TaskForm";
 import { TaskInspectionForm } from "../../tasks/TaskInspectionForm";
+import { TaskInstructionsForm } from "../../tasks/TaskInstructionsForm";
 import { Button } from "../../common/Button";
 import { StatCard } from "../../common/StatCard";
 import { IconTasks, IconWallet } from "../../common/icons";
@@ -37,6 +38,7 @@ export function OverviewTab({ store }: { store: Store }) {
   const [showForm, setShowForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [inspectingTask, setInspectingTask] = useState<Task | null>(null);
+  const [instructionsTaskId, setInstructionsTaskId] = useState<string | null>(null);
 
   async function handleTaskSubmit(values: TaskFormValues) {
     const payload = {
@@ -125,6 +127,12 @@ export function OverviewTab({ store }: { store: Store }) {
         </div>
       )}
 
+      {instructionsTaskId && (
+        <div className="mt-4">
+          <TaskInstructionsForm taskId={instructionsTaskId} onClose={() => setInstructionsTaskId(null)} />
+        </div>
+      )}
+
       <div className="mt-4 rounded-2xl border border-canvas-200 bg-white shadow-sm shadow-canvas-900/5">
         <div className="overflow-x-auto p-5">
           <TaskList
@@ -137,6 +145,7 @@ export function OverviewTab({ store }: { store: Store }) {
             onPublish={(task) => publishTask.mutate(task.id)}
             onUnpublish={(task) => unpublishTask.mutate(task.id)}
             onInspect={(task) => setInspectingTask(task)}
+            onInstructions={(task) => setInstructionsTaskId(task.id)}
           />
         </div>
       </div>

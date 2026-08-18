@@ -8,6 +8,7 @@ export function TaskList({
   onPublish,
   onUnpublish,
   onInspect,
+  onInstructions,
 }: {
   tasks: Task[];
   onEdit: (task: Task) => void;
@@ -15,6 +16,7 @@ export function TaskList({
   onPublish: (task: Task) => void;
   onUnpublish: (task: Task) => void;
   onInspect: (task: Task) => void;
+  onInstructions: (task: Task) => void;
 }) {
   if (tasks.length === 0) {
     return <p className="py-4 text-sm text-canvas-600">Aucune tâche pour ce magasin pour l'instant.</p>;
@@ -85,6 +87,9 @@ export function TaskList({
                 {task.inspection && (
                   <span className="text-canvas-600">Inspectée : {task.inspection.score}/100</span>
                 )}
+                <button className="text-flow-700 hover:text-flow-900" onClick={() => onInstructions(task)}>
+                  Instructions
+                </button>
                 <button className="text-flow-700 hover:text-flow-900" onClick={() => onEdit(task)}>
                   Modifier
                 </button>

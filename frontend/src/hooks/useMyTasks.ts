@@ -33,3 +33,12 @@ export function useMyTaskInspection(taskId: string, enabled: boolean) {
     enabled,
   });
 }
+
+export function useToggleMyTaskStep() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ taskId, stepId, isDone }: { taskId: string; stepId: string; isDone: boolean }) =>
+      myTasksApi.toggleMyTaskStep(taskId, stepId, isDone),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["marketplace", "my-tasks"] }),
+  });
+}

@@ -1,4 +1,5 @@
 import { prisma } from "../../db/prisma";
+import { getSignedDownloadUrl } from "../../utils/storage";
 import type { ClaimStatus } from "@prisma/client";
 
 export function listMarketplaceTasks() {
@@ -9,10 +10,41 @@ export function listMarketplaceTasks() {
       store: { assignedSubcontractorId: { not: null }, isActive: true },
     },
     orderBy: { createdAt: "desc" },
-    include: {
+    select: {
+      id: true,
+      storeId: true,
+      description: true,
+      taskType: true,
+      price: true,
+      isNegotiable: true,
+      isPublished: true,
+      dueDate: true,
+      status: true,
+      assignedToId: true,
+      createdAt: true,
+      updatedAt: true,
+      expectedResultText: true,
+      requiredEquipment: true,
+      estimatedDurationMinutes: true,
       store: { select: { id: true, name: true, city: true, address: true } },
+      expectedPhotos: true,
     },
   });
+}
+
+export async function listMarketplaceTasksWithUrls() {
+  const tasks = await listMarketplaceTasks();
+  return Promise.all(
+    tasks.map(async (task) => ({
+      ...task,
+      expectedPhotos: await Promise.all(
+        task.expectedPhotos.map(async (photo) => ({
+          ...photo,
+          downloadUrl: await getSignedDownloadUrl(photo.fileKey),
+        }))
+      ),
+    }))
+  );
 }
 
 export async function createClaim(taskId: string, workerId: string) {

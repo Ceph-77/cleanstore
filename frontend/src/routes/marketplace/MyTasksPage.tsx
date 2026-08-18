@@ -2,8 +2,14 @@ import { useState } from "react";
 import { AppLayout } from "../../components/common/AppLayout";
 import { Button } from "../../components/common/Button";
 import { TaskStatusBadge } from "../../components/tasks/TaskStatusBadge";
+import { TaskCountdown } from "../../components/tasks/TaskCountdown";
 import { IconTasks, IconMapPin, IconFile } from "../../components/common/icons";
-import { useMyTasks, useUpdateMyTaskStatus, useMyTaskInspection } from "../../hooks/useMyTasks";
+import {
+  useMyTasks,
+  useUpdateMyTaskStatus,
+  useMyTaskInspection,
+  useToggleMyTaskStep,
+} from "../../hooks/useMyTasks";
 import { useMyTaskClaims } from "../../hooks/useMarketplace";
 import type { Task } from "../../types";
 
@@ -54,11 +60,44 @@ function InspectionDetails({ taskId }: { taskId: string }) {
   );
 }
 
+function InstructionsDetails({ task }: { task: Task }) {
+  const toggleStep = useToggleMyTaskStep();
+
+  return (
+    <div className="mt-3 rounded-xl bg-canvas-50 p-3">
+      {task.howToText && (
+        <p className="whitespace-pre-line text-sm text-canvas-900">{task.howToText}</p>
+      )}
+      {task.steps && task.steps.length > 0 && (
+        <ul className="mt-2 space-y-1.5">
+          {task.steps.map((step) => (
+            <li key={step.id} className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-canvas-300 text-flow-600 focus:ring-flow-400"
+                checked={step.isDone}
+                onChange={(e) =>
+                  toggleStep.mutate({ taskId: task.id, stepId: step.id, isDone: e.target.checked })
+                }
+              />
+              <span className={step.isDone ? "text-canvas-500 line-through" : "text-canvas-900"}>{step.text}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {!task.howToText && (!task.steps || task.steps.length === 0) && (
+        <p className="text-xs text-canvas-600">Aucune instruction fournie pour cette tâche.</p>
+      )}
+    </div>
+  );
+}
+
 function TaskRow({ task }: { task: Task }) {
   const updateStatus = useUpdateMyTaskStatus();
   const [showNoteField, setShowNoteField] = useState(false);
   const [note, setNote] = useState("");
   const [showInspection, setShowInspection] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(false);
 
   async function handleComplete() {
     await updateStatus.mutateAsync({ taskId: task.id, status: "completed", note: note || undefined });
@@ -83,8 +122,22 @@ function TaskRow({ task }: { task: Task }) {
           </p>
         </div>
         <p className="font-heading font-semibold text-canvas-900">{Number(task.price).toFixed(2)} $</p>
-        <TaskStatusBadge status={task.status} />
-        <div className="shrink-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <TaskStatusBadge status={task.status} />
+          {task.status === "in_progress" && task.startedAt && task.estimatedDurationMinutes && (
+            <TaskCountdown startedAt={task.startedAt} estimatedDurationMinutes={task.estimatedDurationMinutes} />
+          )}
+        </div>
+        <div className="flex shrink-0 flex-wrap gap-2">
+          {(task.howToText || (task.steps && task.steps.length > 0)) && (
+            <Button
+              variant="secondary"
+              className="w-full sm:w-auto"
+              onClick={() => setShowInstructions((v) => !v)}
+            >
+              {showInstructions ? "Masquer les instructions" : "Voir les instructions"}
+            </Button>
+          )}
           {task.status === "claimed" && (
             <Button
               variant="accent"
@@ -107,6 +160,8 @@ function TaskRow({ task }: { task: Task }) {
           )}
         </div>
       </div>
+
+      {showInstructions && <InstructionsDetails task={task} />}
 
       {showNoteField && (
         <div className="mt-3 space-y-2 rounded-xl bg-flow-50/60 p-3">

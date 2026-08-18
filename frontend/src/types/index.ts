@@ -116,6 +116,23 @@ export interface StoreMapPoint {
 
 export type TaskStatus = "open" | "claimed" | "in_progress" | "completed" | "inspected" | "cancelled";
 
+export interface TaskExpectedPhoto {
+  id: string;
+  fileName: string;
+  fileKey: string;
+  createdAt: string;
+  downloadUrl?: string;
+}
+
+export interface TaskStep {
+  id: string;
+  taskId: string;
+  order: number;
+  text: string;
+  isDone: boolean;
+  createdAt: string;
+}
+
 export interface Task {
   id: string;
   storeId: string;
@@ -128,9 +145,16 @@ export interface Task {
   status: TaskStatus;
   assignedToId: string | null;
   workerNote: string | null;
+  expectedResultText: string | null;
+  howToText: string | null;
+  requiredEquipment: string[];
+  estimatedDurationMinutes: number | null;
+  startedAt: string | null;
   store?: { id: string; name: string; city: string | null; address: string | null };
   inspection?: { id: string; score: number } | null;
   assignedTo?: { id: string; fullName: string | null; email: string } | null;
+  expectedPhotos?: TaskExpectedPhoto[];
+  steps?: TaskStep[];
 }
 
 export type PhotoType = "before" | "after";

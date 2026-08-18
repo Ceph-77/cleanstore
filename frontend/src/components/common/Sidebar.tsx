@@ -84,6 +84,7 @@ function SousTraitantNav({ onNavigate }: { onNavigate?: () => void }) {
     <>
       <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">Markettask</p>
       <NavItem to="/markettask/stores" icon={<IconStore />} label="Magasins disponibles" onNavigate={onNavigate} />
+      <NavItem to="/markettask/store-tasks" icon={<IconTasks />} label="Tâches de mes magasins" onNavigate={onNavigate} />
     </>
   );
 }

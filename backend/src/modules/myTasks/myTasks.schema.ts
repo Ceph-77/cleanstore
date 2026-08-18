@@ -4,3 +4,7 @@ export const myTaskStatusUpdateSchema = z.object({
   status: z.enum(["in_progress", "completed"]),
   note: z.string().optional(),
 });
+
+export const myTaskStepToggleSchema = z.object({
+  isDone: z.boolean(),
+});

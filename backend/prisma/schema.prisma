@@ -182,30 +182,64 @@ model StoreInspector {
 }
 
 model Task {
-  id           String     @id @default(uuid())
-  storeId      String     @map("store_id")
-  description  String
-  taskType     String?    @map("task_type")
-  price        Decimal
-  isNegotiable Boolean    @default(false) @map("is_negotiable")
-  isPublished  Boolean    @default(false) @map("is_published")
-  dueDate      DateTime?  @map("due_date") @db.Date
-  status       TaskStatus @default(open)
-  assignedToId String?    @map("assigned_to")
-  workerNote   String?    @map("worker_note")
-  createdById  String?    @map("created_by")
-  createdAt    DateTime   @default(now()) @map("created_at")
-  updatedAt    DateTime   @updatedAt @map("updated_at")
+  id                       String     @id @default(uuid())
+  storeId                  String     @map("store_id")
+  description              String
+  taskType                 String?    @map("task_type")
+  price                    Decimal
+  isNegotiable             Boolean    @default(false) @map("is_negotiable")
+  isPublished              Boolean    @default(false) @map("is_published")
+  dueDate                  DateTime?  @map("due_date") @db.Date
+  status                   TaskStatus @default(open)
+  assignedToId             String?    @map("assigned_to")
+  workerNote               String?    @map("worker_note")
+  expectedResultText       String?    @map("expected_result_text")
+  howToText                String?    @map("how_to_text")
+  requiredEquipment        String[]   @map("required_equipment")
+  estimatedDurationMinutes Int?       @map("estimated_duration_minutes")
+  startedAt                DateTime?  @map("started_at")
+  createdById              String?    @map("created_by")
+  createdAt                DateTime   @default(now()) @map("created_at")
+  updatedAt                DateTime   @updatedAt @map("updated_at")
 
-  store      Store @relation(fields: [storeId], references: [id], onDelete: Cascade)
-  assignedTo User? @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
-  createdBy  User? @relation("TaskCreatedBy", fields: [createdById], references: [id])
-  claims     TaskClaim[]
-  inspection TaskInspection?
+  store          Store               @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  assignedTo     User?               @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
+  createdBy      User?               @relation("TaskCreatedBy", fields: [createdById], references: [id])
+  claims         TaskClaim[]
+  inspection     TaskInspection?
+  expectedPhotos TaskExpectedPhoto[]
+  steps          TaskStep[]
 
   @@index([storeId])
   @@index([status])
   @@map("tasks")
+}
+
+model TaskExpectedPhoto {
+  id        String   @id @default(uuid())
+  taskId    String   @map("task_id")
+  fileName  String   @map("file_name")
+  fileKey   String   @map("file_key")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@map("task_expected_photos")
+}
+
+model TaskStep {
+  id        String   @id @default(uuid())
+  taskId    String   @map("task_id")
+  order     Int
+  text      String
+  isDone    Boolean  @default(false) @map("is_done")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@map("task_steps")
 }
 
 model StoreContact {

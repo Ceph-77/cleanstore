@@ -1,10 +1,52 @@
 import { useMemo, useState } from "react";
 import { AppLayout } from "../../components/common/AppLayout";
 import { Button } from "../../components/common/Button";
-import { IconTasks, IconMapPin, IconSearch } from "../../components/common/icons";
+import { IconTasks, IconMapPin, IconSearch, IconFile } from "../../components/common/icons";
 import { useMarketplaceTasks, useMyTaskClaims, useClaimTask } from "../../hooks/useMarketplace";
+import type { Task } from "../../types";
 
 type SortKey = "recent" | "price_desc" | "price_asc" | "store_asc" | "due_date";
+
+function ExpectedResultPreview({ task }: { task: Task }) {
+  return (
+    <div className="mt-2 rounded-2xl bg-flow-50/60 p-4 ring-1 ring-flow-100">
+      {task.expectedResultText && (
+        <p className="whitespace-pre-line text-sm text-canvas-900">{task.expectedResultText}</p>
+      )}
+      {task.expectedPhotos && task.expectedPhotos.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {task.expectedPhotos.map((photo) => (
+            <a
+              key={photo.id}
+              href={photo.downloadUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1 rounded-full bg-white px-2 py-1 text-xs text-canvas-700 ring-1 ring-canvas-200 hover:bg-canvas-100"
+            >
+              <IconFile className="h-3 w-3" />
+              {photo.fileName}
+            </a>
+          ))}
+        </div>
+      )}
+      {task.requiredEquipment.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {task.requiredEquipment.map((item) => (
+            <span
+              key={item}
+              className="rounded-full bg-white px-2 py-0.5 text-xs text-canvas-700 ring-1 ring-canvas-200"
+            >
+              {item}
+            </span>
+          ))}
+        </div>
+      )}
+      {task.estimatedDurationMinutes && (
+        <p className="mt-2 text-xs text-canvas-600">Durée estimée : ~{task.estimatedDurationMinutes} min</p>
+      )}
+    </div>
+  );
+}
 
 export function TaskMarketplacePage() {
   const { data: tasks, isLoading } = useMarketplaceTasks();
@@ -13,6 +55,7 @@ export function TaskMarketplacePage() {
 
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortKey>("recent");
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
 
   function claimStatusFor(taskId: string) {
     return myClaims?.find((c) => c.taskId === taskId)?.status;
@@ -97,55 +140,70 @@ export function TaskMarketplacePage() {
         <div className="mt-6 space-y-3">
           {filteredTasks.map((task) => {
             const status = claimStatusFor(task.id);
+            const hasPreview =
+              Boolean(task.expectedResultText) ||
+              (task.expectedPhotos?.length ?? 0) > 0 ||
+              task.requiredEquipment.length > 0 ||
+              Boolean(task.estimatedDurationMinutes);
+            const isExpanded = expandedTaskId === task.id;
             return (
-              <div
-                key={task.id}
-                className="flex flex-col gap-3 rounded-2xl border border-canvas-200 bg-white p-4 shadow-sm shadow-canvas-900/5 sm:flex-row sm:items-center sm:gap-4"
-              >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-flow-100 text-flow-700">
-                  <IconTasks className="h-4 w-4" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-canvas-900">
-                    {task.description}
-                    {task.taskType && <span className="ml-1 text-canvas-600">({task.taskType})</span>}
-                  </p>
-                  <p className="mt-0.5 flex items-center gap-1.5 text-xs text-canvas-600">
-                    <IconMapPin className="h-3 w-3 shrink-0" />
-                    {task.store?.name} · {task.store?.city ?? "—"}
-                  </p>
-                </div>
-                <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-start sm:text-right">
-                  <p className="font-heading font-semibold text-canvas-900">
-                    {Number(task.price).toFixed(2)} $
-                    {task.isNegotiable && (
-                      <span className="ml-1 text-xs font-normal text-canvas-600">négociable</span>
+              <div key={task.id}>
+                <div className="flex flex-col gap-3 rounded-2xl border border-canvas-200 bg-white p-4 shadow-sm shadow-canvas-900/5 sm:flex-row sm:items-center sm:gap-4">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-flow-100 text-flow-700">
+                    <IconTasks className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-canvas-900">
+                      {task.description}
+                      {task.taskType && <span className="ml-1 text-canvas-600">({task.taskType})</span>}
+                    </p>
+                    <p className="mt-0.5 flex items-center gap-1.5 text-xs text-canvas-600">
+                      <IconMapPin className="h-3 w-3 shrink-0" />
+                      {task.store?.name} · {task.store?.city ?? "—"}
+                    </p>
+                    {hasPreview && (
+                      <button
+                        type="button"
+                        onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}
+                        className="mt-1 text-xs font-medium text-flow-700 hover:text-flow-900"
+                      >
+                        {isExpanded ? "Masquer le résultat attendu" : "Voir le résultat attendu"}
+                      </button>
                     )}
-                  </p>
-                  {task.dueDate && <p className="text-xs text-canvas-600">{task.dueDate.slice(0, 10)}</p>}
+                  </div>
+                  <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-start sm:text-right">
+                    <p className="font-heading font-semibold text-canvas-900">
+                      {Number(task.price).toFixed(2)} $
+                      {task.isNegotiable && (
+                        <span className="ml-1 text-xs font-normal text-canvas-600">négociable</span>
+                      )}
+                    </p>
+                    {task.dueDate && <p className="text-xs text-canvas-600">{task.dueDate.slice(0, 10)}</p>}
+                  </div>
+                  <div className="shrink-0">
+                    {status === "pending" && (
+                      <span className="inline-block rounded-full bg-linen-100 px-3 py-1 text-xs font-medium text-linen-800">
+                        En attente
+                      </span>
+                    )}
+                    {status === "rejected" && (
+                      <span className="inline-block rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-700">
+                        Refusée
+                      </span>
+                    )}
+                    {!status && (
+                      <Button
+                        variant="accent"
+                        className="w-full sm:w-auto"
+                        disabled={claimTask.isPending}
+                        onClick={() => claimTask.mutate(task.id)}
+                      >
+                        Je suis intéressé
+                      </Button>
+                    )}
+                  </div>
                 </div>
-                <div className="shrink-0">
-                  {status === "pending" && (
-                    <span className="inline-block rounded-full bg-linen-100 px-3 py-1 text-xs font-medium text-linen-800">
-                      En attente
-                    </span>
-                  )}
-                  {status === "rejected" && (
-                    <span className="inline-block rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-700">
-                      Refusée
-                    </span>
-                  )}
-                  {!status && (
-                    <Button
-                      variant="accent"
-                      className="w-full sm:w-auto"
-                      disabled={claimTask.isPending}
-                      onClick={() => claimTask.mutate(task.id)}
-                    >
-                      Je suis intéressé
-                    </Button>
-                  )}
-                </div>
+                {isExpanded && <ExpectedResultPreview task={task} />}
               </div>
             );
           })}

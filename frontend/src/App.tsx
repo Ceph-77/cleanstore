@@ -13,6 +13,7 @@ import { StoreMapPage } from "./routes/StoreMapPage";
 import { StoreMarketplacePage } from "./routes/marketplace/StoreMarketplacePage";
 import { TaskMarketplacePage } from "./routes/marketplace/TaskMarketplacePage";
 import { MyTasksPage } from "./routes/marketplace/MyTasksPage";
+import { SubcontractorTasksPage } from "./routes/marketplace/SubcontractorTasksPage";
 import { ClaimsPage } from "./routes/admin/ClaimsPage";
 import { UsersPage } from "./routes/admin/UsersPage";
 import { TasksDashboardPage } from "./routes/admin/TasksDashboardPage";
@@ -129,6 +130,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute roles={["sous_traitant"]}>
             <StoreMarketplacePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/markettask/store-tasks"
+        element={
+          <ProtectedRoute roles={["sous_traitant"]}>
+            <SubcontractorTasksPage />
           </ProtectedRoute>
         }
       />
