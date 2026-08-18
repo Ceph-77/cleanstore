@@ -6,6 +6,7 @@ export function useStoreClaimsAdmin(status?: ClaimStatus) {
   return useQuery({
     queryKey: ["admin", "store-claims", status ?? "all"],
     queryFn: () => claimsAdminApi.listStoreClaims(status).then((r) => r.claims),
+    refetchInterval: 10000,
   });
 }
 
@@ -25,6 +26,7 @@ export function useTaskClaimsAdmin(status?: ClaimStatus) {
   return useQuery({
     queryKey: ["admin", "task-claims", status ?? "all"],
     queryFn: () => claimsAdminApi.listTaskClaims(status).then((r) => r.claims),
+    refetchInterval: 10000,
   });
 }
 

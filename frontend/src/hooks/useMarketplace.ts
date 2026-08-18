@@ -5,6 +5,7 @@ export function useAvailableStores() {
   return useQuery({
     queryKey: ["marketplace", "stores"],
     queryFn: () => marketplaceApi.listAvailableStores().then((r) => r.stores),
+    refetchInterval: 10000,
   });
 }
 
@@ -12,6 +13,7 @@ export function useMyStoreClaims() {
   return useQuery({
     queryKey: ["marketplace", "my-store-claims"],
     queryFn: () => marketplaceApi.listMyStoreClaims().then((r) => r.claims),
+    refetchInterval: 10000,
   });
 }
 
@@ -30,6 +32,7 @@ export function useMarketplaceTasks() {
   return useQuery({
     queryKey: ["marketplace", "tasks"],
     queryFn: () => marketplaceApi.listMarketplaceTasks().then((r) => r.tasks),
+    refetchInterval: 10000,
   });
 }
 
@@ -37,6 +40,7 @@ export function useMyTaskClaims() {
   return useQuery({
     queryKey: ["marketplace", "my-task-claims"],
     queryFn: () => marketplaceApi.listMyTaskClaims().then((r) => r.claims),
+    refetchInterval: 10000,
   });
 }
 
