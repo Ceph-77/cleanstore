@@ -102,7 +102,7 @@ export function InvoicesTab({ storeId }: { storeId: string }) {
           onSubmit={handleSubmit}
           className="mt-6 space-y-4 rounded-2xl border border-flow-200 bg-flow-50/60 p-5"
         >
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Field label="Libellé">
               <Input
                 required
@@ -161,8 +161,8 @@ export function InvoicesTab({ storeId }: { storeId: string }) {
         </form>
       )}
 
-      <div className="mt-6 overflow-hidden rounded-2xl border border-canvas-200 bg-white shadow-sm shadow-canvas-900/5">
-        <div className="p-5">
+      <div className="mt-6 rounded-2xl border border-canvas-200 bg-white shadow-sm shadow-canvas-900/5">
+        <div className="overflow-x-auto p-5">
           {invoices && invoices.length === 0 && (
             <p className="py-4 text-sm text-canvas-600">Aucune facture pour ce magasin.</p>
           )}

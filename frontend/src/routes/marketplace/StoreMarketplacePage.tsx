@@ -1,16 +1,27 @@
+import { useMemo, useState } from "react";
 import { AppLayout } from "../../components/common/AppLayout";
 import { Button } from "../../components/common/Button";
-import { IconStore, IconMapPin } from "../../components/common/icons";
+import { IconStore, IconMapPin, IconSearch } from "../../components/common/icons";
 import { useAvailableStores, useMyStoreClaims, useClaimStore } from "../../hooks/useMarketplace";
 
 export function StoreMarketplacePage() {
   const { data: stores, isLoading } = useAvailableStores();
   const { data: myClaims } = useMyStoreClaims();
   const claimStore = useClaimStore();
+  const [search, setSearch] = useState("");
 
   function claimStatusFor(storeId: string) {
     return myClaims?.find((c) => c.storeId === storeId)?.status;
   }
+
+  const filteredStores = useMemo(() => {
+    if (!stores) return [];
+    const q = search.trim().toLowerCase();
+    if (!q) return stores;
+    return stores.filter((store) =>
+      [store.name, store.city, store.grandeCompagnie?.name].filter(Boolean).some((field) => field!.toLowerCase().includes(q))
+    );
+  }, [stores, search]);
 
   return (
     <AppLayout>
@@ -20,6 +31,18 @@ export function StoreMarketplacePage() {
         Manifeste ton intérêt pour un magasin — l'admin confirme l'assignation.
       </p>
 
+      {stores && stores.length > 0 && (
+        <div className="relative mt-6 max-w-sm">
+          <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-canvas-600" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Rechercher par magasin ou ville..."
+            className="w-full rounded-lg border border-canvas-300 bg-white py-2 pl-9 pr-3 text-sm text-canvas-900 placeholder:text-canvas-600/60 focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
+          />
+        </div>
+      )}
+
       {isLoading && <p className="mt-8 text-sm text-canvas-600">Chargement...</p>}
 
       {stores && stores.length === 0 && (
@@ -28,9 +51,13 @@ export function StoreMarketplacePage() {
         </div>
       )}
 
-      {stores && stores.length > 0 && (
+      {stores && stores.length > 0 && filteredStores.length === 0 && (
+        <p className="mt-8 text-center text-sm text-canvas-600">Aucun magasin ne correspond à ta recherche.</p>
+      )}
+
+      {filteredStores.length > 0 && (
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {stores.map((store) => {
+          {filteredStores.map((store) => {
             const status = claimStatusFor(store.id);
             return (
               <div

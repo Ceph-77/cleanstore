@@ -125,8 +125,8 @@ export function OverviewTab({ store }: { store: Store }) {
         </div>
       )}
 
-      <div className="mt-4 overflow-hidden rounded-2xl border border-canvas-200 bg-white shadow-sm shadow-canvas-900/5">
-        <div className="p-5">
+      <div className="mt-4 rounded-2xl border border-canvas-200 bg-white shadow-sm shadow-canvas-900/5">
+        <div className="overflow-x-auto p-5">
           <TaskList
             tasks={tasks ?? []}
             onEdit={(task) => {

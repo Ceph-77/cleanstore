@@ -9,6 +9,7 @@ import {
   IconInventory,
   IconLock,
   IconUser,
+  IconX,
 } from "./icons";
 import type { RoleKey } from "../../types";
 
@@ -25,11 +26,13 @@ function NavItem({
   icon,
   label,
   disabled,
+  onNavigate,
 }: {
   to: string;
   icon: ReactNode;
   label: string;
   disabled?: boolean;
+  onNavigate?: () => void;
 }) {
   if (disabled) {
     return (
@@ -48,6 +51,7 @@ function NavItem({
   return (
     <NavLink
       to={to}
+      onClick={onNavigate}
       className={({ isActive }) =>
         `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
           isActive
@@ -62,37 +66,37 @@ function NavItem({
   );
 }
 
-function AdminNav() {
+function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <>
       <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">Opérations</p>
-      <NavItem to="/stores" icon={<IconStore />} label="Magasins" />
-      <NavItem to="/admin/claims" icon={<IconInspection />} label="Demandes" />
-      <NavItem to="/admin/users" icon={<IconUser />} label="Utilisateurs" />
+      <NavItem to="/stores" icon={<IconStore />} label="Magasins" onNavigate={onNavigate} />
+      <NavItem to="/admin/claims" icon={<IconInspection />} label="Demandes" onNavigate={onNavigate} />
+      <NavItem to="/admin/users" icon={<IconUser />} label="Utilisateurs" onNavigate={onNavigate} />
       <NavItem to="/inventory" icon={<IconInventory />} label="Inventaire" disabled />
     </>
   );
 }
 
-function SousTraitantNav() {
+function SousTraitantNav({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <>
       <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">Marketplace</p>
-      <NavItem to="/marketplace/stores" icon={<IconStore />} label="Magasins disponibles" />
+      <NavItem to="/marketplace/stores" icon={<IconStore />} label="Magasins disponibles" onNavigate={onNavigate} />
     </>
   );
 }
 
-function TravailleurNav() {
+function TravailleurNav({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <>
       <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">Marketplace</p>
-      <NavItem to="/marketplace/tasks" icon={<IconTasks />} label="Tâches disponibles" />
+      <NavItem to="/marketplace/tasks" icon={<IconTasks />} label="Tâches disponibles" onNavigate={onNavigate} />
     </>
   );
 }
 
-export function Sidebar() {
+function SidebarContent({ onNavigate, onCloseButton }: { onNavigate?: () => void; onCloseButton?: () => void }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -104,15 +108,24 @@ export function Sidebar() {
   const role = user?.roleKey as RoleKey | undefined;
 
   return (
-    <aside className="flex h-screen w-64 shrink-0 flex-col bg-canvas-900 px-4 py-6">
-      <div className="px-2">
+    <>
+      <div className="flex items-center justify-between px-2">
         <Logo inverted />
+        {onCloseButton && (
+          <button
+            onClick={onCloseButton}
+            aria-label="Fermer le menu"
+            className="rounded-lg p-1.5 text-canvas-0/60 hover:bg-white/5 hover:text-white md:hidden"
+          >
+            <IconX className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
       <nav className="mt-10 flex-1 space-y-1">
-        {role === "admin" && <AdminNav />}
-        {role === "sous_traitant" && <SousTraitantNav />}
-        {role === "travailleur" && <TravailleurNav />}
+        {role === "admin" && <AdminNav onNavigate={onNavigate} />}
+        {role === "sous_traitant" && <SousTraitantNav onNavigate={onNavigate} />}
+        {role === "travailleur" && <TravailleurNav onNavigate={onNavigate} />}
       </nav>
 
       <div className="mt-auto space-y-3 border-t border-white/10 pt-4">
@@ -135,6 +148,27 @@ export function Sidebar() {
           Déconnexion
         </button>
       </div>
-    </aside>
+    </>
+  );
+}
+
+export function Sidebar({ mobileOpen, onClose }: { mobileOpen: boolean; onClose: () => void }) {
+  return (
+    <>
+      {/* Desktop: static sidebar, always visible */}
+      <aside className="hidden h-screen w-64 shrink-0 flex-col bg-canvas-900 px-4 py-6 md:flex">
+        <SidebarContent />
+      </aside>
+
+      {/* Mobile: overlay drawer */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="absolute inset-0 bg-canvas-900/60" onClick={onClose} />
+          <aside className="absolute inset-y-0 left-0 flex w-72 max-w-[85vw] flex-col bg-canvas-900 px-4 py-6 shadow-xl">
+            <SidebarContent onNavigate={onClose} onCloseButton={onClose} />
+          </aside>
+        </div>
+      )}
+    </>
   );
 }

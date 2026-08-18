@@ -74,7 +74,7 @@ export function ContactsTab({ storeId }: { storeId: string }) {
           onSubmit={handleSubmit}
           className="mt-4 space-y-4 rounded-2xl border border-flow-200 bg-flow-50/60 p-5"
         >
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Nom">
               <Input required value={values.name} onChange={(e) => setValues({ ...values, name: e.target.value })} />
             </Field>
@@ -128,7 +128,7 @@ export function ContactsTab({ storeId }: { storeId: string }) {
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-flow-100 text-flow-700 [&>svg]:h-4 [&>svg]:w-4">
               <IconUser />
             </span>
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-canvas-900">
                 {contact.name}
                 {contact.role && (

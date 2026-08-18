@@ -59,7 +59,7 @@ export function TaskInspectionForm({
           className="w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
         />
       </Field>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field label="Photos avant">
           <input ref={beforeInputRef} type="file" multiple accept="image/*" className="text-sm" />
         </Field>

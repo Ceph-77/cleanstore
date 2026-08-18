@@ -89,7 +89,7 @@ export function StoreForm({
           <span className="h-2 w-2 rounded-full bg-flow-500" />
           Identité / contact
         </h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Nom du magasin">
             <Input required value={values.name} onChange={(e) => set("name", e.target.value)} />
           </Field>
@@ -126,7 +126,7 @@ export function StoreForm({
           <span className="h-2 w-2 rounded-full bg-linen-400" />
           Caractéristiques physiques
         </h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Superficie (pi²)">
             <Input
               type="number"
@@ -193,7 +193,7 @@ export function StoreForm({
           <span className="h-2 w-2 rounded-full bg-flow-500" />
           Contrat / fréquence
         </h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Fréquence de nettoyage">
             <Input
               value={values.cleaningFrequency}
@@ -234,7 +234,7 @@ export function StoreForm({
           <span className="h-2 w-2 rounded-full bg-linen-400" />
           Assignation
         </h2>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Grande compagnie">
             <select
               className="w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"

@@ -70,8 +70,8 @@ export function DocumentsTab({ storeId }: { storeId: string }) {
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-linen-100 text-linen-700 [&>svg]:h-4 [&>svg]:w-4">
               <IconFile />
             </span>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-canvas-900">{doc.fileName}</p>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-canvas-900">{doc.fileName}</p>
               <p className="mt-0.5 text-xs text-canvas-600">{formatSize(doc.sizeBytes)}</p>
             </div>
             {doc.downloadUrl && (

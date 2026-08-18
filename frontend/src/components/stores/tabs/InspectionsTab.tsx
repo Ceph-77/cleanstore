@@ -106,7 +106,7 @@ export function InspectionsTab({ store }: { store: Store }) {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="max-w-[10rem]">
             <Field label="Score (0-100)">
               <Input type="number" min={0} max={100} value={score} onChange={(e) => setScore(e.target.value)} />
             </Field>
@@ -121,7 +121,7 @@ export function InspectionsTab({ store }: { store: Store }) {
             />
           </Field>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Photos avant">
               <input ref={beforeInputRef} type="file" multiple accept="image/*" className="text-sm" />
             </Field>

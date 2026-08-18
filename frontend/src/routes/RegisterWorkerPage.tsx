@@ -31,7 +31,7 @@ export function RegisterWorkerPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-canvas-0 py-10">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-canvas-0 px-4 py-10">
       <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-linen-100 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-flow-100 blur-3xl" />
 

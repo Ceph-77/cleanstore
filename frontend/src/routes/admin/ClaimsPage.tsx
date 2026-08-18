@@ -35,9 +35,9 @@ export function ClaimsPage() {
         {storeClaims?.map((claim) => (
           <div
             key={claim.id}
-            className="flex items-center gap-4 rounded-2xl border border-canvas-200 bg-white p-4 shadow-sm shadow-canvas-900/5"
+            className="flex flex-col gap-3 rounded-2xl border border-canvas-200 bg-white p-4 shadow-sm shadow-canvas-900/5 sm:flex-row sm:items-center sm:gap-4"
           >
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-canvas-900">
                 <Link to={`/stores/${claim.storeId}`} className="text-flow-700 hover:underline">
                   {claim.store?.name}
@@ -48,20 +48,22 @@ export function ClaimsPage() {
                 Demandé par {claim.requestedBy?.fullName ?? claim.requestedBy?.email} · {formatDateTime(claim.createdAt)}
               </p>
             </div>
-            <Button
-              variant="secondary"
-              disabled={decideStoreClaim.isPending}
-              onClick={() => decideStoreClaim.mutate({ id: claim.id, status: "rejected" })}
-            >
-              Refuser
-            </Button>
-            <Button
-              variant="accent"
-              disabled={decideStoreClaim.isPending}
-              onClick={() => decideStoreClaim.mutate({ id: claim.id, status: "approved" })}
-            >
-              Approuver
-            </Button>
+            <div className="flex shrink-0 gap-2">
+              <Button
+                variant="secondary"
+                disabled={decideStoreClaim.isPending}
+                onClick={() => decideStoreClaim.mutate({ id: claim.id, status: "rejected" })}
+              >
+                Refuser
+              </Button>
+              <Button
+                variant="accent"
+                disabled={decideStoreClaim.isPending}
+                onClick={() => decideStoreClaim.mutate({ id: claim.id, status: "approved" })}
+              >
+                Approuver
+              </Button>
+            </div>
           </div>
         ))}
       </div>
@@ -76,9 +78,9 @@ export function ClaimsPage() {
         {taskClaims?.map((claim) => (
           <div
             key={claim.id}
-            className="flex items-center gap-4 rounded-2xl border border-canvas-200 bg-white p-4 shadow-sm shadow-canvas-900/5"
+            className="flex flex-col gap-3 rounded-2xl border border-canvas-200 bg-white p-4 shadow-sm shadow-canvas-900/5 sm:flex-row sm:items-center sm:gap-4"
           >
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-canvas-900">
                 {claim.task?.description}{" "}
                 <span className="text-canvas-600">
@@ -89,20 +91,22 @@ export function ClaimsPage() {
                 Demandé par {claim.worker?.fullName ?? claim.worker?.email} · {formatDateTime(claim.createdAt)}
               </p>
             </div>
-            <Button
-              variant="secondary"
-              disabled={decideTaskClaim.isPending}
-              onClick={() => decideTaskClaim.mutate({ id: claim.id, status: "rejected" })}
-            >
-              Refuser
-            </Button>
-            <Button
-              variant="accent"
-              disabled={decideTaskClaim.isPending}
-              onClick={() => decideTaskClaim.mutate({ id: claim.id, status: "approved" })}
-            >
-              Approuver
-            </Button>
+            <div className="flex shrink-0 gap-2">
+              <Button
+                variant="secondary"
+                disabled={decideTaskClaim.isPending}
+                onClick={() => decideTaskClaim.mutate({ id: claim.id, status: "rejected" })}
+              >
+                Refuser
+              </Button>
+              <Button
+                variant="accent"
+                disabled={decideTaskClaim.isPending}
+                onClick={() => decideTaskClaim.mutate({ id: claim.id, status: "approved" })}
+              >
+                Approuver
+              </Button>
+            </div>
           </div>
         ))}
       </div>

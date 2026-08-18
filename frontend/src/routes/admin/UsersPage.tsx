@@ -59,7 +59,7 @@ export function UsersPage() {
           onSubmit={handleSubmit}
           className="mt-4 space-y-4 rounded-2xl border border-flow-200 bg-flow-50/60 p-5"
         >
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Nom complet">
               <Input
                 required
@@ -131,16 +131,16 @@ export function UsersPage() {
         {users?.map((user) => (
           <div
             key={user.id}
-            className="flex items-center gap-4 rounded-2xl border border-canvas-200 bg-white p-4 shadow-sm shadow-canvas-900/5"
+            className="flex flex-wrap items-center gap-4 rounded-2xl border border-canvas-200 bg-white p-4 shadow-sm shadow-canvas-900/5"
           >
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-flow-100 text-flow-700 [&>svg]:h-4 [&>svg]:w-4">
               <IconUser />
             </span>
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-canvas-900">{user.fullName ?? user.email}</p>
               <p className="mt-0.5 text-xs text-canvas-600">{user.email}</p>
             </div>
-            <div className="flex gap-1.5">
+            <div className="flex flex-wrap gap-1.5">
               {user.roles.map((r, i) => (
                 <span
                   key={i}
