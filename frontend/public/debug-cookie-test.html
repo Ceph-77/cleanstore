@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<body>
+<pre id="out">running...</pre>
+<script>
+const out = document.getElementById('out');
+const base = "https://cleanstore-backend.onrender.com/api";
+let log = [];
+
+async function run() {
+  try {
+    const loginRes = await fetch(base + "/auth/login", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: "cephbookman@gmail.com", password: "C12345678C+er@" }),
+    });
+    log.push("login status: " + loginRes.status);
+    log.push("login body: " + (await loginRes.text()));
+  } catch (e) {
+    log.push("login FETCH ERROR: " + e.message);
+  }
+
+  try {
+    const meRes = await fetch(base + "/auth/me", { credentials: "include" });
+    log.push("me status: " + meRes.status);
+    log.push("me body: " + (await meRes.text()));
+  } catch (e) {
+    log.push("me FETCH ERROR: " + e.message);
+  }
+
+  try {
+    const storesRes = await fetch(base + "/stores", { credentials: "include" });
+    log.push("stores status: " + storesRes.status);
+    log.push("stores body: " + (await storesRes.text()));
+  } catch (e) {
+    log.push("stores FETCH ERROR: " + e.message);
+  }
+
+  log.push("document.cookie: " + document.cookie);
+
+  out.textContent = log.join("\n");
+}
+run();
+</script>
+</body>
+</html>
