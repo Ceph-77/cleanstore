@@ -26,6 +26,10 @@ const sessionPool = new Pool({ connectionString: env.DATABASE_URL });
 
 export const app = express();
 
+// Render (and most PaaS) terminate TLS before the app; without this, Express
+// doesn't know the original connection was HTTPS, and secure cookies break.
+app.set("trust proxy", 1);
+
 app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));
 app.use(express.json());
 app.use(
@@ -36,7 +40,9 @@ app.use(
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      sameSite: "lax",
+      // Cross-site in production (frontend and backend on different domains)
+      // requires "none", which in turn requires secure: true.
+      sameSite: env.NODE_ENV === "production" ? "none" : "lax",
       secure: env.NODE_ENV === "production",
       maxAge: 1000 * 60 * 60 * 24 * 7,
     },
