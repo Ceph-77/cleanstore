@@ -17,6 +17,7 @@ import { storeMarketplaceRouter, storeClaimsAdminRouter } from "./modules/storeC
 import { taskMarketplaceRouter, taskClaimsAdminRouter } from "./modules/taskClaims/taskClaims.routes";
 import { myTasksRouter } from "./modules/myTasks/myTasks.routes";
 import { taskInstructionsRouter } from "./modules/taskInstructions/taskInstructions.routes";
+import { systemRouter } from "./modules/system/system.routes";
 import { requireAuth, requireRole } from "./modules/auth/auth.middleware";
 import { notFound } from "./middleware/notFound";
 import { errorHandler } from "./middleware/errorHandler";
@@ -62,6 +63,7 @@ app.use("/api/marketplace", requireAuth, storeMarketplaceRouter);
 app.use("/api/marketplace", requireAuth, taskMarketplaceRouter);
 app.use("/api/marketplace", requireAuth, myTasksRouter);
 app.use("/api/task-instructions", requireAuth, taskInstructionsRouter);
+app.use("/api/system", systemRouter);
 app.use("/api/store-claims", storeClaimsAdminRouter);
 app.use("/api/task-claims", taskClaimsAdminRouter);
 

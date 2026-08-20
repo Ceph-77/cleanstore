@@ -41,6 +41,14 @@ export function TaskList({
             <td className="py-3 pr-3 text-canvas-900">
               {task.description}
               {task.taskType && <span className="ml-1 text-canvas-600">({task.taskType})</span>}
+              {task.isRecurring && (
+                <span
+                  title="Se répète chaque jour"
+                  className="ml-1.5 rounded-full bg-flow-100 px-1.5 py-0.5 text-[11px] font-medium text-flow-800"
+                >
+                  ↻ quotidien
+                </span>
+              )}
             </td>
             <td className="py-3 pr-3">
               <span className="font-medium text-canvas-900">{Number(task.price).toFixed(2)} $</span>

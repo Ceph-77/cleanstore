@@ -55,3 +55,52 @@ export function listAllTasksForDashboard(status?: TaskStatus) {
 export function deleteTask(id: string) {
   return prisma.task.delete({ where: { id } });
 }
+
+function startOfToday() {
+  const now = new Date();
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+}
+
+export async function runDueRecurrences() {
+  const today = startOfToday();
+  const templates = await prisma.task.findMany({
+    where: {
+      isRecurring: true,
+      OR: [{ lastRecurredOn: null }, { lastRecurredOn: { lt: today } }],
+    },
+  });
+
+  let created = 0;
+  for (const template of templates) {
+    await prisma.$transaction([
+      prisma.task.create({
+        data: {
+          storeId: template.storeId,
+          description: template.description,
+          taskType: template.taskType,
+          price: template.price,
+          isNegotiable: template.isNegotiable,
+          isPublished: template.isPublished,
+          dueDate: today,
+          status: "open",
+          assignedToId: null,
+          workerNote: null,
+          expectedResultText: template.expectedResultText,
+          howToText: template.howToText,
+          requiredEquipment: template.requiredEquipment,
+          estimatedDurationMinutes: template.estimatedDurationMinutes,
+          startedAt: null,
+          isRecurring: false,
+          createdById: template.createdById,
+        },
+      }),
+      prisma.task.update({
+        where: { id: template.id },
+        data: { lastRecurredOn: today },
+      }),
+    ]);
+    created += 1;
+  }
+
+  return created;
+}

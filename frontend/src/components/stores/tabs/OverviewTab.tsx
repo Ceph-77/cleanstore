@@ -48,6 +48,7 @@ export function OverviewTab({ store }: { store: Store }) {
       isNegotiable: values.isNegotiable,
       dueDate: values.dueDate || undefined,
       status: values.status,
+      isRecurring: values.isRecurring,
     };
     if (editingTask) {
       await updateTask.mutateAsync({ id: editingTask.id, data: payload });

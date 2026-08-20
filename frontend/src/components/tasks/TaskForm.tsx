@@ -11,6 +11,7 @@ export interface TaskFormValues {
   isNegotiable: boolean;
   dueDate: string;
   status: TaskStatus;
+  isRecurring: boolean;
 }
 
 export function TaskForm({
@@ -31,6 +32,7 @@ export function TaskForm({
     isNegotiable: initial?.isNegotiable ?? false,
     dueDate: initial?.dueDate?.slice(0, 10) ?? "",
     status: initial?.status ?? "open",
+    isRecurring: initial?.isRecurring ?? false,
   });
 
   function handleSubmit(e: FormEvent) {
@@ -85,6 +87,15 @@ export function TaskForm({
           onChange={(e) => setValues({ ...values, isNegotiable: e.target.checked })}
         />
         Prix négociable
+      </label>
+      <label className="flex items-center gap-2 text-sm text-canvas-800">
+        <input
+          type="checkbox"
+          className="h-4 w-4 rounded border-canvas-300 text-flow-600 focus:ring-flow-400"
+          checked={values.isRecurring}
+          onChange={(e) => setValues({ ...values, isRecurring: e.target.checked })}
+        />
+        Se répète chaque jour
       </label>
       <Field label="Statut">
         <select

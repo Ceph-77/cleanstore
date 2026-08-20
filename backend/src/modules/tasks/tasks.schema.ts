@@ -10,6 +10,7 @@ export const taskCreateSchema = z.object({
   dueDate: z.coerce.date().optional(),
   status: taskStatusEnum.optional(),
   assignedToId: z.string().uuid().optional(),
+  isRecurring: z.boolean().optional(),
 });
 
 export const taskUpdateSchema = taskCreateSchema.partial();
