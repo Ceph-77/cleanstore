@@ -50,14 +50,14 @@ export async function saveFundingMethod(userId: string, paymentMethodId: string)
     customerId = customer.id;
   }
 
-  await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId });
+  const attached = await stripe.paymentMethods.attach(paymentMethodId, { customer: customerId });
   await stripe.customers.update(customerId, {
-    invoice_settings: { default_payment_method: paymentMethodId },
+    invoice_settings: { default_payment_method: attached.id },
   });
 
   await prisma.organization.update({
     where: { id: organizationId },
-    data: { stripeCustomerId: customerId, stripePaymentMethodId: paymentMethodId },
+    data: { stripeCustomerId: customerId, stripePaymentMethodId: attached.id },
   });
 }
 
