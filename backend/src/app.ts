@@ -18,6 +18,7 @@ import { taskMarketplaceRouter, taskClaimsAdminRouter } from "./modules/taskClai
 import { myTasksRouter } from "./modules/myTasks/myTasks.routes";
 import { taskInstructionsRouter } from "./modules/taskInstructions/taskInstructions.routes";
 import { systemRouter } from "./modules/system/system.routes";
+import { paymentsRouter, paymentsWebhookRouter } from "./modules/payments/payments.routes";
 import { requireAuth, requireRole } from "./modules/auth/auth.middleware";
 import { notFound } from "./middleware/notFound";
 import { errorHandler } from "./middleware/errorHandler";
@@ -32,6 +33,10 @@ export const app = express();
 app.set("trust proxy", 1);
 
 app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));
+
+// Mounted before express.json() — Stripe webhook signature verification needs the raw body.
+app.use("/api/payments", paymentsWebhookRouter);
+
 app.use(express.json());
 app.use(
   session({
@@ -64,6 +69,7 @@ app.use("/api/marketplace", requireAuth, taskMarketplaceRouter);
 app.use("/api/marketplace", requireAuth, myTasksRouter);
 app.use("/api/task-instructions", requireAuth, taskInstructionsRouter);
 app.use("/api/system", systemRouter);
+app.use("/api/payments", requireAuth, paymentsRouter);
 app.use("/api/store-claims", storeClaimsAdminRouter);
 app.use("/api/task-claims", taskClaimsAdminRouter);
 

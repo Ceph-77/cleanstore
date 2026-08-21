@@ -236,3 +236,30 @@ export interface AppUser {
   createdAt: string;
   roles: { role: { key: RoleKey; label: string }; organization: { id: string; name: string } | null }[];
 }
+
+export type EarningStatus = "pending" | "disputed" | "available" | "withdrawn";
+export type WithdrawalStatus = "pending" | "paid" | "failed";
+
+export interface WalletBalance {
+  pending: string;
+  available: string;
+}
+
+export interface WorkerEarning {
+  id: string;
+  taskId: string;
+  grossAmount: string;
+  status: EarningStatus;
+  availableAt: string;
+  createdAt: string;
+  task?: { id: string; description: string; store: { name: string } };
+}
+
+export interface Withdrawal {
+  id: string;
+  grossAmount: string;
+  commissionAmount: string;
+  netAmount: string;
+  status: WithdrawalStatus;
+  createdAt: string;
+}

@@ -14,10 +14,13 @@ import { StoreMarketplacePage } from "./routes/marketplace/StoreMarketplacePage"
 import { TaskMarketplacePage } from "./routes/marketplace/TaskMarketplacePage";
 import { MyTasksPage } from "./routes/marketplace/MyTasksPage";
 import { SubcontractorTasksPage } from "./routes/marketplace/SubcontractorTasksPage";
+import { PaymentSettingsPage } from "./routes/marketplace/PaymentSettingsPage";
 import { ClaimsPage } from "./routes/admin/ClaimsPage";
 import { UsersPage } from "./routes/admin/UsersPage";
 import { TasksDashboardPage } from "./routes/admin/TasksDashboardPage";
+import { SettingsPage } from "./routes/admin/SettingsPage";
 import { ProfilePage } from "./routes/ProfilePage";
+import { WalletPage } from "./routes/WalletPage";
 import type { RoleKey } from "./types";
 
 const queryClient = new QueryClient();
@@ -124,6 +127,14 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/admin/settings"
+        element={
+          <ProtectedRoute roles={["admin"]}>
+            <SettingsPage />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/markettask/stores"
@@ -138,6 +149,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute roles={["sous_traitant"]}>
             <SubcontractorTasksPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/markettask/payment-settings"
+        element={
+          <ProtectedRoute roles={["sous_traitant"]}>
+            <PaymentSettingsPage />
           </ProtectedRoute>
         }
       />
@@ -163,6 +182,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <ProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/wallet"
+        element={
+          <ProtectedRoute roles={["travailleur"]}>
+            <WalletPage />
           </ProtectedRoute>
         }
       />

@@ -9,6 +9,8 @@ import {
   IconInventory,
   IconLock,
   IconUser,
+  IconWallet,
+  IconSettings,
   IconX,
 } from "./icons";
 import type { RoleKey } from "../../types";
@@ -74,6 +76,7 @@ function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
       <NavItem to="/admin/tasks" icon={<IconTasks />} label="Suivi des travaux" onNavigate={onNavigate} />
       <NavItem to="/admin/claims" icon={<IconInspection />} label="Demandes" onNavigate={onNavigate} />
       <NavItem to="/admin/users" icon={<IconUser />} label="Utilisateurs" onNavigate={onNavigate} />
+      <NavItem to="/admin/settings" icon={<IconSettings />} label="Réglages" onNavigate={onNavigate} />
       <NavItem to="/inventory" icon={<IconInventory />} label="Inventaire" disabled />
     </>
   );
@@ -85,6 +88,7 @@ function SousTraitantNav({ onNavigate }: { onNavigate?: () => void }) {
       <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">Markettask</p>
       <NavItem to="/markettask/stores" icon={<IconStore />} label="Magasins disponibles" onNavigate={onNavigate} />
       <NavItem to="/markettask/store-tasks" icon={<IconTasks />} label="Tâches de mes magasins" onNavigate={onNavigate} />
+      <NavItem to="/markettask/payment-settings" icon={<IconWallet />} label="Méthode de paiement" onNavigate={onNavigate} />
     </>
   );
 }
@@ -95,6 +99,7 @@ function TravailleurNav({ onNavigate }: { onNavigate?: () => void }) {
       <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">Markettask</p>
       <NavItem to="/markettask/tasks" icon={<IconTasks />} label="Tâches disponibles" onNavigate={onNavigate} />
       <NavItem to="/markettask/my-tasks" icon={<IconInspection />} label="Mes tâches" onNavigate={onNavigate} />
+      <NavItem to="/wallet" icon={<IconWallet />} label="Portefeuille" onNavigate={onNavigate} />
     </>
   );
 }

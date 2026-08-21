@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import { prisma } from "../../db/prisma";
 import { getSignedDownloadUrl, uploadFile } from "../../utils/storage";
+import { resolveEarningOnInspection } from "../payments/payments.service";
 import type { z } from "zod";
 import type { taskInspectionCreateSchema } from "./taskInspections.schema";
 
@@ -52,8 +53,8 @@ export async function createInspection(
     uploaded.push({ fileKey, fileName: file.originalname, photoType: "after" });
   }
 
-  return prisma.$transaction(async (tx) => {
-    const inspection = await tx.taskInspection.create({
+  const inspection = await prisma.$transaction(async (tx) => {
+    const created = await tx.taskInspection.create({
       data: {
         taskId,
         score: data.score,
@@ -64,6 +65,10 @@ export async function createInspection(
       include: { photos: true },
     });
     await tx.task.update({ where: { id: taskId }, data: { status: "inspected" } });
-    return inspection;
+    return created;
   });
+
+  await resolveEarningOnInspection(taskId, data.score);
+
+  return inspection;
 }

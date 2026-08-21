@@ -1,6 +1,7 @@
 import { prisma } from "../../db/prisma";
 import { getInspectionWithUrls } from "../taskInspections/taskInspections.service";
 import { getSignedDownloadUrl } from "../../utils/storage";
+import { createEarningForCompletedTask } from "../payments/payments.service";
 import type { TaskStatus } from "@prisma/client";
 
 const ALLOWED_TRANSITIONS: Partial<Record<TaskStatus, TaskStatus>> = {
@@ -51,7 +52,7 @@ export async function updateMyTaskStatus(
   if (ALLOWED_TRANSITIONS[task.status] !== nextStatus) {
     throw new Error(`Cannot move a task from "${task.status}" to "${nextStatus}"`);
   }
-  return prisma.task.update({
+  const updated = await prisma.task.update({
     where: { id: taskId },
     data: {
       status: nextStatus,
@@ -59,6 +60,12 @@ export async function updateMyTaskStatus(
       ...(note !== undefined ? { workerNote: note } : {}),
     },
   });
+
+  if (nextStatus === "completed") {
+    await createEarningForCompletedTask(taskId);
+  }
+
+  return updated;
 }
 
 export async function toggleMyTaskStep(taskId: string, stepId: string, userId: string, isDone: boolean) {

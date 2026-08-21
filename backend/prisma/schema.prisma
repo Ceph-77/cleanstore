@@ -57,6 +57,19 @@ enum PhotoType {
   after
 }
 
+enum EarningStatus {
+  pending
+  disputed
+  available
+  withdrawn
+}
+
+enum WithdrawalStatus {
+  pending
+  paid
+  failed
+}
+
 model Role {
   id        Int        @id @default(autoincrement())
   key       RoleKey    @unique
@@ -72,6 +85,8 @@ model User {
   phone        String?
   address      String?
   isActive     Boolean  @default(true) @map("is_active")
+  stripeAccountId      String?  @map("stripe_account_id")
+  stripeOnboardingDone Boolean  @default(false) @map("stripe_onboarding_done")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 
@@ -86,6 +101,8 @@ model User {
   storeClaimsRequested StoreClaim[]
   taskClaims          TaskClaim[]
   passwordResetTokens PasswordResetToken[]
+  workerEarnings      WorkerEarning[]
+  withdrawals         Withdrawal[]
 
   @@map("users")
 }
@@ -111,12 +128,15 @@ model Organization {
   contactEmail String?          @map("contact_email")
   contactPhone String?          @map("contact_phone")
   address      String?
+  stripeCustomerId      String? @map("stripe_customer_id")
+  stripePaymentMethodId String? @map("stripe_payment_method_id")
   createdAt    DateTime         @default(now()) @map("created_at")
 
   userRoles              UserRole[]
   storesAsGrandeCompagnie Store[]  @relation("StoreGrandeCompagnie")
   storesAsSubcontractor   Store[]  @relation("StoreSubcontractor")
   storeClaims             StoreClaim[]
+  workerEarnings          WorkerEarning[]
 
   @@map("organizations")
 }
@@ -211,6 +231,7 @@ model Task {
   inspection     TaskInspection?
   expectedPhotos TaskExpectedPhoto[]
   steps          TaskStep[]
+  earning        WorkerEarning?
 
   @@index([storeId])
   @@index([status])
@@ -410,4 +431,49 @@ model PasswordResetToken {
 
   @@index([userId])
   @@map("password_reset_tokens")
+}
+
+model PlatformSettings {
+  id                    String   @id @default("singleton")
+  commissionRatePercent Decimal  @default(5) @map("commission_rate_percent")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  @@map("platform_settings")
+}
+
+model WorkerEarning {
+  id             String        @id @default(uuid())
+  taskId         String        @unique @map("task_id")
+  workerId       String        @map("worker_id")
+  organizationId String        @map("organization_id")
+  grossAmount    Decimal       @map("gross_amount")
+  status         EarningStatus @default(pending)
+  availableAt    DateTime      @map("available_at")
+  chargeId       String?       @map("stripe_charge_id")
+  withdrawalId   String?       @map("withdrawal_id")
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  task         Task         @relation(fields: [taskId], references: [id])
+  worker       User         @relation(fields: [workerId], references: [id])
+  organization Organization @relation(fields: [organizationId], references: [id])
+  withdrawal   Withdrawal?  @relation(fields: [withdrawalId], references: [id])
+
+  @@index([workerId, status])
+  @@map("worker_earnings")
+}
+
+model Withdrawal {
+  id               String           @id @default(uuid())
+  workerId         String           @map("worker_id")
+  grossAmount      Decimal          @map("gross_amount")
+  commissionAmount Decimal          @map("commission_amount")
+  netAmount        Decimal          @map("net_amount")
+  status           WithdrawalStatus @default(pending)
+  stripeTransferId String?          @map("stripe_transfer_id")
+  createdAt        DateTime         @default(now()) @map("created_at")
+
+  worker   User            @relation(fields: [workerId], references: [id])
+  earnings WorkerEarning[]
+
+  @@map("withdrawals")
 }
