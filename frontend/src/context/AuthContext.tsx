@@ -10,6 +10,7 @@ interface AuthContextValue {
   registerWorker: (data: authApi.RegisterWorkerInput) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (data: authApi.UpdateProfileInput) => Promise<void>;
+  acceptTerms: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -50,8 +51,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(user);
   }
 
+  async function acceptTerms() {
+    const { user } = await authApi.acceptTerms();
+    setUser(user);
+  }
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, registerWorker, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, loading, login, registerWorker, logout, updateProfile, acceptTerms }}>
       {children}
     </AuthContext.Provider>
   );

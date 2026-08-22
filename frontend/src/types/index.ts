@@ -7,6 +7,7 @@ export interface AuthUser {
   phone?: string | null;
   address?: string | null;
   roleKey: RoleKey | null;
+  termsAcceptedAt: string | null;
 }
 
 export interface Organization {

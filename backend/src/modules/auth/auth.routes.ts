@@ -9,6 +9,7 @@ import {
   changeMyPassword,
   forgotPassword,
   resetPasswordHandler,
+  acceptTermsHandler,
 } from "./auth.controller";
 import { requireAuth } from "./auth.middleware";
 
@@ -43,3 +44,4 @@ authRouter.patch("/me", requireAuth, updateMe);
 authRouter.patch("/me/password", requireAuth, changeMyPassword);
 authRouter.post("/forgot-password", forgotPasswordLimiter, forgotPassword);
 authRouter.post("/reset-password", forgotPasswordLimiter, resetPasswordHandler);
+authRouter.post("/accept-terms", requireAuth, acceptTermsHandler);

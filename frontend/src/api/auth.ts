@@ -11,6 +11,7 @@ export interface RegisterWorkerInput {
   fullName: string;
   phone?: string;
   address?: string;
+  acceptedTerms: boolean;
 }
 
 export function registerWorker(data: RegisterWorkerInput) {
@@ -45,4 +46,8 @@ export function forgotPassword(email: string) {
 
 export function resetPassword(token: string, newPassword: string) {
   return apiClient.post<void>("/auth/reset-password", { token, newPassword });
+}
+
+export function acceptTerms() {
+  return apiClient.post<{ user: AuthUser }>("/auth/accept-terms");
 }

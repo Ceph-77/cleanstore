@@ -13,6 +13,7 @@ export function RegisterWorkerPage() {
   const { registerWorker } = useAuth();
   const navigate = useNavigate();
   const [values, setValues] = useState(initialValues);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -21,7 +22,7 @@ export function RegisterWorkerPage() {
     setError(null);
     setSubmitting(true);
     try {
-      await registerWorker(values);
+      await registerWorker({ ...values, acceptedTerms });
       navigate("/markettask/tasks");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Erreur lors de l'inscription");
@@ -75,8 +76,23 @@ export function RegisterWorkerPage() {
             <Input value={values.address} onChange={(e) => setValues({ ...values, address: e.target.value })} />
           </Field>
         </div>
+        <label className="flex items-start gap-2 text-sm text-canvas-800">
+          <input
+            type="checkbox"
+            required
+            className="mt-0.5 h-4 w-4 rounded border-canvas-300 text-flow-600 focus:ring-flow-400"
+            checked={acceptedTerms}
+            onChange={(e) => setAcceptedTerms(e.target.checked)}
+          />
+          <span>
+            J'accepte les{" "}
+            <Link to="/terms" target="_blank" className="font-medium text-flow-700 hover:text-flow-900">
+              conditions d'utilisation et la politique de confidentialité
+            </Link>
+          </span>
+        </label>
         {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-        <Button type="submit" className="w-full" disabled={submitting}>
+        <Button type="submit" className="w-full" disabled={submitting || !acceptedTerms}>
           {submitting ? "Création du compte..." : "Créer mon compte"}
         </Button>
         <p className="text-center text-sm text-canvas-600">

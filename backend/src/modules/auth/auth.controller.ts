@@ -15,6 +15,7 @@ import {
   changePassword,
   requestPasswordReset,
   resetPassword,
+  acceptTerms,
 } from "./auth.service";
 
 export async function login(req: Request, res: Response) {
@@ -99,6 +100,11 @@ export async function updateMe(req: Request, res: Response) {
     return res.status(400).json({ error: parsed.error.flatten() });
   }
   const user = await updateProfile(req.session.userId!, parsed.data);
+  res.json({ user });
+}
+
+export async function acceptTermsHandler(req: Request, res: Response) {
+  const user = await acceptTerms(req.session.userId!);
   res.json({ user });
 }
 

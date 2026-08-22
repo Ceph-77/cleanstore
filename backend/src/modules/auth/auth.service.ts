@@ -7,6 +7,7 @@ import type { registerWorkerSchema } from "./auth.schema";
 import type { z } from "zod";
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
+export const CURRENT_TERMS_VERSION = "1.0-2026-08-21";
 
 function hashToken(token: string) {
   return createHash("sha256").update(token).digest("hex");
@@ -36,6 +37,7 @@ export async function authenticate(email: string, password: string) {
     email: user.email,
     fullName: user.fullName,
     roleKey: primaryRole,
+    termsAcceptedAt: user.termsAcceptedAt,
   };
 }
 
@@ -55,6 +57,8 @@ export async function registerWorker(data: RegisterWorkerInput) {
       fullName: data.fullName,
       phone: data.phone,
       address: data.address,
+      termsAcceptedAt: new Date(),
+      termsVersion: CURRENT_TERMS_VERSION,
       roles: { create: { roleId: role.id } },
     },
   });
@@ -64,6 +68,7 @@ export async function registerWorker(data: RegisterWorkerInput) {
     email: user.email,
     fullName: user.fullName,
     roleKey: "travailleur" as const,
+    termsAcceptedAt: user.termsAcceptedAt,
   };
 }
 
@@ -84,7 +89,16 @@ export async function getUserById(userId: string) {
     phone: user.phone,
     address: user.address,
     roleKey: user.roles[0]?.role.key ?? null,
+    termsAcceptedAt: user.termsAcceptedAt,
   };
+}
+
+export async function acceptTerms(userId: string) {
+  await prisma.user.update({
+    where: { id: userId },
+    data: { termsAcceptedAt: new Date(), termsVersion: CURRENT_TERMS_VERSION },
+  });
+  return getUserById(userId);
 }
 
 export async function updateProfile(

@@ -87,6 +87,8 @@ model User {
   isActive     Boolean  @default(true) @map("is_active")
   stripeAccountId      String?  @map("stripe_account_id")
   stripeOnboardingDone Boolean  @default(false) @map("stripe_onboarding_done")
+  termsAcceptedAt      DateTime? @map("terms_accepted_at")
+  termsVersion         String?   @map("terms_version")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 

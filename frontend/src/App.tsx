@@ -21,6 +21,8 @@ import { TasksDashboardPage } from "./routes/admin/TasksDashboardPage";
 import { SettingsPage } from "./routes/admin/SettingsPage";
 import { ProfilePage } from "./routes/ProfilePage";
 import { WalletPage } from "./routes/WalletPage";
+import { TermsPage } from "./routes/TermsPage";
+import { AcceptTermsPage } from "./routes/AcceptTermsPage";
 import type { RoleKey } from "./types";
 
 const queryClient = new QueryClient();
@@ -31,7 +33,15 @@ function homeForRole(role: RoleKey | null | undefined) {
   return "/stores";
 }
 
-function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?: RoleKey[] }) {
+function ProtectedRoute({
+  children,
+  roles,
+  skipTermsCheck,
+}: {
+  children: React.ReactNode;
+  roles?: RoleKey[];
+  skipTermsCheck?: boolean;
+}) {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -40,6 +50,10 @@ function ProtectedRoute({ children, roles }: { children: React.ReactNode; roles?
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (!skipTermsCheck && !user.termsAcceptedAt) {
+    return <Navigate to="/accept-terms" replace />;
   }
 
   if (roles && !roles.includes(user.roleKey as RoleKey)) {
@@ -61,6 +75,15 @@ function AppRoutes() {
       <Route path="/register" element={<RegisterWorkerPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route
+        path="/accept-terms"
+        element={
+          <ProtectedRoute skipTermsCheck>
+            <AcceptTermsPage />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/stores"

@@ -31,4 +31,7 @@ export const registerWorkerSchema = z.object({
   fullName: z.string().min(1),
   phone: z.string().optional(),
   address: z.string().optional(),
+  acceptedTerms: z.literal(true, {
+    errorMap: () => ({ message: "Tu dois accepter les conditions pour continuer" }),
+  }),
 });
