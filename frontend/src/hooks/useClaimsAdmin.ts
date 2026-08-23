@@ -13,8 +13,8 @@ export function useStoreClaimsAdmin(status?: ClaimStatus) {
 export function useDecideStoreClaim() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: "approved" | "rejected" }) =>
-      claimsAdminApi.decideStoreClaim(id, status),
+    mutationFn: ({ id, status, reason }: { id: string; status: "approved" | "rejected"; reason?: string }) =>
+      claimsAdminApi.decideStoreClaim(id, status, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "store-claims"] });
       queryClient.invalidateQueries({ queryKey: ["stores"] });
@@ -33,8 +33,8 @@ export function useTaskClaimsAdmin(status?: ClaimStatus) {
 export function useDecideTaskClaim() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: "approved" | "rejected" }) =>
-      claimsAdminApi.decideTaskClaim(id, status),
+    mutationFn: ({ id, status, reason }: { id: string; status: "approved" | "rejected"; reason?: string }) =>
+      claimsAdminApi.decideTaskClaim(id, status, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin", "task-claims"] });
       queryClient.invalidateQueries({ queryKey: ["stores"] });

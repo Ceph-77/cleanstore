@@ -6,8 +6,8 @@ export function listStoreClaims(status?: ClaimStatus) {
   return apiClient.get<{ claims: StoreClaim[] }>(`/store-claims${query}`);
 }
 
-export function decideStoreClaim(id: string, status: "approved" | "rejected") {
-  return apiClient.patch<{ claim: StoreClaim }>(`/store-claims/${id}`, { status });
+export function decideStoreClaim(id: string, status: "approved" | "rejected", reason?: string) {
+  return apiClient.patch<{ claim: StoreClaim }>(`/store-claims/${id}`, { status, reason });
 }
 
 export function listTaskClaims(status?: ClaimStatus) {
@@ -15,6 +15,6 @@ export function listTaskClaims(status?: ClaimStatus) {
   return apiClient.get<{ claims: TaskClaim[] }>(`/task-claims${query}`);
 }
 
-export function decideTaskClaim(id: string, status: "approved" | "rejected") {
-  return apiClient.patch<{ claim: TaskClaim }>(`/task-claims/${id}`, { status });
+export function decideTaskClaim(id: string, status: "approved" | "rejected", reason?: string) {
+  return apiClient.patch<{ claim: TaskClaim }>(`/task-claims/${id}`, { status, reason });
 }

@@ -1,4 +1,5 @@
 import { prisma } from "../../db/prisma";
+import { sendClaimDecisionEmail } from "../../utils/email";
 import type { ClaimStatus } from "@prisma/client";
 
 export function listAvailableStores() {
@@ -27,7 +28,7 @@ async function getSubcontractorOrganizationId(userId: string) {
   return userRole.organizationId;
 }
 
-export async function createClaim(storeId: string, userId: string) {
+export async function createClaim(storeId: string, userId: string, note?: string) {
   const store = await prisma.store.findUnique({ where: { id: storeId } });
   if (!store || !store.isActive || store.assignedSubcontractorId) {
     throw new Error("This store is not available for claiming");
@@ -35,7 +36,7 @@ export async function createClaim(storeId: string, userId: string) {
 
   const organizationId = await getSubcontractorOrganizationId(userId);
   return prisma.storeClaim.create({
-    data: { storeId, organizationId, requestedById: userId },
+    data: { storeId, organizationId, requestedById: userId, note },
   });
 }
 
@@ -52,14 +53,16 @@ export function listClaims(status?: ClaimStatus) {
     where: status ? { status } : undefined,
     include: {
       store: { select: { id: true, name: true, city: true } },
-      organization: { select: { id: true, name: true } },
-      requestedBy: { select: { id: true, fullName: true, email: true } },
+      organization: {
+        select: { id: true, name: true, _count: { select: { storesAsSubcontractor: true } } },
+      },
+      requestedBy: { select: { id: true, fullName: true, email: true, createdAt: true } },
     },
     orderBy: { createdAt: "desc" },
   });
 }
 
-export async function decideClaim(id: string, status: "approved" | "rejected") {
+export async function decideClaim(id: string, status: "approved" | "rejected", reason?: string) {
   const claim = await prisma.storeClaim.findUniqueOrThrow({ where: { id } });
 
   if (status === "approved") {
@@ -80,9 +83,23 @@ export async function decideClaim(id: string, status: "approved" | "rejected") {
   } else {
     await prisma.storeClaim.update({
       where: { id },
-      data: { status: "rejected", decidedAt: new Date() },
+      data: { status: "rejected", decidedAt: new Date(), decisionReason: reason },
     });
   }
 
-  return prisma.storeClaim.findUniqueOrThrow({ where: { id } });
+  const decided = await prisma.storeClaim.findUniqueOrThrow({
+    where: { id },
+    include: {
+      store: { select: { name: true } },
+      requestedBy: { select: { email: true } },
+    },
+  });
+
+  await sendClaimDecisionEmail(decided.requestedBy.email, {
+    itemLabel: decided.store.name,
+    status,
+    reason: decided.decisionReason,
+  }).catch(() => {});
+
+  return decided;
 }

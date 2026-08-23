@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import type { ClaimStatus } from "@prisma/client";
-import { claimDecisionSchema } from "./taskClaims.schema";
+import { claimDecisionSchema, createClaimSchema } from "./taskClaims.schema";
 import * as taskClaimsService from "./taskClaims.service";
 
 export async function listMarketplace(req: Request, res: Response) {
@@ -9,8 +9,12 @@ export async function listMarketplace(req: Request, res: Response) {
 }
 
 export async function create(req: Request, res: Response) {
+  const parsed = createClaimSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.flatten() });
+  }
   try {
-    const claim = await taskClaimsService.createClaim(req.params.taskId, req.session.userId!);
+    const claim = await taskClaimsService.createClaim(req.params.taskId, req.session.userId!, parsed.data.note);
     res.status(201).json({ claim });
   } catch (err) {
     res.status(400).json({ error: (err as Error).message });
@@ -33,6 +37,6 @@ export async function decide(req: Request, res: Response) {
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.flatten() });
   }
-  const claim = await taskClaimsService.decideClaim(req.params.id, parsed.data.status);
+  const claim = await taskClaimsService.decideClaim(req.params.id, parsed.data.status, parsed.data.reason);
   res.json({ claim });
 }

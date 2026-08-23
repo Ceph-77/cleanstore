@@ -27,6 +27,24 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string) {
   });
 }
 
+export async function sendClaimDecisionEmail(
+  to: string,
+  data: { itemLabel: string; status: "approved" | "rejected"; reason?: string | null }
+) {
+  const from = env.RESEND_FROM_EMAIL ?? "KLEAN'STOR <onboarding@resend.dev>";
+  const subject =
+    data.status === "approved"
+      ? `Demande approuvée : ${data.itemLabel}`
+      : `Demande refusée : ${data.itemLabel}`;
+  const body =
+    data.status === "approved"
+      ? `<p>Ta demande pour « ${data.itemLabel} » a été approuvée. Connecte-toi à KLEAN'STOR pour voir les détails.</p>`
+      : `<p>Ta demande pour « ${data.itemLabel} » a été refusée.</p>${
+          data.reason ? `<p><strong>Raison :</strong> ${data.reason}</p>` : ""
+        }`;
+  await getClient().emails.send({ from, to, subject, html: body });
+}
+
 export function isEmailConfigured() {
   return Boolean(env.RESEND_API_KEY);
 }

@@ -1,5 +1,6 @@
 import { prisma } from "../../db/prisma";
 import { getSignedDownloadUrl } from "../../utils/storage";
+import { sendClaimDecisionEmail } from "../../utils/email";
 import type { ClaimStatus } from "@prisma/client";
 
 export function listMarketplaceTasks() {
@@ -47,7 +48,7 @@ export async function listMarketplaceTasksWithUrls() {
   );
 }
 
-export async function createClaim(taskId: string, workerId: string) {
+export async function createClaim(taskId: string, workerId: string, note?: string) {
   const task = await prisma.task.findUnique({
     where: { id: taskId },
     include: { store: { select: { isActive: true, assignedSubcontractorId: true } } },
@@ -63,7 +64,7 @@ export async function createClaim(taskId: string, workerId: string) {
     throw new Error("This task is not available for claiming");
   }
 
-  return prisma.taskClaim.create({ data: { taskId, workerId } });
+  return prisma.taskClaim.create({ data: { taskId, workerId, note } });
 }
 
 export function listMyClaims(userId: string) {
@@ -74,8 +75,8 @@ export function listMyClaims(userId: string) {
   });
 }
 
-export function listClaims(status?: ClaimStatus) {
-  return prisma.taskClaim.findMany({
+export async function listClaims(status?: ClaimStatus) {
+  const claims = await prisma.taskClaim.findMany({
     where: status ? { status } : undefined,
     include: {
       task: { include: { store: { select: { id: true, name: true } } } },
@@ -84,6 +85,7 @@ export function listClaims(status?: ClaimStatus) {
           id: true,
           fullName: true,
           email: true,
+          createdAt: true,
           _count: {
             select: {
               assignedTasks: { where: { status: { in: ["completed", "inspected"] } } },
@@ -94,9 +96,29 @@ export function listClaims(status?: ClaimStatus) {
     },
     orderBy: { createdAt: "desc" },
   });
+
+  const workerIds = [...new Set(claims.map((c) => c.workerId))];
+  const inspections = await prisma.taskInspection.findMany({
+    where: { task: { assignedToId: { in: workerIds } } },
+    select: { score: true, task: { select: { assignedToId: true } } },
+  });
+  const scoresByWorker = new Map<string, number[]>();
+  for (const inspection of inspections) {
+    const workerId = inspection.task.assignedToId;
+    if (!workerId) continue;
+    const scores = scoresByWorker.get(workerId) ?? [];
+    scores.push(inspection.score);
+    scoresByWorker.set(workerId, scores);
+  }
+
+  return claims.map((claim) => {
+    const scores = scoresByWorker.get(claim.workerId);
+    const averageScore = scores && scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+    return { ...claim, worker: { ...claim.worker, averageInspectionScore: averageScore } };
+  });
 }
 
-export async function decideClaim(id: string, status: "approved" | "rejected") {
+export async function decideClaim(id: string, status: "approved" | "rejected", reason?: string) {
   const claim = await prisma.taskClaim.findUniqueOrThrow({ where: { id } });
 
   if (status === "approved") {
@@ -117,9 +139,23 @@ export async function decideClaim(id: string, status: "approved" | "rejected") {
   } else {
     await prisma.taskClaim.update({
       where: { id },
-      data: { status: "rejected", decidedAt: new Date() },
+      data: { status: "rejected", decidedAt: new Date(), decisionReason: reason },
     });
   }
 
-  return prisma.taskClaim.findUniqueOrThrow({ where: { id } });
+  const decided = await prisma.taskClaim.findUniqueOrThrow({
+    where: { id },
+    include: {
+      task: { select: { description: true } },
+      worker: { select: { email: true, fullName: true } },
+    },
+  });
+
+  await sendClaimDecisionEmail(decided.worker.email, {
+    itemLabel: decided.task.description,
+    status,
+    reason: decided.decisionReason,
+  }).catch(() => {});
+
+  return decided;
 }

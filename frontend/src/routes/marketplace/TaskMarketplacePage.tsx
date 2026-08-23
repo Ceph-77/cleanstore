@@ -56,6 +56,18 @@ export function TaskMarketplacePage() {
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortKey>("recent");
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+  const [claimingTaskId, setClaimingTaskId] = useState<string | null>(null);
+  const [note, setNote] = useState("");
+
+  function claimFor(taskId: string) {
+    return myClaims?.find((c) => c.taskId === taskId);
+  }
+
+  async function handleConfirmClaim(taskId: string) {
+    await claimTask.mutateAsync({ taskId, note: note.trim() || undefined });
+    setClaimingTaskId(null);
+    setNote("");
+  }
 
   function claimStatusFor(taskId: string) {
     return myClaims?.find((c) => c.taskId === taskId)?.status;
@@ -140,6 +152,7 @@ export function TaskMarketplacePage() {
         <div className="mt-6 space-y-3">
           {filteredTasks.map((task) => {
             const status = claimStatusFor(task.id);
+            const claim = claimFor(task.id);
             const hasPreview =
               Boolean(task.expectedResultText) ||
               (task.expectedPhotos?.length ?? 0) > 0 ||
@@ -180,29 +193,58 @@ export function TaskMarketplacePage() {
                     </p>
                     {task.dueDate && <p className="text-xs text-canvas-600">{task.dueDate.slice(0, 10)}</p>}
                   </div>
-                  <div className="shrink-0">
+                  <div className="shrink-0 text-right">
                     {status === "pending" && (
                       <span className="inline-block rounded-full bg-linen-100 px-3 py-1 text-xs font-medium text-linen-800">
                         En attente
                       </span>
                     )}
                     {status === "rejected" && (
-                      <span className="inline-block rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-700">
-                        Refusée
-                      </span>
+                      <>
+                        <span className="inline-block rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-700">
+                          Refusée
+                        </span>
+                        {claim?.decisionReason && (
+                          <p className="mt-1 max-w-[16rem] text-xs text-canvas-600">{claim.decisionReason}</p>
+                        )}
+                      </>
                     )}
-                    {!status && (
+                    {!status && claimingTaskId !== task.id && (
                       <Button
                         variant="accent"
                         className="w-full sm:w-auto"
-                        disabled={claimTask.isPending}
-                        onClick={() => claimTask.mutate(task.id)}
+                        onClick={() => setClaimingTaskId(task.id)}
                       >
                         Je suis intéressé
                       </Button>
                     )}
                   </div>
                 </div>
+                {claimingTaskId === task.id && (
+                  <div className="mt-2 space-y-2 rounded-xl bg-flow-50/60 p-3">
+                    <textarea
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      rows={2}
+                      placeholder="Ajouter un message (optionnel) — ex: ta disponibilité, ton expérience"
+                      className="w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
+                    />
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          setClaimingTaskId(null);
+                          setNote("");
+                        }}
+                      >
+                        Annuler
+                      </Button>
+                      <Button variant="accent" disabled={claimTask.isPending} onClick={() => handleConfirmClaim(task.id)}>
+                        {claimTask.isPending ? "Envoi..." : "Confirmer"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 {isExpanded && <ExpectedResultPreview task={task} />}
               </div>
             );

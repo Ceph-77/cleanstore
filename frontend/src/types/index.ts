@@ -205,11 +205,13 @@ export interface StoreClaim {
   organizationId: string;
   requestedById: string;
   status: ClaimStatus;
+  note: string | null;
+  decisionReason: string | null;
   createdAt: string;
   decidedAt: string | null;
   store?: { id: string; name: string; city?: string | null };
-  organization?: { id: string; name: string };
-  requestedBy?: { id: string; fullName: string | null; email: string };
+  organization?: { id: string; name: string; _count?: { storesAsSubcontractor: number } };
+  requestedBy?: { id: string; fullName: string | null; email: string; createdAt?: string };
 }
 
 export interface TaskClaim {
@@ -217,6 +219,8 @@ export interface TaskClaim {
   taskId: string;
   workerId: string;
   status: ClaimStatus;
+  note: string | null;
+  decisionReason: string | null;
   createdAt: string;
   decidedAt: string | null;
   task?: Task & { store?: { id: string; name: string } };
@@ -224,6 +228,8 @@ export interface TaskClaim {
     id: string;
     fullName: string | null;
     email: string;
+    createdAt?: string;
+    averageInspectionScore?: number | null;
     _count?: { assignedTasks: number };
   };
 }

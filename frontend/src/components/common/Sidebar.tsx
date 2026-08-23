@@ -13,6 +13,7 @@ import {
   IconSettings,
   IconX,
 } from "./icons";
+import { useUnseenDecisionsCount } from "../../hooks/useNotifications";
 import type { RoleKey } from "../../types";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -29,12 +30,14 @@ function NavItem({
   label,
   disabled,
   onNavigate,
+  badge,
 }: {
   to: string;
   icon: ReactNode;
   label: string;
   disabled?: boolean;
   onNavigate?: () => void;
+  badge?: number;
 }) {
   if (disabled) {
     return (
@@ -55,15 +58,22 @@ function NavItem({
       to={to}
       onClick={onNavigate}
       className={({ isActive }) =>
-        `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
+        `flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
           isActive
             ? "bg-white/10 text-white"
             : "text-canvas-0/60 hover:bg-white/5 hover:text-white"
         }`
       }
     >
-      <span className="[&>svg]:h-4 [&>svg]:w-4">{icon}</span>
-      {label}
+      <span className="flex items-center gap-3">
+        <span className="[&>svg]:h-4 [&>svg]:w-4">{icon}</span>
+        {label}
+      </span>
+      {!!badge && (
+        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-linen-400 px-1.5 text-[11px] font-semibold text-linen-900">
+          {badge}
+        </span>
+      )}
     </NavLink>
   );
 }
@@ -82,23 +92,35 @@ function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-function SousTraitantNav({ onNavigate }: { onNavigate?: () => void }) {
+function SousTraitantNav({ onNavigate, unseenCount }: { onNavigate?: () => void; unseenCount?: number }) {
   return (
     <>
       <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">Markettask</p>
-      <NavItem to="/markettask/stores" icon={<IconStore />} label="Magasins disponibles" onNavigate={onNavigate} />
+      <NavItem
+        to="/markettask/stores"
+        icon={<IconStore />}
+        label="Magasins disponibles"
+        onNavigate={onNavigate}
+        badge={unseenCount}
+      />
       <NavItem to="/markettask/store-tasks" icon={<IconTasks />} label="Tâches de mes magasins" onNavigate={onNavigate} />
       <NavItem to="/markettask/payment-settings" icon={<IconWallet />} label="Méthode de paiement" onNavigate={onNavigate} />
     </>
   );
 }
 
-function TravailleurNav({ onNavigate }: { onNavigate?: () => void }) {
+function TravailleurNav({ onNavigate, unseenCount }: { onNavigate?: () => void; unseenCount?: number }) {
   return (
     <>
       <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">Markettask</p>
       <NavItem to="/markettask/tasks" icon={<IconTasks />} label="Tâches disponibles" onNavigate={onNavigate} />
-      <NavItem to="/markettask/my-tasks" icon={<IconInspection />} label="Mes tâches" onNavigate={onNavigate} />
+      <NavItem
+        to="/markettask/my-tasks"
+        icon={<IconInspection />}
+        label="Mes tâches"
+        onNavigate={onNavigate}
+        badge={unseenCount}
+      />
       <NavItem to="/wallet" icon={<IconWallet />} label="Portefeuille" onNavigate={onNavigate} />
     </>
   );
@@ -107,13 +129,13 @@ function TravailleurNav({ onNavigate }: { onNavigate?: () => void }) {
 function SidebarContent({ onNavigate, onCloseButton }: { onNavigate?: () => void; onCloseButton?: () => void }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const role = user?.roleKey as RoleKey | undefined;
+  const { data: unseenCount } = useUnseenDecisionsCount();
 
   async function handleLogout() {
     await logout();
     navigate("/login");
   }
-
-  const role = user?.roleKey as RoleKey | undefined;
 
   return (
     <>
@@ -132,8 +154,8 @@ function SidebarContent({ onNavigate, onCloseButton }: { onNavigate?: () => void
 
       <nav className="mt-10 flex-1 space-y-1">
         {role === "admin" && <AdminNav onNavigate={onNavigate} />}
-        {role === "sous_traitant" && <SousTraitantNav onNavigate={onNavigate} />}
-        {role === "travailleur" && <TravailleurNav onNavigate={onNavigate} />}
+        {role === "sous_traitant" && <SousTraitantNav onNavigate={onNavigate} unseenCount={unseenCount} />}
+        {role === "travailleur" && <TravailleurNav onNavigate={onNavigate} unseenCount={unseenCount} />}
       </nav>
 
       <div className="mt-auto space-y-3 border-t border-white/10 pt-4">

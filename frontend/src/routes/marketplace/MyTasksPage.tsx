@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppLayout } from "../../components/common/AppLayout";
 import { Button } from "../../components/common/Button";
 import { TaskStatusBadge } from "../../components/tasks/TaskStatusBadge";
@@ -11,6 +11,7 @@ import {
   useToggleMyTaskStep,
 } from "../../hooks/useMyTasks";
 import { useMyTaskClaims } from "../../hooks/useMarketplace";
+import { useMarkDecisionsSeen } from "../../hooks/useNotifications";
 import type { Task } from "../../types";
 
 function formatDate(iso: string) {
@@ -195,6 +196,12 @@ function TaskRow({ task }: { task: Task }) {
 export function MyTasksPage() {
   const { data: tasks, isLoading } = useMyTasks();
   const { data: claims } = useMyTaskClaims();
+  const markSeen = useMarkDecisionsSeen();
+
+  useEffect(() => {
+    markSeen.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <AppLayout>
@@ -234,6 +241,10 @@ export function MyTasksPage() {
                     {claim.task?.description} <span className="text-canvas-600">({claim.task?.store?.name})</span>
                   </p>
                   <p className="text-xs text-canvas-600">{formatDate(claim.createdAt)}</p>
+                  {claim.note && <p className="mt-1 text-xs italic text-canvas-600">« {claim.note} »</p>}
+                  {claim.status === "rejected" && claim.decisionReason && (
+                    <p className="mt-1 text-xs text-red-700">{claim.decisionReason}</p>
+                  )}
                 </div>
                 {claim.status === "pending" && (
                   <span className="shrink-0 rounded-full bg-linen-100 px-2.5 py-0.5 text-xs font-medium text-linen-800">

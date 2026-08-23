@@ -1,17 +1,32 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppLayout } from "../../components/common/AppLayout";
 import { Button } from "../../components/common/Button";
 import { IconStore, IconMapPin, IconSearch } from "../../components/common/icons";
 import { useAvailableStores, useMyStoreClaims, useClaimStore } from "../../hooks/useMarketplace";
+import { useMarkDecisionsSeen } from "../../hooks/useNotifications";
 
 export function StoreMarketplacePage() {
   const { data: stores, isLoading } = useAvailableStores();
   const { data: myClaims } = useMyStoreClaims();
   const claimStore = useClaimStore();
+  const markSeen = useMarkDecisionsSeen();
   const [search, setSearch] = useState("");
+  const [claimingStoreId, setClaimingStoreId] = useState<string | null>(null);
+  const [note, setNote] = useState("");
 
-  function claimStatusFor(storeId: string) {
-    return myClaims?.find((c) => c.storeId === storeId)?.status;
+  useEffect(() => {
+    markSeen.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function claimFor(storeId: string) {
+    return myClaims?.find((c) => c.storeId === storeId);
+  }
+
+  async function handleConfirmClaim(storeId: string) {
+    await claimStore.mutateAsync({ storeId, note: note.trim() || undefined });
+    setClaimingStoreId(null);
+    setNote("");
   }
 
   const filteredStores = useMemo(() => {
@@ -58,7 +73,8 @@ export function StoreMarketplacePage() {
       {filteredStores.length > 0 && (
         <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredStores.map((store) => {
-            const status = claimStatusFor(store.id);
+            const claim = claimFor(store.id);
+            const status = claim?.status;
             return (
               <div
                 key={store.id}
@@ -84,19 +100,48 @@ export function StoreMarketplacePage() {
                     </span>
                   )}
                   {status === "rejected" && (
-                    <span className="inline-block rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-700">
-                      Demande refusée
-                    </span>
+                    <>
+                      <span className="inline-block rounded-full bg-red-50 px-3 py-1 text-xs font-medium text-red-700">
+                        Demande refusée
+                      </span>
+                      {claim?.decisionReason && (
+                        <p className="mt-1 text-xs text-canvas-600">{claim.decisionReason}</p>
+                      )}
+                    </>
                   )}
-                  {!status && (
-                    <Button
-                      variant="accent"
-                      className="w-full"
-                      disabled={claimStore.isPending}
-                      onClick={() => claimStore.mutate(store.id)}
-                    >
+                  {!status && claimingStoreId !== store.id && (
+                    <Button variant="accent" className="w-full" onClick={() => setClaimingStoreId(store.id)}>
                       Je suis intéressé
                     </Button>
+                  )}
+                  {claimingStoreId === store.id && (
+                    <div className="space-y-2">
+                      <textarea
+                        value={note}
+                        onChange={(e) => setNote(e.target.value)}
+                        rows={2}
+                        placeholder="Message optionnel"
+                        className="w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
+                      />
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="secondary"
+                          onClick={() => {
+                            setClaimingStoreId(null);
+                            setNote("");
+                          }}
+                        >
+                          Annuler
+                        </Button>
+                        <Button
+                          variant="accent"
+                          disabled={claimStore.isPending}
+                          onClick={() => handleConfirmClaim(store.id)}
+                        >
+                          {claimStore.isPending ? "Envoi..." : "Confirmer"}
+                        </Button>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>

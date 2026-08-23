@@ -337,6 +337,9 @@ model StoreClaim {
   organizationId String      @map("organization_id")
   requestedById  String      @map("requested_by")
   status         ClaimStatus @default(pending)
+  note              String?
+  decisionReason    String?   @map("decision_reason")
+  seenByRequesterAt DateTime? @map("seen_by_requester_at")
   createdAt      DateTime    @default(now()) @map("created_at")
   decidedAt      DateTime?   @map("decided_at")
 
@@ -354,6 +357,9 @@ model TaskClaim {
   taskId    String      @map("task_id")
   workerId  String      @map("worker_id")
   status    ClaimStatus @default(pending)
+  note              String?
+  decisionReason    String?   @map("decision_reason")
+  seenByRequesterAt DateTime? @map("seen_by_requester_at")
   createdAt DateTime    @default(now()) @map("created_at")
   decidedAt DateTime?   @map("decided_at")
 

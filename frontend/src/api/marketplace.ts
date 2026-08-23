@@ -15,8 +15,8 @@ export function listAvailableStores() {
   return apiClient.get<{ stores: MarketplaceStore[] }>("/marketplace/stores");
 }
 
-export function claimStore(storeId: string) {
-  return apiClient.post<{ claim: StoreClaim }>(`/marketplace/stores/${storeId}/claims`);
+export function claimStore(storeId: string, note?: string) {
+  return apiClient.post<{ claim: StoreClaim }>(`/marketplace/stores/${storeId}/claims`, { note });
 }
 
 export function listMyStoreClaims() {
@@ -27,8 +27,8 @@ export function listMarketplaceTasks() {
   return apiClient.get<{ tasks: Task[] }>("/marketplace/tasks");
 }
 
-export function claimTask(taskId: string) {
-  return apiClient.post<{ claim: TaskClaim }>(`/marketplace/tasks/${taskId}/claims`);
+export function claimTask(taskId: string, note?: string) {
+  return apiClient.post<{ claim: TaskClaim }>(`/marketplace/tasks/${taskId}/claims`, { note });
 }
 
 export function listMyTaskClaims() {

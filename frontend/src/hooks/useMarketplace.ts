@@ -20,7 +20,8 @@ export function useMyStoreClaims() {
 export function useClaimStore() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (storeId: string) => marketplaceApi.claimStore(storeId),
+    mutationFn: ({ storeId, note }: { storeId: string; note?: string }) =>
+      marketplaceApi.claimStore(storeId, note),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["marketplace", "stores"] });
       queryClient.invalidateQueries({ queryKey: ["marketplace", "my-store-claims"] });
@@ -47,7 +48,8 @@ export function useMyTaskClaims() {
 export function useClaimTask() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (taskId: string) => marketplaceApi.claimTask(taskId),
+    mutationFn: ({ taskId, note }: { taskId: string; note?: string }) =>
+      marketplaceApi.claimTask(taskId, note),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["marketplace", "tasks"] });
       queryClient.invalidateQueries({ queryKey: ["marketplace", "my-task-claims"] });
