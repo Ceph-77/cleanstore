@@ -4,6 +4,7 @@ import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import { Pool } from "pg";
 import { env } from "./config/env";
+import { prisma } from "./db/prisma";
 import { authRouter } from "./modules/auth/auth.routes";
 import { storesRouter } from "./modules/stores/stores.routes";
 import { tasksRouter } from "./modules/tasks/tasks.routes";
@@ -32,6 +33,15 @@ export const app = express();
 // Render (and most PaaS) terminate TLS before the app; without this, Express
 // doesn't know the original connection was HTTPS, and secure cookies break.
 app.set("trust proxy", 1);
+
+// No auth, no session, no CORS needed -- a free external pinger hits this every
+// ~10 min to keep Render's free tier from sleeping (which is what actually causes
+// the ~50s "first load of the day" delay, not the app code). Touches the DB too,
+// since Neon's free-tier compute also auto-suspends on its own idle timer.
+app.get("/api/health", async (_req, res) => {
+  await prisma.$queryRaw`SELECT 1`;
+  res.json({ ok: true });
+});
 
 app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));
 
