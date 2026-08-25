@@ -10,8 +10,10 @@ import {
   forgotPassword,
   resetPasswordHandler,
   acceptTermsHandler,
+  impersonate,
+  stopImpersonating,
 } from "./auth.controller";
-import { requireAuth } from "./auth.middleware";
+import { requireAuth, requireRole } from "./auth.middleware";
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -45,3 +47,5 @@ authRouter.patch("/me/password", requireAuth, changeMyPassword);
 authRouter.post("/forgot-password", forgotPasswordLimiter, forgotPassword);
 authRouter.post("/reset-password", forgotPasswordLimiter, resetPasswordHandler);
 authRouter.post("/accept-terms", requireAuth, acceptTermsHandler);
+authRouter.post("/impersonate/:userId", requireRole("admin"), impersonate);
+authRouter.post("/stop-impersonating", requireAuth, stopImpersonating);

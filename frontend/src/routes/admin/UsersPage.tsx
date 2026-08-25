@@ -1,4 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { AppLayout } from "../../components/common/AppLayout";
 import { Button } from "../../components/common/Button";
 import { Field } from "../../components/common/Field";
@@ -7,7 +8,14 @@ import { IconUser } from "../../components/common/icons";
 import { useUsers, useCreateUser } from "../../hooks/useUsers";
 import * as organizationsApi from "../../api/organizations";
 import { ApiError } from "../../api/client";
-import type { Organization } from "../../types";
+import { useAuth } from "../../context/AuthContext";
+import type { Organization, RoleKey } from "../../types";
+
+const IMPERSONATABLE_ROLES: RoleKey[] = ["travailleur", "sous_traitant"];
+
+function homeForImpersonatedRole(role: RoleKey) {
+  return role === "travailleur" ? "/markettask/tasks" : "/markettask/stores";
+}
 
 const initialValues = {
   email: "",
@@ -21,10 +29,23 @@ const initialValues = {
 export function UsersPage() {
   const { data: users } = useUsers();
   const createUser = useCreateUser();
+  const { impersonate } = useAuth();
+  const navigate = useNavigate();
   const [values, setValues] = useState(initialValues);
   const [sousTraitants, setSousTraitants] = useState<Organization[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [impersonatingId, setImpersonatingId] = useState<string | null>(null);
+
+  async function handleImpersonate(userId: string, role: RoleKey) {
+    setImpersonatingId(userId);
+    try {
+      await impersonate(userId);
+      navigate(homeForImpersonatedRole(role));
+    } finally {
+      setImpersonatingId(null);
+    }
+  }
 
   useEffect(() => {
     organizationsApi.listOrganizations("sous_traitant").then((r) => setSousTraitants(r.organizations));
@@ -151,6 +172,16 @@ export function UsersPage() {
                 </span>
               ))}
             </div>
+            {user.roles[0] && IMPERSONATABLE_ROLES.includes(user.roles[0].role.key) && (
+              <Button
+                variant="secondary"
+                className="shrink-0"
+                disabled={impersonatingId === user.id}
+                onClick={() => handleImpersonate(user.id, user.roles[0].role.key)}
+              >
+                {impersonatingId === user.id ? "..." : "Voir comme cet utilisateur"}
+              </Button>
+            )}
           </div>
         ))}
       </div>

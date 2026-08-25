@@ -2,6 +2,7 @@ import { useState, type ReactNode } from "react";
 import { Sidebar } from "./Sidebar";
 import { Logo } from "./Logo";
 import { IconMenu } from "./icons";
+import { ImpersonationBanner } from "./ImpersonationBanner";
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -11,6 +12,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
 
       <div className="flex min-w-0 flex-1 flex-col">
+        <ImpersonationBanner />
         <header className="flex items-center justify-between border-b border-canvas-200 bg-white px-4 py-3 md:hidden">
           <Logo size="sm" />
           <button

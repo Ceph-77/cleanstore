@@ -16,7 +16,7 @@ import {
 import { useUnseenDecisionsCount } from "../../hooks/useNotifications";
 import type { RoleKey } from "../../types";
 
-const ROLE_LABELS: Record<string, string> = {
+export const ROLE_LABELS: Record<string, string> = {
   admin: "Administrateur",
   sous_traitant: "Sous-traitant",
   travailleur: "Travailleur autonome",

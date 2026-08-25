@@ -23,7 +23,15 @@ export function logout() {
 }
 
 export function me() {
-  return apiClient.get<{ user: AuthUser }>("/auth/me");
+  return apiClient.get<{ user: AuthUser; impersonating: boolean }>("/auth/me");
+}
+
+export function impersonate(userId: string) {
+  return apiClient.post<{ user: AuthUser }>(`/auth/impersonate/${userId}`);
+}
+
+export function stopImpersonating() {
+  return apiClient.post<{ user: AuthUser }>("/auth/stop-impersonating");
 }
 
 export interface UpdateProfileInput {

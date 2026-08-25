@@ -91,6 +91,39 @@ export async function me(req: Request, res: Response) {
     return res.status(401).json({ error: "Not authenticated" });
   }
 
+  res.json({ user, impersonating: !!req.session.impersonatorId });
+}
+
+const IMPERSONATABLE_ROLES = ["travailleur", "sous_traitant"];
+
+export async function impersonate(req: Request, res: Response) {
+  const target = await getUserById(req.params.userId);
+  if (!target) {
+    return res.status(404).json({ error: "Utilisateur introuvable" });
+  }
+  if (!target.roleKey || !IMPERSONATABLE_ROLES.includes(target.roleKey)) {
+    return res.status(400).json({ error: "Ce type de compte ne peut pas être prévisualisé" });
+  }
+
+  req.session.impersonatorId = req.session.userId;
+  req.session.impersonatorRoleKey = req.session.roleKey;
+  req.session.userId = target.id;
+  req.session.roleKey = target.roleKey;
+
+  res.json({ user: target });
+}
+
+export async function stopImpersonating(req: Request, res: Response) {
+  if (!req.session.impersonatorId) {
+    return res.status(400).json({ error: "Aucun aperçu en cours" });
+  }
+
+  req.session.userId = req.session.impersonatorId;
+  req.session.roleKey = req.session.impersonatorRoleKey;
+  delete req.session.impersonatorId;
+  delete req.session.impersonatorRoleKey;
+
+  const user = await getUserById(req.session.userId!);
   res.json({ user });
 }
 
