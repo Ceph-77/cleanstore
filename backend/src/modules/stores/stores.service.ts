@@ -1,10 +1,12 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "../../db/prisma";
 import type { z } from "zod";
-import type { storeCreateSchema, storeUpdateSchema } from "./stores.schema";
+import type { storeCreateSchema, storeUpdateSchema, storeGeofenceSchema } from "./stores.schema";
 import { geocodeAddress } from "../../utils/geocode";
 
 type StoreCreateInput = z.infer<typeof storeCreateSchema>;
 type StoreUpdateInput = z.infer<typeof storeUpdateSchema>;
+type StoreGeofenceInput = z.infer<typeof storeGeofenceSchema>;
 
 export function listStores() {
   return prisma.store.findMany({
@@ -80,6 +82,25 @@ export async function updateStore(id: string, data: StoreUpdateInput) {
     data: {
       ...data,
       ...(coords ? { latitude: coords.latitude, longitude: coords.longitude } : {}),
+    },
+  });
+}
+
+export function setStoreGeofence(id: string, data: StoreGeofenceInput) {
+  const points =
+    data.geofencePoints === undefined
+      ? undefined
+      : data.geofencePoints === null || data.geofencePoints.length === 0
+        ? Prisma.JsonNull
+        : (data.geofencePoints as Prisma.InputJsonValue);
+
+  return prisma.store.update({
+    where: { id },
+    data: {
+      geofenceLat: data.geofenceLat,
+      geofenceLng: data.geofenceLng,
+      geofenceRadiusM: data.geofenceRadiusM,
+      ...(points === undefined ? {} : { geofencePoints: points }),
     },
   });
 }

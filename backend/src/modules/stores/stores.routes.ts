@@ -17,6 +17,7 @@ storesRouter.post("/", storesController.create);
 storesRouter.get("/map-points", storesController.listMapPoints);
 storesRouter.get("/:id", storesController.getOne);
 storesRouter.patch("/:id", storesController.update);
+storesRouter.patch("/:id/geofence", storesController.setGeofence);
 storesRouter.patch("/:id/archive", storesController.archive);
 
 storesRouter.use("/:storeId/tasks", tasksRouterForStore);

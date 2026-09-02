@@ -105,6 +105,7 @@ model User {
   passwordResetTokens PasswordResetToken[]
   workerEarnings      WorkerEarning[]
   withdrawals         Withdrawal[]
+  feedbackEntries     Feedback[]
 
   @@map("users")
 }
@@ -152,6 +153,10 @@ model Store {
   postalCode               String?   @map("postal_code")
   latitude                 Decimal?  @db.Decimal(9, 6)
   longitude                Decimal?  @db.Decimal(9, 6)
+  geofenceLat              Decimal?  @map("geofence_lat") @db.Decimal(9, 6)
+  geofenceLng              Decimal?  @map("geofence_lng") @db.Decimal(9, 6)
+  geofenceRadiusM          Int?      @map("geofence_radius_m")
+  geofencePoints           Json?     @map("geofence_points")
   storeManagerName         String?   @map("store_manager_name")
   storeManagerPhone        String?   @map("store_manager_phone")
   storeManagerEmail        String?   @map("store_manager_email")
@@ -439,6 +444,23 @@ model PasswordResetToken {
 
   @@index([userId])
   @@map("password_reset_tokens")
+}
+
+model Feedback {
+  id        String   @id @default(uuid())
+  userId    String?  @map("user_id")
+  role      String?
+  selector  String
+  context   String
+  section   String
+  note      String
+  isMulti   Boolean  @default(false) @map("is_multi")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@map("feedback_entries")
 }
 
 model PlatformSettings {

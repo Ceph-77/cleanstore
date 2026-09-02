@@ -42,3 +42,14 @@ export function useUpdateStore(id: string) {
     },
   });
 }
+
+export function useSetStoreGeofence(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: storesApi.StoreGeofencePayload) => storesApi.setStoreGeofence(id, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["stores"] });
+      queryClient.invalidateQueries({ queryKey: ["stores", id] });
+    },
+  });
+}

@@ -19,6 +19,7 @@ import { ClaimsPage } from "./routes/admin/ClaimsPage";
 import { UsersPage } from "./routes/admin/UsersPage";
 import { TasksDashboardPage } from "./routes/admin/TasksDashboardPage";
 import { SettingsPage } from "./routes/admin/SettingsPage";
+import { FeedbackPage } from "./routes/admin/FeedbackPage";
 import { ProfilePage } from "./routes/ProfilePage";
 import { WalletPage } from "./routes/WalletPage";
 import { TermsPage } from "./routes/TermsPage";
@@ -155,6 +156,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute roles={["admin"]}>
             <SettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/feedback"
+        element={
+          <ProtectedRoute roles={["admin"]}>
+            <FeedbackPage />
           </ProtectedRoute>
         }
       />

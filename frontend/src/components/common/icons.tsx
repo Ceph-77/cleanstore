@@ -159,6 +159,15 @@ export function IconSearch(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function IconFeedback(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M4 5.5h16a1 1 0 0 1 1 1V15a1 1 0 0 1-1 1H9l-4.5 4V16H4a1 1 0 0 1-1-1V6.5a1 1 0 0 1 1-1Z" />
+      <path d="m9.5 12.5 2-2 3 3M9.5 10.5h.01" />
+    </svg>
+  );
+}
+
 export function IconSettings(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...base} {...props}>

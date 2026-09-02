@@ -11,6 +11,7 @@ import {
   IconUser,
   IconWallet,
   IconSettings,
+  IconFeedback,
   IconX,
 } from "./icons";
 import { useUnseenDecisionsCount } from "../../hooks/useNotifications";
@@ -87,6 +88,7 @@ function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
       <NavItem to="/admin/claims" icon={<IconInspection />} label="Demandes" onNavigate={onNavigate} />
       <NavItem to="/admin/users" icon={<IconUser />} label="Utilisateurs" onNavigate={onNavigate} />
       <NavItem to="/admin/settings" icon={<IconSettings />} label="Réglages" onNavigate={onNavigate} />
+      <NavItem to="/admin/feedback" icon={<IconFeedback />} label="Feedback" onNavigate={onNavigate} />
       <NavItem to="/inventory" icon={<IconInventory />} label="Inventaire" disabled />
     </>
   );

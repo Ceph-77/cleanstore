@@ -12,6 +12,7 @@ import {
 } from "../../hooks/useMyTasks";
 import { useMyTaskClaims } from "../../hooks/useMarketplace";
 import { useMarkDecisionsSeen } from "../../hooks/useNotifications";
+import { getCurrentPosition } from "../../utils/geo";
 import type { Task } from "../../types";
 
 function formatDate(iso: string) {
@@ -99,11 +100,26 @@ function TaskRow({ task }: { task: Task }) {
   const [note, setNote] = useState("");
   const [showInspection, setShowInspection] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
 
   async function handleComplete() {
     await updateStatus.mutateAsync({ taskId: task.id, status: "completed", note: note || undefined });
     setShowNoteField(false);
     setNote("");
+  }
+
+  async function handleStart() {
+    setStartError(null);
+    setLocating(true);
+    try {
+      const position = await getCurrentPosition();
+      await updateStatus.mutateAsync({ taskId: task.id, status: "in_progress", position });
+    } catch (err) {
+      setStartError(err instanceof Error ? err.message : "Impossible de démarrer la tâche.");
+    } finally {
+      setLocating(false);
+    }
   }
 
   return (
@@ -143,10 +159,10 @@ function TaskRow({ task }: { task: Task }) {
             <Button
               variant="accent"
               className="w-full sm:w-auto"
-              disabled={updateStatus.isPending}
-              onClick={() => updateStatus.mutate({ taskId: task.id, status: "in_progress" })}
+              disabled={locating || updateStatus.isPending}
+              onClick={handleStart}
             >
-              Démarrer
+              {locating ? "Localisation..." : updateStatus.isPending ? "Démarrage..." : "Démarrer"}
             </Button>
           )}
           {task.status === "in_progress" && !showNoteField && (
@@ -161,6 +177,19 @@ function TaskRow({ task }: { task: Task }) {
           )}
         </div>
       </div>
+
+      {task.status === "claimed" && (
+        <p className="mt-2 flex items-center gap-1.5 text-xs text-canvas-500">
+          <IconMapPin className="h-3 w-3 shrink-0" />
+          Vous devez être à moins de 100 m du magasin pour démarrer.
+        </p>
+      )}
+
+      {startError && (
+        <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700 ring-1 ring-red-200">
+          {startError}
+        </p>
+      )}
 
       {showInstructions && <InstructionsDetails task={task} />}
 

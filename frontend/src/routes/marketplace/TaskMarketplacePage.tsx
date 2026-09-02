@@ -58,15 +58,21 @@ export function TaskMarketplacePage() {
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [claimingTaskId, setClaimingTaskId] = useState<string | null>(null);
   const [note, setNote] = useState("");
+  const [claimError, setClaimError] = useState<string | null>(null);
 
   function claimFor(taskId: string) {
     return myClaims?.find((c) => c.taskId === taskId);
   }
 
   async function handleConfirmClaim(taskId: string) {
-    await claimTask.mutateAsync({ taskId, note: note.trim() || undefined });
-    setClaimingTaskId(null);
-    setNote("");
+    setClaimError(null);
+    try {
+      await claimTask.mutateAsync({ taskId, note: note.trim() || undefined });
+      setClaimingTaskId(null);
+      setNote("");
+    } catch (err) {
+      setClaimError(err instanceof Error ? err.message : "Impossible d'envoyer la candidature.");
+    }
   }
 
   function claimStatusFor(taskId: string) {
@@ -213,7 +219,10 @@ export function TaskMarketplacePage() {
                       <Button
                         variant="accent"
                         className="w-full sm:w-auto"
-                        onClick={() => setClaimingTaskId(task.id)}
+                        onClick={() => {
+                          setClaimError(null);
+                          setClaimingTaskId(task.id);
+                        }}
                       >
                         Je suis intéressé
                       </Button>
@@ -229,12 +238,18 @@ export function TaskMarketplacePage() {
                       placeholder="Ajouter un message (optionnel) — ex: ta disponibilité, ton expérience"
                       className="w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
                     />
+                    {claimError && (
+                      <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700 ring-1 ring-red-200">
+                        {claimError}
+                      </p>
+                    )}
                     <div className="flex justify-end gap-2">
                       <Button
                         variant="secondary"
                         onClick={() => {
                           setClaimingTaskId(null);
                           setNote("");
+                          setClaimError(null);
                         }}
                       >
                         Annuler

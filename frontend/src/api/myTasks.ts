@@ -5,12 +5,25 @@ export function listMyTasks() {
   return apiClient.get<{ tasks: Task[] }>("/marketplace/my-tasks");
 }
 
+export interface WorkerPosition {
+  lat: number;
+  lng: number;
+  accuracy?: number;
+}
+
 export function updateMyTaskStatus(
   taskId: string,
   status: Extract<TaskStatus, "in_progress" | "completed">,
-  note?: string
+  note?: string,
+  position?: WorkerPosition
 ) {
-  return apiClient.patch<{ task: Task }>(`/marketplace/my-tasks/${taskId}/status`, { status, note });
+  return apiClient.patch<{ task: Task }>(`/marketplace/my-tasks/${taskId}/status`, {
+    status,
+    note,
+    lat: position?.lat,
+    lng: position?.lng,
+    accuracy: position?.accuracy,
+  });
 }
 
 export function getMyTaskInspection(taskId: string) {

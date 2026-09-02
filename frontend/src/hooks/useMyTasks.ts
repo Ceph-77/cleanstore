@@ -17,11 +17,13 @@ export function useUpdateMyTaskStatus() {
       taskId,
       status,
       note,
+      position,
     }: {
       taskId: string;
       status: Extract<TaskStatus, "in_progress" | "completed">;
       note?: string;
-    }) => myTasksApi.updateMyTaskStatus(taskId, status, note),
+      position?: myTasksApi.WorkerPosition;
+    }) => myTasksApi.updateMyTaskStatus(taskId, status, note, position),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["marketplace", "my-tasks"] }),
   });
 }

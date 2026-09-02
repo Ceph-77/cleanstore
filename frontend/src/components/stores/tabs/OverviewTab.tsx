@@ -15,6 +15,7 @@ import { Button } from "../../common/Button";
 import { StatCard } from "../../common/StatCard";
 import { IconTasks, IconWallet } from "../../common/icons";
 import { useCreateTaskInspection } from "../../../hooks/useTaskInspections";
+import { StoreGeofenceCard } from "../StoreGeofenceCard";
 import type { Store, Task } from "../../../types";
 
 function InfoItem({ label, value }: { label: string; value: string }) {
@@ -86,6 +87,8 @@ export function OverviewTab({ store }: { store: Store }) {
         <StatCard label="Tâches ouvertes" value={openTasks.length} icon={<IconTasks />} accent="flow" />
         <StatCard label="Valeur totale des tâches" value={`${totalValue.toFixed(2)} $`} icon={<IconWallet />} accent="linen" />
       </div>
+
+      <StoreGeofenceCard store={store} />
 
       <div className="mt-10 flex items-center justify-between">
         <h2 className="font-heading text-lg font-semibold text-canvas-900">Tâches</h2>

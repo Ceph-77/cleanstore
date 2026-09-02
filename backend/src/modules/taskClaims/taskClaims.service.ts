@@ -1,7 +1,11 @@
 import { prisma } from "../../db/prisma";
 import { getSignedDownloadUrl } from "../../utils/storage";
 import { sendClaimDecisionEmail } from "../../utils/email";
+import { startOfCurrentWeek } from "../../utils/week";
 import type { ClaimStatus } from "@prisma/client";
+
+/** A worker may submit at most this many task claims per store per calendar week. */
+export const MAX_CLAIMS_PER_STORE_PER_WEEK = 3;
 
 export function listMarketplaceTasks() {
   return prisma.task.findMany({
@@ -62,6 +66,20 @@ export async function createClaim(taskId: string, workerId: string, note?: strin
     !task.store.assignedSubcontractorId
   ) {
     throw new Error("This task is not available for claiming");
+  }
+
+  const claimsThisWeek = await prisma.taskClaim.count({
+    where: {
+      workerId,
+      task: { storeId: task.storeId },
+      createdAt: { gte: startOfCurrentWeek() },
+    },
+  });
+  if (claimsThisWeek >= MAX_CLAIMS_PER_STORE_PER_WEEK) {
+    throw new Error(
+      `Limite atteinte : vous avez déjà soumis ${MAX_CLAIMS_PER_STORE_PER_WEEK} candidatures pour ce magasin cette semaine. ` +
+        "Un administrateur peut vous attribuer une tâche supplémentaire directement."
+    );
   }
 
   return prisma.taskClaim.create({ data: { taskId, workerId, note } });

@@ -3,12 +3,14 @@ import { Sidebar } from "./Sidebar";
 import { Logo } from "./Logo";
 import { IconMenu } from "./icons";
 import { ImpersonationBanner } from "./ImpersonationBanner";
+import { FeedbackButton } from "../feedback/FeedbackButton";
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <div className="flex min-h-screen bg-canvas-50">
+      <FeedbackButton />
       <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
 
       <div className="flex min-w-0 flex-1 flex-col">

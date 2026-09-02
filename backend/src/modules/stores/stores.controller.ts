@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { storeCreateSchema, storeUpdateSchema } from "./stores.schema";
+import { storeCreateSchema, storeUpdateSchema, storeGeofenceSchema } from "./stores.schema";
 import * as storesService from "./stores.service";
 
 export async function list(req: Request, res: Response) {
@@ -35,6 +35,15 @@ export async function update(req: Request, res: Response) {
     return res.status(400).json({ error: parsed.error.flatten() });
   }
   const store = await storesService.updateStore(req.params.id, parsed.data);
+  res.json({ store });
+}
+
+export async function setGeofence(req: Request, res: Response) {
+  const parsed = storeGeofenceSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.flatten() });
+  }
+  const store = await storesService.setStoreGeofence(req.params.id, parsed.data);
   res.json({ store });
 }
 

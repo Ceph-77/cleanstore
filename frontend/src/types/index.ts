@@ -71,6 +71,13 @@ export interface StoreInvoice {
   createdAt: string;
 }
 
+export interface GeoPoint {
+  lat: number;
+  lng: number;
+  acc?: number;
+  ts?: number;
+}
+
 export interface Store {
   id: string;
   name: string;
@@ -78,6 +85,12 @@ export interface Store {
   address: string | null;
   city: string | null;
   postalCode: string | null;
+  latitude: string | null;
+  longitude: string | null;
+  geofenceLat: string | null;
+  geofenceLng: string | null;
+  geofenceRadiusM: number | null;
+  geofencePoints: GeoPoint[] | null;
   storeManagerName: string | null;
   storeManagerPhone: string | null;
   storeManagerEmail: string | null;
@@ -260,6 +273,19 @@ export interface WorkerEarning {
   availableAt: string;
   createdAt: string;
   task?: { id: string; description: string; store: { name: string } };
+}
+
+export interface Feedback {
+  id: string;
+  userId: string | null;
+  role: string | null;
+  selector: string;
+  context: string;
+  section: string;
+  note: string;
+  isMulti: boolean;
+  createdAt: string;
+  user?: { id: string; fullName: string | null; email: string } | null;
 }
 
 export interface Withdrawal {

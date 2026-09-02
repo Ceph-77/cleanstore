@@ -18,7 +18,8 @@ export async function updateStatus(req: Request, res: Response) {
       req.params.id,
       req.session.userId!,
       parsed.data.status,
-      parsed.data.note
+      parsed.data.note,
+      { lat: parsed.data.lat, lng: parsed.data.lng, accuracy: parsed.data.accuracy }
     );
     res.json({ task });
   } catch (err) {
