@@ -17,7 +17,16 @@ const envSchema = z.object({
   R2_SECRET_ACCESS_KEY: z.string().optional(),
   R2_BUCKET_NAME: z.string().optional(),
   RESEND_API_KEY: z.string().optional(),
-  RESEND_FROM_EMAIL: z.string().email().optional(),
+  // Accepts a bare address (no-reply@x.com) or an RFC 5322 "Name <addr>" form,
+  // both of which Resend's `from` field takes.
+  RESEND_FROM_EMAIL: z
+    .string()
+    .refine((v) => {
+      const s = v.trim();
+      const addr = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return addr.test(s) || /<[^\s@]+@[^\s@]+\.[^\s@]+>$/.test(s);
+    }, 'RESEND_FROM_EMAIL must be an email or "Name <email>"')
+    .optional(),
   CRON_SECRET: z.string().optional(),
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
