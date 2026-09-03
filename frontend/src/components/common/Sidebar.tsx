@@ -12,6 +12,7 @@ import {
   IconWallet,
   IconSettings,
   IconFeedback,
+  IconTrophy,
   IconX,
 } from "./icons";
 import { useUnseenDecisionsCount } from "../../hooks/useNotifications";
@@ -87,6 +88,7 @@ function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
       <NavItem to="/admin/tasks" icon={<IconTasks />} label="Suivi des travaux" onNavigate={onNavigate} />
       <NavItem to="/admin/claims" icon={<IconInspection />} label="Demandes" onNavigate={onNavigate} />
       <NavItem to="/admin/users" icon={<IconUser />} label="Utilisateurs" onNavigate={onNavigate} />
+      <NavItem to="/leaderboard" icon={<IconTrophy />} label="Classement" onNavigate={onNavigate} />
       <NavItem to="/admin/settings" icon={<IconSettings />} label="Réglages" onNavigate={onNavigate} />
       <NavItem to="/admin/feedback" icon={<IconFeedback />} label="Feedback" onNavigate={onNavigate} />
       <NavItem to="/inventory" icon={<IconInventory />} label="Inventaire" disabled />
@@ -106,6 +108,7 @@ function SousTraitantNav({ onNavigate, unseenCount }: { onNavigate?: () => void;
         badge={unseenCount}
       />
       <NavItem to="/markettask/store-tasks" icon={<IconTasks />} label="Tâches de mes magasins" onNavigate={onNavigate} />
+      <NavItem to="/leaderboard" icon={<IconTrophy />} label="Classement" onNavigate={onNavigate} />
       <NavItem to="/markettask/payment-settings" icon={<IconWallet />} label="Méthode de paiement" onNavigate={onNavigate} />
     </>
   );

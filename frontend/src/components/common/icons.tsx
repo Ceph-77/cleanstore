@@ -168,6 +168,16 @@ export function IconFeedback(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function IconTrophy(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M7 4h10v5a5 5 0 0 1-10 0V4Z" />
+      <path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3" />
+      <path d="M12 14v3M9 20h6M10 20l.5-3h3l.5 3" />
+    </svg>
+  );
+}
+
 export function IconSettings(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...base} {...props}>

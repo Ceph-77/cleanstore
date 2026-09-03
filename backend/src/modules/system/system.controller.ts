@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { env } from "../../config/env";
 import * as tasksService from "../tasks/tasks.service";
 import * as paymentsService from "../payments/payments.service";
+import * as engagementService from "../engagement/engagement.service";
 
 function checkSecret(req: Request, res: Response): boolean {
   if (!env.CRON_SECRET) {
@@ -26,4 +27,10 @@ export async function triggerPayoutSweep(req: Request, res: Response) {
   if (!checkSecret(req, res)) return;
   const processed = await paymentsService.runDuePayouts();
   res.json({ processed });
+}
+
+export async function triggerMonthlyRecap(req: Request, res: Response) {
+  if (!checkSecret(req, res)) return;
+  const result = await engagementService.runMonthlyRecap();
+  res.json(result);
 }

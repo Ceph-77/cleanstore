@@ -6,6 +6,7 @@ import { Input } from "../components/common/Input";
 import { useAuth } from "../context/AuthContext";
 import * as authApi from "../api/auth";
 import { ApiError } from "../api/client";
+import { ProgressCard } from "../components/engagement/ProgressCard";
 
 export function ProfilePage() {
   const { user, updateProfile } = useAuth();
@@ -65,6 +66,8 @@ export function ProfilePage() {
     <AppLayout>
       <h1 className="font-heading text-2xl font-semibold tracking-tight text-canvas-900">Mon profil</h1>
       <p className="mt-1 text-sm text-canvas-600">{user?.email}</p>
+
+      <ProgressCard />
 
       <form
         onSubmit={handleProfileSubmit}

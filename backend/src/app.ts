@@ -22,6 +22,7 @@ import { systemRouter } from "./modules/system/system.routes";
 import { paymentsRouter, paymentsWebhookRouter } from "./modules/payments/payments.routes";
 import { notificationsRouter } from "./modules/notifications/notifications.routes";
 import { feedbackRouter } from "./modules/feedback/feedback.routes";
+import { engagementRouter } from "./modules/engagement/engagement.routes";
 import { requireAuth, requireRole } from "./modules/auth/auth.middleware";
 import { notFound } from "./middleware/notFound";
 import { errorHandler } from "./middleware/errorHandler";
@@ -84,6 +85,7 @@ app.use("/api/system", systemRouter);
 app.use("/api/payments", requireAuth, paymentsRouter);
 app.use("/api/notifications", requireAuth, notificationsRouter);
 app.use("/api/feedback", requireAuth, feedbackRouter);
+app.use("/api/engagement", requireAuth, engagementRouter);
 app.use("/api/store-claims", storeClaimsAdminRouter);
 app.use("/api/task-claims", taskClaimsAdminRouter);
 

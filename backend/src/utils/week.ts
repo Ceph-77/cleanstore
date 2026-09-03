@@ -37,3 +37,26 @@ export function startOfCurrentWeek(now: Date = new Date(), tz: string = DEFAULT_
   const todayStart = zonedStartOfDay(year, month, day, tz);
   return new Date(todayStart.getTime() - daysSinceMonday * 24 * 60 * 60 * 1000);
 }
+
+/** Start of the current calendar month (1st, 00:00 in `tz`), as a UTC Date. */
+export function startOfCurrentMonth(now: Date = new Date(), tz: string = DEFAULT_TZ): Date {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+  }).formatToParts(now);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+  return zonedStartOfDay(Number(get("year")), Number(get("month")), 1, tz);
+}
+
+/** Local calendar day (YYYY-MM-DD in `tz`) for a given instant. */
+export function localDayKey(date: Date, tz: string = DEFAULT_TZ): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: tz,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
+  return `${get("year")}-${get("month")}-${get("day")}`;
+}

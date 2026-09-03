@@ -106,6 +106,8 @@ model User {
   workerEarnings      WorkerEarning[]
   withdrawals         Withdrawal[]
   feedbackEntries     Feedback[]
+  pointEntries        PointEntry[]
+  workerMoments       WorkerMoment[]
 
   @@map("users")
 }
@@ -239,6 +241,8 @@ model Task {
   expectedPhotos TaskExpectedPhoto[]
   steps          TaskStep[]
   earning        WorkerEarning?
+  pointEntries   PointEntry[]
+  workerMoments  WorkerMoment[]
 
   @@index([storeId])
   @@index([status])
@@ -461,6 +465,42 @@ model Feedback {
 
   @@index([createdAt])
   @@map("feedback_entries")
+}
+
+model PointEntry {
+  id        String   @id @default(uuid())
+  workerId  String   @map("worker_id")
+  taskId    String?  @map("task_id")
+  kind      String
+  points    Int
+  createdAt DateTime @default(now()) @map("created_at")
+
+  worker User  @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  task   Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([workerId, createdAt])
+  @@map("point_entries")
+}
+
+model WorkerMoment {
+  id            String    @id @default(uuid())
+  workerId      String    @map("worker_id")
+  taskId        String?   @map("task_id")
+  type          String
+  title         String
+  body          String
+  pointsAwarded Int       @default(0) @map("points_awarded")
+  meta          Json?
+  seenAt        DateTime? @map("seen_at")
+  emailedAt     DateTime? @map("emailed_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  worker User  @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  task   Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([workerId, seenAt])
+  @@index([workerId, createdAt])
+  @@map("worker_moments")
 }
 
 model PlatformSettings {

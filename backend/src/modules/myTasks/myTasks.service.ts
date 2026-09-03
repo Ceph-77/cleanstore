@@ -7,6 +7,7 @@ import {
   DEFAULT_START_RADIUS_M,
   FALLBACK_START_RADIUS_M,
 } from "../../utils/geo";
+import * as engagement from "../engagement/engagement.service";
 import type { TaskStatus, Prisma } from "@prisma/client";
 
 const ALLOWED_TRANSITIONS: Partial<Record<TaskStatus, TaskStatus>> = {
@@ -137,6 +138,13 @@ export async function updateMyTaskStatus(
 
   if (nextStatus === "completed") {
     await createEarningForCompletedTask(taskId);
+  }
+
+  // Engagement moments — never let them break the core task flow.
+  if (nextStatus === "in_progress") {
+    void engagement.onTaskStarted(updated).catch(() => {});
+  } else if (nextStatus === "completed") {
+    void engagement.onTaskCompleted(updated).catch(() => {});
   }
 
   return updated;

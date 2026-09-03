@@ -45,6 +45,25 @@ export async function sendClaimDecisionEmail(
   await getClient().emails.send({ from, to, subject, html: body });
 }
 
+export async function sendMomentEmail(
+  to: string,
+  data: { title: string; body: string; name?: string | null }
+) {
+  const from = env.RESEND_FROM_EMAIL ?? "KLEAN'STOR <onboarding@resend.dev>";
+  const hi = data.name ? `Salut ${data.name},` : "Salut,";
+  await getClient().emails.send({
+    from,
+    to,
+    subject: data.title,
+    html: `
+      <p>${hi}</p>
+      <p style="font-size:18px;font-weight:600;margin:12px 0 4px">${data.title}</p>
+      <p>${data.body}</p>
+      <p style="color:#6b7280">Connecte-toi à KLEAN'STOR pour voir ta progression.</p>
+    `,
+  });
+}
+
 export function isEmailConfigured() {
   return Boolean(env.RESEND_API_KEY);
 }

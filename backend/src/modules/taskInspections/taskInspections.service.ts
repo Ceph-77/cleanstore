@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { prisma } from "../../db/prisma";
 import { getSignedDownloadUrl, uploadFile } from "../../utils/storage";
 import { resolveEarningOnInspection } from "../payments/payments.service";
+import * as engagement from "../engagement/engagement.service";
 import type { z } from "zod";
 import type { taskInspectionCreateSchema } from "./taskInspections.schema";
 
@@ -69,6 +70,8 @@ export async function createInspection(
   });
 
   await resolveEarningOnInspection(taskId, data.score);
+
+  void engagement.onTaskInspected(taskId, data.score).catch(() => {});
 
   return inspection;
 }

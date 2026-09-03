@@ -296,3 +296,42 @@ export interface Withdrawal {
   status: WithdrawalStatus;
   createdAt: string;
 }
+
+export type WorkerMomentType =
+  | "zone_arrival"
+  | "faster_than_estimated"
+  | "streak"
+  | "milestone"
+  | "personal_best"
+  | "monthly_recap";
+
+export interface WorkerMoment {
+  id: string;
+  workerId: string;
+  taskId: string | null;
+  type: WorkerMomentType;
+  title: string;
+  body: string;
+  pointsAwarded: number;
+  meta: Record<string, unknown> | null;
+  seenAt: string | null;
+  createdAt: string;
+}
+
+export interface EngagementSummary {
+  pointsTotal: number;
+  pointsThisMonth: number;
+  tasksCompleted: number;
+  streakDays: number;
+}
+
+export interface LeaderboardRow {
+  workerId: string;
+  fullName: string | null;
+  pointsThisMonth: number;
+  pointsTotal: number;
+  onTimeRate: number | null;
+  avgQuality: number | null;
+  tasksThisMonth: number;
+  rank: number;
+}

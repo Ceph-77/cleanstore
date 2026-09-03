@@ -21,6 +21,7 @@ import { TasksDashboardPage } from "./routes/admin/TasksDashboardPage";
 import { SettingsPage } from "./routes/admin/SettingsPage";
 import { FeedbackPage } from "./routes/admin/FeedbackPage";
 import { ProfilePage } from "./routes/ProfilePage";
+import { LeaderboardPage } from "./routes/LeaderboardPage";
 import { WalletPage } from "./routes/WalletPage";
 import { TermsPage } from "./routes/TermsPage";
 import { AcceptTermsPage } from "./routes/AcceptTermsPage";
@@ -205,6 +206,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute roles={["travailleur"]}>
             <MyTasksPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/leaderboard"
+        element={
+          <ProtectedRoute roles={["admin", "sous_traitant"]}>
+            <LeaderboardPage />
           </ProtectedRoute>
         }
       />
