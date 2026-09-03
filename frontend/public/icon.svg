@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="112" fill="#2d5871"/>
+  <g stroke="#fdfcf9" stroke-linecap="round" stroke-linejoin="round">
+    <!-- K spine -->
+    <path d="M186 150 V366" stroke-width="42"/>
+    <!-- handle = upper arm of the K -->
+    <path d="M186 258 L330 150" stroke-width="42"/>
+    <!-- broom neck = lower leg of the K -->
+    <path d="M186 258 L250 328" stroke-width="42"/>
+    <!-- bristles fanning out -->
+    <g stroke-width="15">
+      <path d="M234 322 L214 392"/>
+      <path d="M250 328 L252 396"/>
+      <path d="M266 332 L292 390"/>
+      <path d="M280 340 L324 376"/>
+    </g>
+    <!-- swept floor line -->
+    <path d="M206 396 Q 268 416 332 384" stroke-width="12" opacity="0.5"/>
+  </g>
+  <!-- accent dot at the throat -->
+  <circle cx="208" cy="252" r="17" fill="#e3a94c"/>
+</svg>
