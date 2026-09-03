@@ -45,7 +45,7 @@ app.get("/api/health", async (_req, res) => {
   res.json({ ok: true });
 });
 
-app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));
+app.use(cors({ origin: env.FRONTEND_URLS, credentials: true }));
 
 // Mounted before express.json() — Stripe webhook signature verification needs the raw body.
 app.use("/api/payments", paymentsWebhookRouter);

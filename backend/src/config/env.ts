@@ -5,6 +5,9 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   SESSION_SECRET: z.string().min(16, "SESSION_SECRET must be at least 16 characters"),
   PORT: z.coerce.number().default(4000),
+  // One or more allowed frontend origins, comma-separated. The first one is the
+  // canonical URL used to build links (password reset, Stripe return_url, …);
+  // all of them are accepted by CORS — handy while migrating to a new domain.
   FRONTEND_URL: z.string().min(1, "FRONTEND_URL is required"),
   SEED_ADMIN_EMAIL: z.string().email().optional(),
   SEED_ADMIN_PASSWORD: z.string().min(8).optional(),
@@ -20,4 +23,16 @@ const envSchema = z.object({
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
 });
 
-export const env = envSchema.parse(process.env);
+const parsed = envSchema.parse(process.env);
+
+const frontendUrls = parsed.FRONTEND_URL.split(",")
+  .map((s) => s.trim().replace(/\/$/, ""))
+  .filter(Boolean);
+
+export const env = {
+  ...parsed,
+  /** Canonical frontend URL, for building outbound links. */
+  FRONTEND_URL: frontendUrls[0],
+  /** Every allowed frontend origin, for CORS. */
+  FRONTEND_URLS: frontendUrls,
+};

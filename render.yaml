@@ -6,6 +6,8 @@ services:
     rootDir: backend
     buildCommand: npm install --include=dev && npx prisma generate && npx prisma migrate deploy && npx prisma db seed && npm run build
     startCommand: npm run start
+    domains:
+      - api.kleanstor.com
     envVars:
       - key: NODE_ENV
         value: production
