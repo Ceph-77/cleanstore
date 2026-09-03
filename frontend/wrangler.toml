@@ -1,11 +1,11 @@
 name = "cleanstore"
 compatibility_date = "2026-08-19"
 
-# Custom domain: UNCOMMENT once the kleanstor.com zone is on this Cloudflare
-# account, then `wrangler deploy` provisions app.kleanstor.com automatically.
+# Custom domain: UNCOMMENT once the kleanstor.org zone is on this Cloudflare
+# account, then `wrangler deploy` provisions app.kleanstor.org automatically.
 # Leaving it enabled before the zone exists makes `wrangler deploy` fail.
 # routes = [
-#   { pattern = "app.kleanstor.com", custom_domain = true },
+#   { pattern = "app.kleanstor.org", custom_domain = true },
 # ]
 
 [assets]
