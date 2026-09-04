@@ -15,3 +15,7 @@ export const userCreateSchema = z
     message: "organizationId is required for role sous_traitant",
     path: ["organizationId"],
   });
+
+export const userUpdateSchema = z.object({
+  isActive: z.boolean(),
+});

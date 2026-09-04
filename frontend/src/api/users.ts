@@ -18,3 +18,11 @@ export interface CreateUserInput {
 export function createUser(data: CreateUserInput) {
   return apiClient.post<{ user: AppUser }>("/users", data);
 }
+
+export function setUserActive(id: string, isActive: boolean) {
+  return apiClient.patch<{ user: AppUser }>(`/users/${id}`, { isActive });
+}
+
+export function deleteUser(id: string) {
+  return apiClient.delete<{ deleted: { id: string; email: string } }>(`/users/${id}`);
+}
