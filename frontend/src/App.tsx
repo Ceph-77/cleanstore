@@ -25,6 +25,7 @@ import { ProfilePage } from "./routes/ProfilePage";
 import { LeaderboardPage } from "./routes/LeaderboardPage";
 import { WalletPage } from "./routes/WalletPage";
 import { TermsPage } from "./routes/TermsPage";
+import { PrivacyPage } from "./routes/PrivacyPage";
 import { AcceptTermsPage } from "./routes/AcceptTermsPage";
 import type { RoleKey } from "./types";
 
@@ -79,6 +80,7 @@ function AppRoutes() {
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route path="/terms" element={<TermsPage />} />
+      <Route path="/confidentialite" element={<PrivacyPage />} />
       <Route
         path="/accept-terms"
         element={

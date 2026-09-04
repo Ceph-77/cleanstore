@@ -12,6 +12,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg', 'favicon-32.png', 'apple-touch-icon.png'],
       manifest: {
+        id: '/',
         name: "KLEAN'STOR",
         short_name: "KLEAN'STOR",
         description: 'Gestion du nettoyage de magasins — magasins, tâches, paiements.',
@@ -22,6 +23,7 @@ export default defineConfig({
         orientation: 'portrait',
         background_color: '#2d5871',
         theme_color: '#2d5871',
+        categories: ['business', 'productivity'],
         icons: [
           { src: '/pwa-192.png', sizes: '192x192', type: 'image/png' },
           { src: '/pwa-512.png', sizes: '512x512', type: 'image/png' },
