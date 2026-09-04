@@ -45,6 +45,17 @@ export function useUpdateUser(id: string) {
   });
 }
 
+export function useUploadUserAvatar(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (file: File) => usersApi.uploadUserAvatar(id, file),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "users", "detail", id] });
+    },
+  });
+}
+
 export function useDeleteUser() {
   const queryClient = useQueryClient();
   return useMutation({

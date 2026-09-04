@@ -27,12 +27,21 @@ export interface UserAdminPatch {
   isActive?: boolean;
   fullName?: string;
   phone?: string | null;
+  address?: string | null;
+  adminNote?: string | null;
+  availability?: { days: number[]; note?: string } | null;
   role?: "sous_traitant" | "travailleur";
   organizationId?: string | null;
 }
 
 export function updateUser(id: string, patch: UserAdminPatch) {
   return apiClient.patch<{ user: AppUser }>(`/users/${id}`, patch);
+}
+
+export function uploadUserAvatar(id: string, file: File) {
+  const fd = new FormData();
+  fd.append("avatar", file);
+  return apiClient.upload<{ user: AppUser }>(`/users/${id}/avatar`, fd);
 }
 
 export function setUserActive(id: string, isActive: boolean) {

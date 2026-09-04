@@ -1,5 +1,6 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useUnseenMoments, useMarkMomentSeen } from "../../hooks/useEngagement";
+import { playChime } from "../../utils/sound";
 
 const CONFETTI_COLORS = ["#f59e0b", "#10b981", "#3b82f6", "#ef4444", "#8b5cf6", "#ec4899"];
 
@@ -50,6 +51,20 @@ export function CelebrationModal() {
   const markSeen = useMarkMomentSeen();
 
   const current = moments?.[0];
+  const chimedFor = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!current || chimedFor.current === current.id) return;
+    chimedFor.current = current.id;
+    playChime(
+      current.type === "streak"
+        ? "streak"
+        : current.type === "milestone" || current.type === "personal_best"
+          ? "milestone"
+          : "success"
+    );
+  }, [current]);
+
   if (!current) return null;
 
   const remaining = (moments?.length ?? 0) - 1;

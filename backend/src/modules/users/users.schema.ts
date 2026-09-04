@@ -16,11 +16,19 @@ export const userCreateSchema = z
     path: ["organizationId"],
   });
 
+export const availabilitySchema = z.object({
+  days: z.array(z.number().int().min(0).max(6)),
+  note: z.string().optional().default(""),
+});
+
 export const userUpdateSchema = z
   .object({
     isActive: z.boolean(),
     fullName: z.string().min(1),
     phone: z.string().nullable(),
+    address: z.string().nullable(),
+    adminNote: z.string().nullable(),
+    availability: availabilitySchema.nullable(),
     role: userRoleKeyEnum,
     organizationId: z.string().uuid().nullable(),
   })

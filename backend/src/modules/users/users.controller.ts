@@ -15,6 +15,17 @@ export async function getOne(req: Request, res: Response) {
   res.json({ user });
 }
 
+export async function uploadAvatar(req: Request, res: Response) {
+  const file = req.file;
+  if (!file) return res.status(400).json({ error: "Aucun fichier." });
+  try {
+    const user = await usersService.setUserAvatar(req.params.id, file);
+    res.json({ user });
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
+  }
+}
+
 export async function create(req: Request, res: Response) {
   const parsed = userCreateSchema.safeParse(req.body);
   if (!parsed.success) {

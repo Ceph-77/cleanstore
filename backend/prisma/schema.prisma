@@ -84,6 +84,9 @@ model User {
   fullName     String?  @map("full_name")
   phone        String?
   address      String?
+  avatarKey    String?  @map("avatar_key")
+  availability Json?
+  adminNote    String?  @map("admin_note")
   isActive     Boolean  @default(true) @map("is_active")
   stripeAccountId      String?  @map("stripe_account_id")
   stripeOnboardingDone Boolean  @default(false) @map("stripe_onboarding_done")

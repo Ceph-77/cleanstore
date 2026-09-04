@@ -6,7 +6,7 @@ import { Field } from "../../components/common/Field";
 import { Input } from "../../components/common/Input";
 import { IconMapPin } from "../../components/common/icons";
 import { ApiError } from "../../api/client";
-import { useUser, useUpdateUser } from "../../hooks/useUsers";
+import { useUser, useUpdateUser, useUploadUserAvatar } from "../../hooks/useUsers";
 import { useStores } from "../../hooks/useStores";
 import { useTasks } from "../../hooks/useTasks";
 import * as organizationsApi from "../../api/organizations";
@@ -23,6 +23,9 @@ import type { DayTask, Organization, RoleKey } from "../../types";
 function Flame({ lit }: { lit: boolean }) {
   return <span className={lit ? "" : "opacity-30 grayscale"} aria-hidden="true">🔥</span>;
 }
+
+const DAY_LABELS = ["L", "M", "M", "J", "V", "S", "D"]; // Mon..Sun -> indices 1..0
+const DAY_INDEX = [1, 2, 3, 4, 5, 6, 0]; // JS getDay values, Monday first
 
 const emptyForm = {
   storeId: "",
@@ -44,6 +47,7 @@ export function WorkerDetailPage() {
   const updatePastTask = useUpdatePastTask(id);
   const deletePastTask = useDeletePastTask(id);
   const updateUser = useUpdateUser(id);
+  const uploadAvatar = useUploadUserAvatar(id);
 
   const [selected, setSelected] = useState<string | null>(null);
   const [mode, setMode] = useState<null | "add" | string>(null); // null | "add" | editTaskId
@@ -52,7 +56,16 @@ export function WorkerDetailPage() {
   const [notice, setNotice] = useState<string | null>(null);
 
   const [editProfile, setEditProfile] = useState(false);
-  const [profile, setProfile] = useState({ fullName: "", phone: "", role: "travailleur" as RoleKey, organizationId: "" });
+  const [profile, setProfile] = useState({
+    fullName: "",
+    phone: "",
+    address: "",
+    adminNote: "",
+    availDays: [] as number[],
+    availNote: "",
+    role: "travailleur" as RoleKey,
+    organizationId: "",
+  });
   const [profileErr, setProfileErr] = useState<string | null>(null);
   const [orgs, setOrgs] = useState<Organization[]>([]);
 
@@ -86,6 +99,10 @@ export function WorkerDetailPage() {
       setProfile({
         fullName: user.fullName ?? "",
         phone: user.phone ?? "",
+        address: user.address ?? "",
+        adminNote: user.adminNote ?? "",
+        availDays: user.availability?.days ?? [],
+        availNote: user.availability?.note ?? "",
         role: user.roles[0]?.role.key ?? "travailleur",
         organizationId: user.roles[0]?.organization?.id ?? "",
       });
@@ -172,6 +189,12 @@ export function WorkerDetailPage() {
       await updateUser.mutateAsync({
         fullName: profile.fullName,
         phone: profile.phone || null,
+        address: profile.address || null,
+        adminNote: profile.adminNote || null,
+        availability:
+          profile.availDays.length > 0 || profile.availNote
+            ? { days: [...profile.availDays].sort(), note: profile.availNote }
+            : null,
         role: profile.role === "sous_traitant" || profile.role === "travailleur" ? profile.role : undefined,
         organizationId: profile.role === "sous_traitant" ? profile.organizationId || null : null,
       });
@@ -190,18 +213,27 @@ export function WorkerDetailPage() {
       </Link>
 
       <div className="mt-1 flex items-start justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight text-canvas-900">
-            {user?.fullName ?? user?.email ?? "…"}
-          </h1>
-          <p className="mt-0.5 text-sm text-canvas-600">{user?.email}</p>
-          <div className="mt-2 flex flex-wrap gap-1.5">
-            {user?.roles.map((r, i) => (
-              <span key={i} className="rounded-full bg-linen-100 px-2 py-0.5 text-xs font-medium text-linen-800">
-                {r.role.label}
-                {r.organization && ` · ${r.organization.name}`}
-              </span>
-            ))}
+        <div className="flex items-start gap-3">
+          {user?.avatarUrl ? (
+            <img src={user.avatarUrl} alt="" className="h-14 w-14 shrink-0 rounded-full object-cover" />
+          ) : (
+            <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-linen-400 text-lg font-semibold text-linen-900">
+              {(user?.fullName ?? user?.email ?? "?").slice(0, 1).toUpperCase()}
+            </span>
+          )}
+          <div>
+            <h1 className="font-heading text-2xl font-semibold tracking-tight text-canvas-900">
+              {user?.fullName ?? user?.email ?? "…"}
+            </h1>
+            <p className="mt-0.5 text-sm text-canvas-600">{user?.email}</p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {user?.roles.map((r, i) => (
+                <span key={i} className="rounded-full bg-linen-100 px-2 py-0.5 text-xs font-medium text-linen-800">
+                  {r.role.label}
+                  {r.organization && ` · ${r.organization.name}`}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
         <Button variant="secondary" onClick={() => setEditProfile((v) => !v)}>
@@ -244,7 +276,70 @@ export function WorkerDetailPage() {
                 </select>
               </Field>
             )}
+            <Field label="Adresse">
+              <Input value={profile.address} onChange={(e) => setProfile({ ...profile, address: e.target.value })} />
+            </Field>
           </div>
+
+          <Field label="Note interne (admin)">
+            <textarea
+              value={profile.adminNote}
+              onChange={(e) => setProfile({ ...profile, adminNote: e.target.value })}
+              rows={2}
+              className="w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
+            />
+          </Field>
+
+          <div>
+            <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-canvas-600">
+              Disponibilités
+            </span>
+            <div className="flex gap-1.5">
+              {DAY_LABELS.map((label, i) => {
+                const dv = DAY_INDEX[i];
+                const on = profile.availDays.includes(dv);
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() =>
+                      setProfile({
+                        ...profile,
+                        availDays: on
+                          ? profile.availDays.filter((d) => d !== dv)
+                          : [...profile.availDays, dv],
+                      })
+                    }
+                    className={`h-9 w-9 rounded-full text-sm font-semibold transition-colors ${
+                      on ? "bg-flow-600 text-white" : "bg-canvas-100 text-canvas-600 hover:bg-canvas-200"
+                    }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            <Input
+              className="mt-2"
+              placeholder="Précision (ex: soirs seulement, pas le 15 du mois…)"
+              value={profile.availNote}
+              onChange={(e) => setProfile({ ...profile, availNote: e.target.value })}
+            />
+          </div>
+
+          <Field label="Photo de profil">
+            <input
+              type="file"
+              accept="image/*"
+              className="text-sm"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) uploadAvatar.mutate(f);
+              }}
+            />
+            {uploadAvatar.isPending && <p className="mt-1 text-xs text-canvas-500">Téléversement…</p>}
+          </Field>
+
           {profileErr && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{profileErr}</p>}
           <div className="flex justify-end">
             <Button type="submit" variant="accent" disabled={updateUser.isPending}>

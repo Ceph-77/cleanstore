@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
+import { playChime } from "../../utils/sound";
 import { useAuth } from "../../context/AuthContext";
 import { Logo } from "./Logo";
 import {
@@ -136,6 +137,18 @@ function SidebarContent({ onNavigate, onCloseButton }: { onNavigate?: () => void
   const navigate = useNavigate();
   const role = user?.roleKey as RoleKey | undefined;
   const { data: unseenCount } = useUnseenDecisionsCount();
+
+  const prevUnseen = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    if (
+      typeof unseenCount === "number" &&
+      typeof prevUnseen.current === "number" &&
+      unseenCount > prevUnseen.current
+    ) {
+      playChime("notify");
+    }
+    prevUnseen.current = unseenCount;
+  }, [unseenCount]);
 
   async function handleLogout() {
     await logout();

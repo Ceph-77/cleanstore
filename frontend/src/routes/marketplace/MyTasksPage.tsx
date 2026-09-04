@@ -223,15 +223,23 @@ function TaskRow({ task }: { task: Task }) {
   );
 }
 
+const ACTIVE_STATUSES = ["claimed", "in_progress"];
+
 export function MyTasksPage() {
   const { data: tasks, isLoading } = useMyTasks();
   const { data: claims } = useMyTaskClaims();
   const markSeen = useMarkDecisionsSeen();
+  const [tab, setTab] = useState<"active" | "done">("active");
 
   useEffect(() => {
     markSeen.mutate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const shown = (tasks ?? []).filter((t) =>
+    tab === "active" ? ACTIVE_STATUSES.includes(t.status) : !ACTIVE_STATUSES.includes(t.status)
+  );
+  const doneCount = (tasks ?? []).filter((t) => !ACTIVE_STATUSES.includes(t.status)).length;
 
   return (
     <AppLayout>
@@ -241,17 +249,34 @@ export function MyTasksPage() {
 
       <StreakBadge />
 
+      <div className="mt-4 inline-flex rounded-lg border border-canvas-200 bg-white p-0.5 text-sm">
+        {(["active", "done"] as const).map((k) => (
+          <button
+            key={k}
+            type="button"
+            onClick={() => setTab(k)}
+            className={`rounded-md px-3 py-1.5 font-medium transition-colors ${
+              tab === k ? "bg-flow-600 text-white" : "text-canvas-600 hover:text-canvas-900"
+            }`}
+          >
+            {k === "active" ? "À faire" : `Terminées${doneCount ? ` (${doneCount})` : ""}`}
+          </button>
+        ))}
+      </div>
+
       {isLoading && <p className="mt-8 text-sm text-canvas-600">Chargement...</p>}
 
-      {tasks && tasks.length === 0 && (
-        <div className="mt-8 rounded-2xl border border-dashed border-canvas-300 bg-white px-6 py-16 text-center">
-          <p className="text-sm text-canvas-600">Aucune tâche en cours pour l'instant.</p>
+      {tasks && shown.length === 0 && (
+        <div className="mt-6 rounded-2xl border border-dashed border-canvas-300 bg-white px-6 py-16 text-center">
+          <p className="text-sm text-canvas-600">
+            {tab === "active" ? "Aucune tâche à faire pour l'instant." : "Aucune tâche terminée."}
+          </p>
         </div>
       )}
 
-      {tasks && tasks.length > 0 && (
+      {shown.length > 0 && (
         <div className="mt-6 space-y-3">
-          {tasks.map((task) => (
+          {shown.map((task) => (
             <TaskRow key={task.id} task={task} />
           ))}
         </div>

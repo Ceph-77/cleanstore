@@ -247,11 +247,20 @@ export interface TaskClaim {
   };
 }
 
+export interface Availability {
+  days: number[];
+  note?: string;
+}
+
 export interface AppUser {
   id: string;
   fullName: string | null;
   email: string;
   phone: string | null;
+  address?: string | null;
+  adminNote?: string | null;
+  availability?: Availability | null;
+  avatarUrl?: string | null;
   isActive: boolean;
   createdAt: string;
   roles: { role: { key: RoleKey; label: string }; organization: { id: string; name: string } | null }[];
