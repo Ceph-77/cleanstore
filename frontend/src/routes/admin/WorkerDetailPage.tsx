@@ -8,6 +8,7 @@ import { IconMapPin } from "../../components/common/icons";
 import { ApiError } from "../../api/client";
 import { useUser } from "../../hooks/useUsers";
 import { useStores } from "../../hooks/useStores";
+import { useTasks } from "../../hooks/useTasks";
 import {
   useWorkerSummary,
   useWorkerStreak,
@@ -34,6 +35,18 @@ export function WorkerDetailPage() {
   const [form, setForm] = useState(emptyForm);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+
+  const { data: storeTasks } = useTasks(form.storeId);
+  // Distinct task "templates" already defined for the selected store, so the
+  // admin can pick instead of retyping.
+  const templates = Array.from(
+    new Map(
+      (storeTasks ?? []).map((t) => [
+        `${t.description}|${t.taskType ?? ""}|${t.price}`,
+        { description: t.description, taskType: t.taskType ?? "", price: String(t.price) },
+      ])
+    ).values()
+  );
 
   const { data: day, isLoading: dayLoading } = useWorkerStreakDay(id, selected);
   const today = strip?.days[strip.days.length - 1];
@@ -170,23 +183,47 @@ export function WorkerDetailPage() {
                   Enregistré comme complété le <strong>{selected}</strong>. Compte dans les points, la
                   série et le classement à cette date.
                 </p>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <Field label="Magasin">
+                <Field label="Magasin">
+                  <select
+                    required
+                    className="w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
+                    value={form.storeId}
+                    onChange={(e) =>
+                      setForm({ ...form, storeId: e.target.value, description: "", taskType: "", price: "" })
+                    }
+                  >
+                    <option value="">—</option>
+                    {stores?.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                        {s.city ? ` · ${s.city}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+
+                {form.storeId && templates.length > 0 && (
+                  <Field label="Depuis une tâche du magasin (remplit les champs)">
                     <select
-                      required
                       className="w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
-                      value={form.storeId}
-                      onChange={(e) => setForm({ ...form, storeId: e.target.value })}
+                      value=""
+                      onChange={(e) => {
+                        const t = templates[Number(e.target.value)];
+                        if (t) setForm({ ...form, description: t.description, taskType: t.taskType, price: t.price });
+                      }}
                     >
-                      <option value="">—</option>
-                      {stores?.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name}
-                          {s.city ? ` · ${s.city}` : ""}
+                      <option value="">— Choisir / ou saisir manuellement ci-dessous —</option>
+                      {templates.map((t, i) => (
+                        <option key={i} value={i}>
+                          {t.description}
+                          {t.taskType ? ` · ${t.taskType}` : ""} · {Number(t.price).toFixed(2)} $
                         </option>
                       ))}
                     </select>
                   </Field>
+                )}
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <Field label="Type (optionnel)">
                     <Input value={form.taskType} onChange={(e) => setForm({ ...form, taskType: e.target.value })} />
                   </Field>
