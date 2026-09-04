@@ -40,3 +40,13 @@ engagementRouter.post(
   requireRole("admin"),
   engagementController.addPastTask
 );
+engagementRouter.patch(
+  "/workers/:workerId/past-tasks/:taskId",
+  requireRole("admin"),
+  engagementController.updatePastTask
+);
+engagementRouter.delete(
+  "/workers/:workerId/past-tasks/:taskId",
+  requireRole("admin"),
+  engagementController.deletePastTask
+);

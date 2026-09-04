@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { pastTaskSchema } from "./engagement.schema";
+import { pastTaskSchema, pastTaskUpdateSchema } from "./engagement.schema";
 import * as engagementService from "./engagement.service";
 
 export async function mySummary(req: Request, res: Response) {
@@ -70,6 +70,28 @@ export async function addPastTask(req: Request, res: Response) {
       req.session.userId!
     );
     res.status(201).json(result);
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
+  }
+}
+
+export async function updatePastTask(req: Request, res: Response) {
+  const parsed = pastTaskUpdateSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.flatten() });
+  }
+  try {
+    res.json(
+      await engagementService.updatePastTask(req.params.workerId, req.params.taskId, parsed.data)
+    );
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
+  }
+}
+
+export async function deletePastTask(req: Request, res: Response) {
+  try {
+    res.json(await engagementService.deletePastTask(req.params.workerId, req.params.taskId));
   } catch (err) {
     res.status(400).json({ error: (err as Error).message });
   }

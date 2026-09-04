@@ -9,6 +9,7 @@ const upload = multer({
 
 export const taskInspectionsRouterForTask = Router({ mergeParams: true });
 taskInspectionsRouterForTask.get("/", taskInspectionsController.get);
+taskInspectionsRouterForTask.patch("/", taskInspectionsController.update);
 taskInspectionsRouterForTask.post(
   "/",
   upload.fields([

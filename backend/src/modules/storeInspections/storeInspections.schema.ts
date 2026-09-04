@@ -11,3 +11,11 @@ export const storeInspectionCreateSchema = z.object({
   notes: z.string().optional(),
   checklist: z.array(checklistItemSchema).default([]),
 });
+
+export const storeInspectionUpdateSchema = z
+  .object({
+    score: z.coerce.number().int().min(0).max(100),
+    notes: z.string().nullable(),
+    checklist: z.array(checklistItemSchema),
+  })
+  .partial();

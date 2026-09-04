@@ -58,3 +58,19 @@ export function addPastTask(workerId: string, input: PastTaskInput) {
     input
   );
 }
+
+export interface PastTaskPatch {
+  description?: string;
+  taskType?: string | null;
+  price?: number;
+  completedAt?: string;
+  inspectionScore?: number | null;
+}
+
+export function updatePastTask(workerId: string, taskId: string, patch: PastTaskPatch) {
+  return apiClient.patch<{ id: string }>(`/engagement/workers/${workerId}/past-tasks/${taskId}`, patch);
+}
+
+export function deletePastTask(workerId: string, taskId: string) {
+  return apiClient.delete<{ id: string }>(`/engagement/workers/${workerId}/past-tasks/${taskId}`);
+}

@@ -55,11 +55,52 @@ export function getUserById(id: string) {
   });
 }
 
-export function setUserActive(id: string, isActive: boolean) {
-  return prisma.user.update({
-    where: { id },
-    data: { isActive },
-    select: { id: true, email: true, fullName: true, isActive: true },
+interface UserAdminPatch {
+  isActive?: boolean;
+  fullName?: string;
+  phone?: string | null;
+  role?: RoleKey;
+  organizationId?: string | null;
+}
+
+export async function updateUserAdmin(id: string, patch: UserAdminPatch) {
+  return prisma.$transaction(async (tx) => {
+    const data: Record<string, unknown> = {};
+    if (patch.isActive !== undefined) data.isActive = patch.isActive;
+    if (patch.fullName !== undefined) data.fullName = patch.fullName;
+    if (patch.phone !== undefined) data.phone = patch.phone;
+    if (Object.keys(data).length > 0) {
+      await tx.user.update({ where: { id }, data });
+    }
+
+    if (patch.role !== undefined) {
+      const role = await tx.role.findUniqueOrThrow({ where: { key: patch.role } });
+      await tx.userRole.deleteMany({ where: { userId: id } });
+      await tx.userRole.create({
+        data: {
+          userId: id,
+          roleId: role.id,
+          organizationId: patch.role === "sous_traitant" ? patch.organizationId ?? undefined : undefined,
+        },
+      });
+    }
+
+    return tx.user.findUniqueOrThrow({
+      where: { id },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        phone: true,
+        isActive: true,
+        roles: {
+          select: {
+            role: { select: { key: true, label: true } },
+            organization: { select: { id: true, name: true } },
+          },
+        },
+      },
+    });
   });
 }
 

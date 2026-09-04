@@ -5,6 +5,14 @@ export function listStoreInspections(storeId: string) {
   return apiClient.get<{ inspections: StoreInspection[] }>(`/stores/${storeId}/inspections`);
 }
 
+export function updateStoreInspection(
+  storeId: string,
+  id: string,
+  data: { score?: number; notes?: string | null; checklist?: ChecklistItem[] }
+) {
+  return apiClient.patch<{ inspection: StoreInspection }>(`/stores/${storeId}/inspections/${id}`, data);
+}
+
 export function createStoreInspection(
   storeId: string,
   data: { score: number; notes: string; checklist: ChecklistItem[] },

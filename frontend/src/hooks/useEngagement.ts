@@ -82,6 +82,23 @@ export function useAddPastTask(workerId: string) {
   });
 }
 
+export function useUpdatePastTask(workerId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ taskId, patch }: { taskId: string; patch: engagementApi.PastTaskPatch }) =>
+      engagementApi.updatePastTask(workerId, taskId, patch),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["engagement", "worker", workerId] }),
+  });
+}
+
+export function useDeletePastTask(workerId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (taskId: string) => engagementApi.deletePastTask(workerId, taskId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["engagement", "worker", workerId] }),
+  });
+}
+
 export function useLeaderboard() {
   const { user } = useAuth();
   return useQuery({

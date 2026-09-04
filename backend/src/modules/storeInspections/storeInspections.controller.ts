@@ -1,10 +1,23 @@
 import type { Request, Response } from "express";
-import { storeInspectionCreateSchema } from "./storeInspections.schema";
+import { storeInspectionCreateSchema, storeInspectionUpdateSchema } from "./storeInspections.schema";
 import * as storeInspectionsService from "./storeInspections.service";
 
 export async function list(req: Request, res: Response) {
   const inspections = await storeInspectionsService.listInspectionsWithUrls(req.params.storeId);
   res.json({ inspections });
+}
+
+export async function update(req: Request, res: Response) {
+  const parsed = storeInspectionUpdateSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.flatten() });
+  }
+  try {
+    const inspection = await storeInspectionsService.updateInspection(req.params.id, parsed.data);
+    res.json({ inspection });
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
+  }
 }
 
 export async function create(req: Request, res: Response) {

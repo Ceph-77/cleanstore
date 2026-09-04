@@ -5,6 +5,10 @@ export function getTaskInspection(taskId: string) {
   return apiClient.get<{ inspection: TaskInspection | null }>(`/tasks/${taskId}/inspections`);
 }
 
+export function updateTaskInspection(taskId: string, data: { score?: number; notes?: string | null }) {
+  return apiClient.patch<{ inspection: TaskInspection }>(`/tasks/${taskId}/inspections`, data);
+}
+
 export function createTaskInspection(
   taskId: string,
   data: { score: number; notes: string },

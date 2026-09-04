@@ -423,6 +423,112 @@ export async function backfillCompletedTask(input: BackfillInput, createdById: s
   };
 }
 
+async function assertOwnedEditableTask(workerId: string, taskId: string) {
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: { id: true, assignedToId: true, status: true },
+  });
+  if (!task || task.assignedToId !== workerId) throw new Error("Tâche introuvable pour ce travailleur.");
+  const earning = await prisma.workerEarning.findUnique({
+    where: { taskId },
+    select: { status: true },
+  });
+  if (earning && earning.status === "withdrawn") {
+    throw new Error("Le gain de cette tâche a déjà été retiré — modification impossible.");
+  }
+  return task;
+}
+
+export async function deletePastTask(workerId: string, taskId: string) {
+  await assertOwnedEditableTask(workerId, taskId);
+  await prisma.$transaction([
+    prisma.pointEntry.deleteMany({ where: { taskId } }),
+    prisma.workerMoment.deleteMany({ where: { taskId } }),
+    prisma.workerEarning.deleteMany({ where: { taskId } }),
+    prisma.taskClaim.deleteMany({ where: { taskId } }),
+    prisma.task.delete({ where: { id: taskId } }), // taskInspection cascades
+  ]);
+  return { id: taskId };
+}
+
+export interface PastTaskPatch {
+  description?: string;
+  taskType?: string | null;
+  price?: number;
+  completedAt?: Date;
+  inspectionScore?: number | null;
+}
+
+export async function updatePastTask(workerId: string, taskId: string, patch: PastTaskPatch) {
+  await assertOwnedEditableTask(workerId, taskId);
+  if (patch.completedAt && patch.completedAt.getTime() > Date.now()) {
+    throw new Error("La date doit être dans le passé.");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    const taskData: Record<string, unknown> = {};
+    if (patch.description !== undefined) taskData.description = patch.description;
+    if (patch.taskType !== undefined) taskData.taskType = patch.taskType || null;
+    if (patch.price !== undefined) taskData.price = patch.price;
+    if (patch.completedAt !== undefined) taskData.startedAt = patch.completedAt;
+
+    // Inspection score
+    if (patch.inspectionScore !== undefined) {
+      const existing = await tx.taskInspection.findUnique({ where: { taskId } });
+      if (patch.inspectionScore === null) {
+        if (existing) await tx.taskInspection.delete({ where: { taskId } });
+        taskData.status = "completed";
+      } else {
+        if (existing) {
+          await tx.taskInspection.update({ where: { taskId }, data: { score: patch.inspectionScore } });
+        } else {
+          await tx.taskInspection.create({ data: { taskId, score: patch.inspectionScore } });
+        }
+        taskData.status = "inspected";
+      }
+      // quality point entry follows the score
+      await tx.pointEntry.deleteMany({ where: { taskId, kind: "quality" } });
+      if (patch.inspectionScore !== null && patch.inspectionScore >= POINTS.QUALITY_MIN_SCORE) {
+        const current = await tx.task.findUnique({ where: { id: taskId }, select: { startedAt: true } });
+        await tx.pointEntry.create({
+          data: {
+            workerId,
+            kind: "quality",
+            points: POINTS.QUALITY_BONUS,
+            taskId,
+            createdAt: patch.completedAt ?? current?.startedAt ?? new Date(),
+          },
+        });
+      }
+    }
+
+    if (Object.keys(taskData).length > 0) {
+      await tx.task.update({ where: { id: taskId }, data: taskData });
+    }
+
+    // Move all of this task's point entries to the new date
+    if (patch.completedAt !== undefined) {
+      await tx.pointEntry.updateMany({ where: { taskId }, data: { createdAt: patch.completedAt } });
+    }
+
+    // Keep the earning in sync with price / score
+    const earning = await tx.workerEarning.findUnique({ where: { taskId } });
+    if (earning) {
+      const data: Record<string, unknown> = {};
+      if (patch.price !== undefined) data.grossAmount = patch.price;
+      if (patch.completedAt !== undefined) data.availableAt = patch.completedAt;
+      if (patch.inspectionScore !== undefined && earning.status !== "withdrawn") {
+        data.status = patch.inspectionScore !== null && patch.inspectionScore < 50 ? "disputed" : "available";
+      }
+      if (Object.keys(data).length > 0) {
+        await tx.workerEarning.update({ where: { taskId }, data });
+      }
+    }
+  });
+
+  return { id: taskId };
+}
+
 /** Tasks the worker completed on a given local day (YYYY-MM-DD). */
 export async function getTasksForDay(workerId: string, dayKey: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(dayKey)) throw new Error("Date invalide.");

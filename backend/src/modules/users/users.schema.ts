@@ -16,6 +16,16 @@ export const userCreateSchema = z
     path: ["organizationId"],
   });
 
-export const userUpdateSchema = z.object({
-  isActive: z.boolean(),
-});
+export const userUpdateSchema = z
+  .object({
+    isActive: z.boolean(),
+    fullName: z.string().min(1),
+    phone: z.string().nullable(),
+    role: userRoleKeyEnum,
+    organizationId: z.string().uuid().nullable(),
+  })
+  .partial()
+  .refine((d) => d.role !== "sous_traitant" || !!d.organizationId, {
+    message: "organizationId requis pour le rôle sous_traitant",
+    path: ["organizationId"],
+  });

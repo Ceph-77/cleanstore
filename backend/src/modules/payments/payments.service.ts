@@ -212,6 +212,14 @@ export async function resolveEarningOnInspection(taskId: string, score: number) 
   });
 }
 
+/** Re-evaluate an earning when an inspection score is edited (unless already paid out). */
+export async function reevaluateEarningForScore(taskId: string, score: number | null) {
+  const earning = await prisma.workerEarning.findUnique({ where: { taskId } });
+  if (!earning || earning.status === "withdrawn") return;
+  const status = score !== null && score < PASSING_SCORE ? "disputed" : "available";
+  await prisma.workerEarning.update({ where: { id: earning.id }, data: { status } });
+}
+
 export async function runDuePayouts() {
   const due = await prisma.workerEarning.findMany({
     where: { status: "pending", availableAt: { lte: new Date() } },

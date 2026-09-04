@@ -9,6 +9,7 @@ const upload = multer({
 
 export const storeInspectionsRouterForStore = Router({ mergeParams: true });
 storeInspectionsRouterForStore.get("/", storeInspectionsController.list);
+storeInspectionsRouterForStore.patch("/:id", storeInspectionsController.update);
 storeInspectionsRouterForStore.post(
   "/",
   upload.fields([

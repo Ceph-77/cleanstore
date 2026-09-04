@@ -1,5 +1,9 @@
 import { useRef, useState, type FormEvent } from "react";
-import { useStoreInspections, useCreateStoreInspection } from "../../../hooks/useStoreInspections";
+import {
+  useStoreInspections,
+  useCreateStoreInspection,
+  useUpdateStoreInspection,
+} from "../../../hooks/useStoreInspections";
 import { Button } from "../../common/Button";
 import { Field } from "../../common/Field";
 import { Input } from "../../common/Input";
@@ -20,6 +24,11 @@ function scoreColor(score: number) {
 export function InspectionsTab({ store }: { store: Store }) {
   const { data: inspections } = useStoreInspections(store.id);
   const createInspection = useCreateStoreInspection(store.id);
+  const updateInspection = useUpdateStoreInspection(store.id);
+
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editScore, setEditScore] = useState("");
+  const [editNotes, setEditNotes] = useState("");
 
   const [showForm, setShowForm] = useState(false);
   const [score, setScore] = useState("100");
@@ -170,13 +179,74 @@ export function InspectionsTab({ store }: { store: Store }) {
                     )}
                   </div>
                 </div>
-                <span
-                  className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${scoreColor(inspection.score)}`}
-                >
-                  {inspection.score}/100
-                </span>
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${scoreColor(inspection.score)}`}
+                  >
+                    {inspection.score}/100
+                  </span>
+                  {editId !== inspection.id && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditId(inspection.id);
+                        setEditScore(String(inspection.score));
+                        setEditNotes(inspection.notes ?? "");
+                      }}
+                      className="text-xs font-medium text-flow-700 hover:text-flow-900"
+                    >
+                      Modifier
+                    </button>
+                  )}
+                </div>
               </div>
-              {inspection.notes && <p className="mt-2 whitespace-pre-line text-sm text-canvas-900">{inspection.notes}</p>}
+
+              {editId === inspection.id ? (
+                <div className="mt-3 space-y-2 rounded-xl bg-flow-50/60 p-3">
+                  <div className="max-w-[8rem]">
+                    <Field label="Score (0-100)">
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={editScore}
+                        onChange={(e) => setEditScore(e.target.value)}
+                      />
+                    </Field>
+                  </div>
+                  <Field label="Note">
+                    <textarea
+                      value={editNotes}
+                      onChange={(e) => setEditNotes(e.target.value)}
+                      rows={3}
+                      className="w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
+                    />
+                  </Field>
+                  <div className="flex justify-end gap-2">
+                    <Button type="button" variant="secondary" onClick={() => setEditId(null)}>
+                      Annuler
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="accent"
+                      disabled={updateInspection.isPending}
+                      onClick={async () => {
+                        await updateInspection.mutateAsync({
+                          id: inspection.id,
+                          data: { score: Number(editScore), notes: editNotes || null },
+                        });
+                        setEditId(null);
+                      }}
+                    >
+                      {updateInspection.isPending ? "Enregistrement..." : "Enregistrer"}
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                inspection.notes && (
+                  <p className="mt-2 whitespace-pre-line text-sm text-canvas-900">{inspection.notes}</p>
+                )
+              )}
               {inspection.photos.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {inspection.photos.map((photo) => (

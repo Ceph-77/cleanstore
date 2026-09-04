@@ -35,11 +35,20 @@ export async function update(req: Request, res: Response) {
   if (!parsed.success) {
     return res.status(400).json({ error: parsed.error.flatten() });
   }
-  if (req.params.id === req.session.userId && parsed.data.isActive === false) {
+  const isSelf = req.params.id === req.session.userId;
+  if (isSelf && parsed.data.isActive === false) {
     return res.status(400).json({ error: "Vous ne pouvez pas désactiver votre propre compte." });
   }
-  const user = await usersService.setUserActive(req.params.id, parsed.data.isActive);
-  res.json({ user });
+  if (isSelf && parsed.data.role !== undefined) {
+    // an admin changing their own role would lock themselves out of admin
+    return res.status(400).json({ error: "Vous ne pouvez pas changer votre propre rôle." });
+  }
+  try {
+    const user = await usersService.updateUserAdmin(req.params.id, parsed.data);
+    res.json({ user });
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
+  }
 }
 
 export async function remove(req: Request, res: Response) {

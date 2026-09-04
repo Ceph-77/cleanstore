@@ -61,3 +61,18 @@ export async function createInspection(
     include: { photos: true },
   });
 }
+
+export async function updateInspection(
+  id: string,
+  patch: { score?: number; notes?: string | null; checklist?: InspectionCreateInput["checklist"] }
+) {
+  return prisma.storeInspection.update({
+    where: { id },
+    data: {
+      ...(patch.score !== undefined ? { score: patch.score } : {}),
+      ...(patch.notes !== undefined ? { notes: patch.notes } : {}),
+      ...(patch.checklist !== undefined ? { checklist: patch.checklist } : {}),
+    },
+    include: { photos: true },
+  });
+}

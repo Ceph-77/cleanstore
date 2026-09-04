@@ -34,6 +34,17 @@ export function useSetUserActive() {
   });
 }
 
+export function useUpdateUser(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (patch: usersApi.UserAdminPatch) => usersApi.updateUser(id, patch),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "users", "detail", id] });
+    },
+  });
+}
+
 export function useDeleteUser() {
   const queryClient = useQueryClient();
   return useMutation({

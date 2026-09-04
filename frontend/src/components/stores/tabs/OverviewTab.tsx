@@ -14,7 +14,11 @@ import { TaskInstructionsForm } from "../../tasks/TaskInstructionsForm";
 import { Button } from "../../common/Button";
 import { StatCard } from "../../common/StatCard";
 import { IconTasks, IconWallet } from "../../common/icons";
-import { useCreateTaskInspection } from "../../../hooks/useTaskInspections";
+import {
+  useCreateTaskInspection,
+  useUpdateTaskInspection,
+  useTaskInspection,
+} from "../../../hooks/useTaskInspections";
 import { StoreGeofenceCard } from "../StoreGeofenceCard";
 import type { Store, Task } from "../../../types";
 
@@ -35,10 +39,12 @@ export function OverviewTab({ store }: { store: Store }) {
   const publishTask = usePublishTask(store.id);
   const unpublishTask = useUnpublishTask(store.id);
   const createInspection = useCreateTaskInspection(store.id);
+  const updateInspection = useUpdateTaskInspection(store.id);
 
   const [showForm, setShowForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [inspectingTask, setInspectingTask] = useState<Task | null>(null);
+  const { data: existingInspection } = useTaskInspection(inspectingTask?.id ?? "");
   const [instructionsTaskId, setInstructionsTaskId] = useState<string | null>(null);
 
   async function handleTaskSubmit(values: TaskFormValues) {
@@ -121,10 +127,19 @@ export function OverviewTab({ store }: { store: Store }) {
         <div className="mt-4">
           <TaskInspectionForm
             task={inspectingTask}
-            submitting={createInspection.isPending}
+            initial={
+              existingInspection
+                ? { score: existingInspection.score, notes: existingInspection.notes ?? "" }
+                : undefined
+            }
+            submitting={createInspection.isPending || updateInspection.isPending}
             onCancel={() => setInspectingTask(null)}
             onSubmit={async (values) => {
-              await createInspection.mutateAsync({ taskId: inspectingTask.id, ...values });
+              if (existingInspection) {
+                await updateInspection.mutateAsync({ taskId: inspectingTask.id, data: values.data });
+              } else {
+                await createInspection.mutateAsync({ taskId: inspectingTask.id, ...values });
+              }
               setInspectingTask(null);
             }}
           />

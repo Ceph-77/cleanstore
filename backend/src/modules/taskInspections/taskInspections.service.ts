@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { prisma } from "../../db/prisma";
 import { getSignedDownloadUrl, uploadFile } from "../../utils/storage";
-import { resolveEarningOnInspection } from "../payments/payments.service";
+import { resolveEarningOnInspection, reevaluateEarningForScore } from "../payments/payments.service";
 import * as engagement from "../engagement/engagement.service";
 import type { z } from "zod";
 import type { taskInspectionCreateSchema } from "./taskInspections.schema";
@@ -74,4 +74,41 @@ export async function createInspection(
   void engagement.onTaskInspected(taskId, data.score).catch(() => {});
 
   return inspection;
+}
+
+/** Edit an existing task inspection's score/notes (admin correction). */
+export async function updateInspection(taskId: string, patch: { score?: number; notes?: string | null }) {
+  const existing = await prisma.taskInspection.findUnique({ where: { taskId } });
+  if (!existing) throw new Error("Aucune inspection pour cette tâche.");
+
+  const updated = await prisma.taskInspection.update({
+    where: { taskId },
+    data: {
+      ...(patch.score !== undefined ? { score: patch.score } : {}),
+      ...(patch.notes !== undefined ? { notes: patch.notes } : {}),
+    },
+    include: { photos: true },
+  });
+
+  if (patch.score !== undefined) {
+    await reevaluateEarningForScore(taskId, patch.score);
+    // keep the engagement quality bonus in sync with the corrected score
+    await prisma.pointEntry.deleteMany({ where: { taskId, kind: "quality" } });
+    if (patch.score >= 90) {
+      const task = await prisma.task.findUnique({ where: { id: taskId }, select: { assignedToId: true } });
+      if (task?.assignedToId) {
+        await prisma.pointEntry.create({
+          data: {
+            workerId: task.assignedToId,
+            kind: "quality",
+            points: 15,
+            taskId,
+            createdAt: existing.createdAt,
+          },
+        });
+      }
+    }
+  }
+
+  return updated;
 }

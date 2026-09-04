@@ -23,8 +23,20 @@ export function createUser(data: CreateUserInput) {
   return apiClient.post<{ user: AppUser }>("/users", data);
 }
 
+export interface UserAdminPatch {
+  isActive?: boolean;
+  fullName?: string;
+  phone?: string | null;
+  role?: "sous_traitant" | "travailleur";
+  organizationId?: string | null;
+}
+
+export function updateUser(id: string, patch: UserAdminPatch) {
+  return apiClient.patch<{ user: AppUser }>(`/users/${id}`, patch);
+}
+
 export function setUserActive(id: string, isActive: boolean) {
-  return apiClient.patch<{ user: AppUser }>(`/users/${id}`, { isActive });
+  return updateUser(id, { isActive });
 }
 
 export function deleteUser(id: string) {

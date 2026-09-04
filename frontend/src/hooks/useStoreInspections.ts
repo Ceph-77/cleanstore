@@ -10,6 +10,20 @@ export function useStoreInspections(storeId: string) {
   });
 }
 
+export function useUpdateStoreInspection(storeId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: { score?: number; notes?: string | null; checklist?: ChecklistItem[] };
+    }) => storeInspectionsApi.updateStoreInspection(storeId, id, data),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["stores", storeId, "inspections"] }),
+  });
+}
+
 export function useCreateStoreInspection(storeId: string) {
   const queryClient = useQueryClient();
   return useMutation({
