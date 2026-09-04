@@ -49,6 +49,17 @@ export function startOfCurrentMonth(now: Date = new Date(), tz: string = DEFAULT
   return zonedStartOfDay(Number(get("year")), Number(get("month")), 1, tz);
 }
 
+/** Start of "today" (00:00 in `tz`), as a UTC Date. */
+export function startOfCurrentDay(now: Date = new Date(), tz: string = DEFAULT_TZ): Date {
+  return startOfLocalDay(localDayKey(now, tz), tz);
+}
+
+/** Start of the given local day "YYYY-MM-DD" (00:00 in `tz`), as a UTC Date. */
+export function startOfLocalDay(dayKey: string, tz: string = DEFAULT_TZ): Date {
+  const [y, m, d] = dayKey.split("-").map(Number);
+  return zonedStartOfDay(y, m, d, tz);
+}
+
 /** Local calendar day (YYYY-MM-DD in `tz`) for a given instant. */
 export function localDayKey(date: Date, tz: string = DEFAULT_TZ): string {
   const parts = new Intl.DateTimeFormat("en-CA", {

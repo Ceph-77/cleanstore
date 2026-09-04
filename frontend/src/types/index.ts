@@ -323,6 +323,34 @@ export interface EngagementSummary {
   pointsThisMonth: number;
   tasksCompleted: number;
   streakDays: number;
+  doneToday: boolean;
+}
+
+export interface StreakDay {
+  date: string;
+  label: string;
+  done: boolean;
+  count: number;
+}
+
+export interface StreakStrip {
+  streakDays: number;
+  days: StreakDay[];
+}
+
+export interface DayTask {
+  id: string;
+  description: string;
+  taskType: string | null;
+  price: string;
+  status: TaskStatus;
+  store: { name: string; city: string | null };
+  completedAt: string;
+}
+
+export interface DayTasks {
+  date: string;
+  tasks: DayTask[];
 }
 
 export interface LeaderboardRow {

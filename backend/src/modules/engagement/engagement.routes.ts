@@ -9,6 +9,8 @@ engagementRouter.get("/me", requireRole("travailleur"), engagementController.myS
 engagementRouter.get("/moments/unseen", requireRole("travailleur"), engagementController.unseenMoments);
 engagementRouter.post("/moments/seen", requireRole("travailleur"), engagementController.markAllSeen);
 engagementRouter.post("/moments/:id/seen", requireRole("travailleur"), engagementController.markMomentSeen);
+engagementRouter.get("/streak", requireRole("travailleur"), engagementController.streakStrip);
+engagementRouter.get("/streak/:date", requireRole("travailleur"), engagementController.dayTasks);
 
 // Leaderboard — admin + sous-traitant
 engagementRouter.get(

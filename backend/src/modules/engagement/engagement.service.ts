@@ -1,6 +1,11 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "../../db/prisma";
-import { startOfCurrentMonth, localDayKey } from "../../utils/week";
+import {
+  startOfCurrentMonth,
+  startOfCurrentDay,
+  startOfLocalDay,
+  localDayKey,
+} from "../../utils/week";
 import { sendMomentEmail } from "../../utils/email";
 import { POINTS, type PointKind, type MomentType } from "./points";
 
@@ -254,7 +259,7 @@ export async function onTaskInspected(taskId: string, score: number) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function getMySummary(workerId: string) {
-  const [totalAgg, monthAgg, completedCount, streakDays] = await Promise.all([
+  const [totalAgg, monthAgg, completedCount, streakDays, todayCount] = await Promise.all([
     prisma.pointEntry.aggregate({ _sum: { points: true }, where: { workerId } }),
     prisma.pointEntry.aggregate({
       _sum: { points: true },
@@ -262,12 +267,91 @@ export async function getMySummary(workerId: string) {
     }),
     prisma.pointEntry.count({ where: { workerId, kind: "task_completed" } }),
     computeStreak(workerId),
+    prisma.pointEntry.count({
+      where: { workerId, kind: "task_completed", createdAt: { gte: startOfCurrentDay() } },
+    }),
   ]);
   return {
     pointsTotal: totalAgg._sum.points ?? 0,
     pointsThisMonth: monthAgg._sum.points ?? 0,
     tasksCompleted: completedCount,
     streakDays,
+    // The flame is "lit" once at least one task is completed today; otherwise the
+    // streak is still alive from yesterday but at risk.
+    doneToday: todayCount > 0,
+  };
+}
+
+const WEEKDAY_LABELS = ["D", "L", "M", "M", "J", "V", "S"]; // Sun..Sat, fr
+
+/** Last `n` local days (oldest first) with whether a task was completed each day. */
+export async function getStreakStrip(workerId: string, n = 7) {
+  const since = new Date(startOfCurrentDay().getTime() - (n - 1) * DAY_MS);
+  const entries = await prisma.pointEntry.findMany({
+    where: { workerId, kind: "task_completed", createdAt: { gte: since } },
+    select: { createdAt: true },
+  });
+  const counts = new Map<string, number>();
+  for (const e of entries) {
+    const k = localDayKey(e.createdAt);
+    counts.set(k, (counts.get(k) ?? 0) + 1);
+  }
+
+  const days: { date: string; label: string; done: boolean; count: number }[] = [];
+  for (let i = n - 1; i >= 0; i -= 1) {
+    const key = localDayKey(new Date(Date.now() - i * DAY_MS));
+    // weekday of that calendar date, tz-independent (noon UTC can't cross a day)
+    const label = WEEKDAY_LABELS[new Date(`${key}T12:00:00Z`).getUTCDay()];
+    days.push({
+      date: key,
+      label,
+      done: (counts.get(key) ?? 0) > 0,
+      count: counts.get(key) ?? 0,
+    });
+  }
+  return { streakDays: await computeStreak(workerId), days };
+}
+
+/** Tasks the worker completed on a given local day (YYYY-MM-DD). */
+export async function getTasksForDay(workerId: string, dayKey: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dayKey)) throw new Error("Date invalide.");
+  const start = startOfLocalDay(dayKey);
+  const end = new Date(start.getTime() + DAY_MS);
+
+  const entries = await prisma.pointEntry.findMany({
+    where: {
+      workerId,
+      kind: "task_completed",
+      createdAt: { gte: start, lt: end },
+      taskId: { not: null },
+    },
+    select: { taskId: true, createdAt: true },
+    orderBy: { createdAt: "asc" },
+  });
+  const taskIds = entries.map((e) => e.taskId as string);
+  if (taskIds.length === 0) return { date: dayKey, tasks: [] };
+
+  const tasks = await prisma.task.findMany({
+    where: { id: { in: taskIds } },
+    select: {
+      id: true,
+      description: true,
+      taskType: true,
+      price: true,
+      status: true,
+      store: { select: { name: true, city: true } },
+    },
+  });
+  const byId = new Map(tasks.map((t) => [t.id, t]));
+
+  return {
+    date: dayKey,
+    tasks: entries
+      .map((e) => {
+        const t = byId.get(e.taskId as string);
+        return t ? { ...t, completedAt: e.createdAt } : null;
+      })
+      .filter((t): t is NonNullable<typeof t> => t !== null),
   };
 }
 

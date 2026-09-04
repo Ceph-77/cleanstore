@@ -32,6 +32,23 @@ export function useMarkMomentSeen() {
   });
 }
 
+export function useStreak() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["engagement", "streak"],
+    queryFn: () => engagementApi.getStreak(),
+    enabled: user?.roleKey === "travailleur",
+  });
+}
+
+export function useStreakDay(date: string | null) {
+  return useQuery({
+    queryKey: ["engagement", "streak", date],
+    queryFn: () => engagementApi.getStreakDay(date!),
+    enabled: !!date,
+  });
+}
+
 export function useLeaderboard() {
   const { user } = useAuth();
   return useQuery({
