@@ -17,6 +17,7 @@ import { SubcontractorTasksPage } from "./routes/marketplace/SubcontractorTasksP
 import { PaymentSettingsPage } from "./routes/marketplace/PaymentSettingsPage";
 import { ClaimsPage } from "./routes/admin/ClaimsPage";
 import { UsersPage } from "./routes/admin/UsersPage";
+import { WorkerDetailPage } from "./routes/admin/WorkerDetailPage";
 import { TasksDashboardPage } from "./routes/admin/TasksDashboardPage";
 import { SettingsPage } from "./routes/admin/SettingsPage";
 import { FeedbackPage } from "./routes/admin/FeedbackPage";
@@ -141,6 +142,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute roles={["admin"]}>
             <UsersPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/users/:id"
+        element={
+          <ProtectedRoute roles={["admin"]}>
+            <WorkerDetailPage />
           </ProtectedRoute>
         }
       />

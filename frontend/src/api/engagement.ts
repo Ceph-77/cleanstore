@@ -28,3 +28,33 @@ export function getStreak() {
 export function getStreakDay(date: string) {
   return apiClient.get<DayTasks>(`/engagement/streak/${date}`);
 }
+
+// ── Admin: any worker ──
+
+export function getWorkerSummary(workerId: string) {
+  return apiClient.get<{ summary: EngagementSummary }>(`/engagement/workers/${workerId}/summary`);
+}
+
+export function getWorkerStreak(workerId: string) {
+  return apiClient.get<StreakStrip>(`/engagement/workers/${workerId}/streak`);
+}
+
+export function getWorkerStreakDay(workerId: string, date: string) {
+  return apiClient.get<DayTasks>(`/engagement/workers/${workerId}/streak/${date}`);
+}
+
+export interface PastTaskInput {
+  storeId: string;
+  description: string;
+  taskType?: string;
+  price: number;
+  completedAt: string;
+  inspectionScore?: number;
+}
+
+export function addPastTask(workerId: string, input: PastTaskInput) {
+  return apiClient.post<{ task: { id: string }; earningCreated: boolean; earningSkippedReason: string | null }>(
+    `/engagement/workers/${workerId}/past-tasks`,
+    input
+  );
+}

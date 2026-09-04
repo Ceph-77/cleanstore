@@ -15,9 +15,17 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 // Low-level writers
 // ─────────────────────────────────────────────────────────────────────────────
 
-async function award(workerId: string, kind: PointKind, points: number, taskId?: string) {
+async function award(
+  workerId: string,
+  kind: PointKind,
+  points: number,
+  taskId?: string,
+  createdAt?: Date
+) {
   if (points <= 0) return;
-  await prisma.pointEntry.create({ data: { workerId, kind, points, taskId: taskId ?? null } });
+  await prisma.pointEntry.create({
+    data: { workerId, kind, points, taskId: taskId ?? null, ...(createdAt ? { createdAt } : {}) },
+  });
 }
 
 interface MomentInput {
@@ -310,6 +318,109 @@ export async function getStreakStrip(workerId: string, n = 7) {
     });
   }
   return { streakDays: await computeStreak(workerId), days };
+}
+
+export interface BackfillInput {
+  workerId: string;
+  storeId: string;
+  description: string;
+  taskType?: string;
+  price: number;
+  completedAt: Date;
+  inspectionScore?: number;
+}
+
+/**
+ * Admin records a task that was done outside the app. Creates a completed (or
+ * inspected) Task assigned to the worker, back-dated point entries so the streak
+ * / leaderboard reflect the real date, and a payable earning when the store has
+ * a subcontractor. No celebration moments — it's a historical entry.
+ */
+export async function backfillCompletedTask(input: BackfillInput, createdById: string) {
+  const { workerId, storeId, description, taskType, price, completedAt, inspectionScore } = input;
+
+  if (completedAt.getTime() > Date.now()) throw new Error("La date doit être dans le passé.");
+
+  const [worker, store] = await Promise.all([
+    prisma.user.findFirst({
+      where: { id: workerId, roles: { some: { role: { key: "travailleur" } } } },
+      select: { id: true },
+    }),
+    prisma.store.findUnique({
+      where: { id: storeId },
+      select: { id: true, assignedSubcontractorId: true },
+    }),
+  ]);
+  if (!worker) throw new Error("Travailleur introuvable.");
+  if (!store) throw new Error("Magasin introuvable.");
+
+  const hasScore = typeof inspectionScore === "number";
+
+  const result = await prisma.$transaction(async (tx) => {
+    const task = await tx.task.create({
+      data: {
+        storeId,
+        description,
+        taskType: taskType || null,
+        price,
+        status: hasScore ? "inspected" : "completed",
+        assignedToId: workerId,
+        createdById,
+        startedAt: completedAt,
+        isPublished: false,
+      },
+    });
+
+    if (hasScore) {
+      await tx.taskInspection.create({
+        data: { taskId: task.id, score: inspectionScore!, createdById },
+      });
+    }
+
+    await tx.pointEntry.create({
+      data: {
+        workerId,
+        kind: "task_completed",
+        points: POINTS.TASK_COMPLETED,
+        taskId: task.id,
+        createdAt: completedAt,
+      },
+    });
+    if (hasScore && inspectionScore! >= POINTS.QUALITY_MIN_SCORE) {
+      await tx.pointEntry.create({
+        data: {
+          workerId,
+          kind: "quality",
+          points: POINTS.QUALITY_BONUS,
+          taskId: task.id,
+          createdAt: completedAt,
+        },
+      });
+    }
+
+    let earning = null;
+    if (store.assignedSubcontractorId) {
+      earning = await tx.workerEarning.create({
+        data: {
+          taskId: task.id,
+          workerId,
+          organizationId: store.assignedSubcontractorId,
+          grossAmount: price,
+          status: hasScore && inspectionScore! < 50 ? "disputed" : "available",
+          availableAt: completedAt,
+        },
+      });
+    }
+
+    return { task, earningCreated: !!earning };
+  });
+
+  return {
+    ...result,
+    earningSkippedReason: result.earningCreated
+      ? null
+      : "Le magasin n'a pas de sous-traitant assigné — aucun gain créé.",
+  };
 }
 
 /** Tasks the worker completed on a given local day (YYYY-MM-DD). */

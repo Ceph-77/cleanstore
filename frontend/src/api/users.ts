@@ -6,6 +6,10 @@ export function listUsers(role?: RoleKey) {
   return apiClient.get<{ users: AppUser[] }>(`/users${query}`);
 }
 
+export function getUser(id: string) {
+  return apiClient.get<{ user: AppUser }>(`/users/${id}`);
+}
+
 export interface CreateUserInput {
   email: string;
   password: string;

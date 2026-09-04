@@ -18,3 +18,25 @@ engagementRouter.get(
   requireRole("admin", "sous_traitant"),
   engagementController.leaderboard
 );
+
+// Admin: inspect any worker's streak + record past (off-app) work
+engagementRouter.get(
+  "/workers/:workerId/summary",
+  requireRole("admin"),
+  engagementController.workerSummary
+);
+engagementRouter.get(
+  "/workers/:workerId/streak",
+  requireRole("admin"),
+  engagementController.workerStreak
+);
+engagementRouter.get(
+  "/workers/:workerId/streak/:date",
+  requireRole("admin"),
+  engagementController.workerDayTasks
+);
+engagementRouter.post(
+  "/workers/:workerId/past-tasks",
+  requireRole("admin"),
+  engagementController.addPastTask
+);

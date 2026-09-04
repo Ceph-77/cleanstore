@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AppLayout } from "../../components/common/AppLayout";
 import { Button } from "../../components/common/Button";
 import { Field } from "../../components/common/Field";
@@ -191,14 +191,17 @@ export function UsersPage() {
                 <IconUser />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium text-canvas-900">
+                <Link
+                  to={`/admin/users/${user.id}`}
+                  className="text-sm font-medium text-canvas-900 hover:text-flow-700 hover:underline"
+                >
                   {user.fullName ?? user.email}
-                  {!user.isActive && (
-                    <span className="ml-2 rounded-full bg-canvas-200 px-2 py-0.5 text-[11px] font-medium text-canvas-700">
-                      Désactivé
-                    </span>
-                  )}
-                </p>
+                </Link>
+                {!user.isActive && (
+                  <span className="ml-2 rounded-full bg-canvas-200 px-2 py-0.5 text-[11px] font-medium text-canvas-700">
+                    Désactivé
+                  </span>
+                )}
                 <p className="mt-0.5 text-xs text-canvas-600">{user.email}</p>
               </div>
               <div className="flex flex-wrap gap-1.5">

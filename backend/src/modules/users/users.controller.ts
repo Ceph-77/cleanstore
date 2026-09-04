@@ -9,6 +9,12 @@ export async function list(req: Request, res: Response) {
   res.json({ users });
 }
 
+export async function getOne(req: Request, res: Response) {
+  const user = await usersService.getUserById(req.params.id);
+  if (!user) return res.status(404).json({ error: "Utilisateur introuvable." });
+  res.json({ user });
+}
+
 export async function create(req: Request, res: Response) {
   const parsed = userCreateSchema.safeParse(req.body);
   if (!parsed.success) {

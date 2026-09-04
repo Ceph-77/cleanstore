@@ -35,6 +35,26 @@ export function findUserByEmail(email: string) {
   return prisma.user.findUnique({ where: { email } });
 }
 
+export function getUserById(id: string) {
+  return prisma.user.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      fullName: true,
+      email: true,
+      phone: true,
+      isActive: true,
+      createdAt: true,
+      roles: {
+        select: {
+          role: { select: { key: true, label: true } },
+          organization: { select: { id: true, name: true } },
+        },
+      },
+    },
+  });
+}
+
 export function setUserActive(id: string, isActive: boolean) {
   return prisma.user.update({
     where: { id },

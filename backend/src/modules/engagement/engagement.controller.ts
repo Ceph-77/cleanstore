@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { pastTaskSchema } from "./engagement.schema";
 import * as engagementService from "./engagement.service";
 
 export async function mySummary(req: Request, res: Response) {
@@ -38,4 +39,38 @@ export async function dayTasks(req: Request, res: Response) {
 export async function leaderboard(_req: Request, res: Response) {
   const rows = await engagementService.getLeaderboard();
   res.json({ rows });
+}
+
+// ── Admin: inspect any worker + record past work ──
+
+export async function workerSummary(req: Request, res: Response) {
+  res.json({ summary: await engagementService.getMySummary(req.params.workerId) });
+}
+
+export async function workerStreak(req: Request, res: Response) {
+  res.json(await engagementService.getStreakStrip(req.params.workerId));
+}
+
+export async function workerDayTasks(req: Request, res: Response) {
+  try {
+    res.json(await engagementService.getTasksForDay(req.params.workerId, req.params.date));
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
+  }
+}
+
+export async function addPastTask(req: Request, res: Response) {
+  const parsed = pastTaskSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.flatten() });
+  }
+  try {
+    const result = await engagementService.backfillCompletedTask(
+      { workerId: req.params.workerId, ...parsed.data },
+      req.session.userId!
+    );
+    res.status(201).json(result);
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
+  }
 }

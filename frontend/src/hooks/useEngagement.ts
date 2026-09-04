@@ -49,6 +49,39 @@ export function useStreakDay(date: string | null) {
   });
 }
 
+export function useWorkerSummary(workerId: string) {
+  return useQuery({
+    queryKey: ["engagement", "worker", workerId, "summary"],
+    queryFn: () => engagementApi.getWorkerSummary(workerId).then((r) => r.summary),
+    enabled: !!workerId,
+  });
+}
+
+export function useWorkerStreak(workerId: string) {
+  return useQuery({
+    queryKey: ["engagement", "worker", workerId, "streak"],
+    queryFn: () => engagementApi.getWorkerStreak(workerId),
+    enabled: !!workerId,
+  });
+}
+
+export function useWorkerStreakDay(workerId: string, date: string | null) {
+  return useQuery({
+    queryKey: ["engagement", "worker", workerId, "streak", date],
+    queryFn: () => engagementApi.getWorkerStreakDay(workerId, date!),
+    enabled: !!workerId && !!date,
+  });
+}
+
+export function useAddPastTask(workerId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: engagementApi.PastTaskInput) => engagementApi.addPastTask(workerId, input),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ["engagement", "worker", workerId] }),
+  });
+}
+
 export function useLeaderboard() {
   const { user } = useAuth();
   return useQuery({

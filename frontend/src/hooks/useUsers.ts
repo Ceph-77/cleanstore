@@ -9,6 +9,14 @@ export function useUsers(role?: RoleKey) {
   });
 }
 
+export function useUser(id: string) {
+  return useQuery({
+    queryKey: ["admin", "users", "detail", id],
+    queryFn: () => usersApi.getUser(id).then((r) => r.user),
+    enabled: !!id,
+  });
+}
+
 export function useCreateUser() {
   const queryClient = useQueryClient();
   return useMutation({
