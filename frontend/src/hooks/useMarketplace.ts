@@ -56,3 +56,21 @@ export function useClaimTask() {
     },
   });
 }
+
+export function useAssignableWorkers() {
+  return useQuery({
+    queryKey: ["marketplace", "assignable-workers"],
+    queryFn: () => marketplaceApi.listAssignableWorkers().then((r) => r.workers),
+  });
+}
+
+export function useDirectAssign() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ taskId, workerId }: { taskId: string; workerId: string }) =>
+      marketplaceApi.directAssignTask(taskId, workerId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["task-instructions", "mine"] });
+    },
+  });
+}

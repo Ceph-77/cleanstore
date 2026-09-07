@@ -10,6 +10,16 @@ taskMarketplaceRouter.post(
   taskClaimsController.create
 );
 taskMarketplaceRouter.get("/my-task-claims", requireRole("travailleur"), taskClaimsController.listMine);
+taskMarketplaceRouter.get(
+  "/assignable-workers",
+  requireRole("sous_traitant"),
+  taskClaimsController.assignableWorkers
+);
+taskMarketplaceRouter.post(
+  "/direct-assign",
+  requireRole("sous_traitant"),
+  taskClaimsController.directAssign
+);
 
 export const taskClaimsAdminRouter = Router();
 taskClaimsAdminRouter.use(requireRole("admin"));

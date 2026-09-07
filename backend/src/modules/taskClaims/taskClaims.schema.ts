@@ -4,6 +4,11 @@ export const createClaimSchema = z.object({
   note: z.string().optional(),
 });
 
+export const directAssignSchema = z.object({
+  taskId: z.string().uuid(),
+  workerId: z.string().uuid(),
+});
+
 export const claimDecisionSchema = z
   .object({
     status: z.enum(["approved", "rejected"]),

@@ -114,6 +114,7 @@ export async function listTasksForSubcontractor(userId: string) {
     where: { store: { assignedSubcontractorId: organizationId } },
     include: {
       store: { select: { id: true, name: true, city: true } },
+      assignedTo: { select: { id: true, fullName: true, email: true } },
       _count: { select: { expectedPhotos: true, steps: true } },
     },
     orderBy: { updatedAt: "desc" },

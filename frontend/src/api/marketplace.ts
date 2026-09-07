@@ -34,3 +34,17 @@ export function claimTask(taskId: string, note?: string) {
 export function listMyTaskClaims() {
   return apiClient.get<{ claims: TaskClaim[] }>("/marketplace/my-task-claims");
 }
+
+export interface AssignableWorker {
+  id: string;
+  fullName: string | null;
+  email: string;
+}
+
+export function listAssignableWorkers() {
+  return apiClient.get<{ workers: AssignableWorker[] }>("/marketplace/assignable-workers");
+}
+
+export function directAssignTask(taskId: string, workerId: string) {
+  return apiClient.post<{ task: Task }>("/marketplace/direct-assign", { taskId, workerId });
+}

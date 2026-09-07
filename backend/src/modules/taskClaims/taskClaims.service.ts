@@ -2,6 +2,7 @@ import { prisma } from "../../db/prisma";
 import { getSignedDownloadUrl } from "../../utils/storage";
 import { sendClaimDecisionEmail } from "../../utils/email";
 import { startOfCurrentWeek } from "../../utils/week";
+import { assertCanEditTask } from "../taskInstructions/taskInstructions.service";
 import type { ClaimStatus } from "@prisma/client";
 
 /** A worker may submit at most this many task claims per store per calendar week. */
@@ -83,6 +84,53 @@ export async function createClaim(taskId: string, workerId: string, note?: strin
   }
 
   return prisma.taskClaim.create({ data: { taskId, workerId, note } });
+}
+
+/** Active workers a subcontractor can assign a task to. */
+export function listAssignableWorkers() {
+  return prisma.user.findMany({
+    where: { isActive: true, roles: { some: { role: { key: "travailleur" } } } },
+    select: { id: true, fullName: true, email: true },
+    orderBy: { fullName: "asc" },
+  });
+}
+
+/**
+ * A subcontractor assigns one of their workers directly to a task on one of
+ * their own stores, bypassing the claim flow. Any pending claim on that task is
+ * rejected. Only usable while the task is still open or claimed (not started).
+ */
+export async function directAssignTask(taskId: string, workerId: string, subUserId: string) {
+  await assertCanEditTask(taskId, subUserId, "sous_traitant");
+
+  const [task, worker] = await Promise.all([
+    prisma.task.findUnique({ where: { id: taskId }, select: { status: true } }),
+    prisma.user.findFirst({
+      where: { id: workerId, isActive: true, roles: { some: { role: { key: "travailleur" } } } },
+      select: { id: true },
+    }),
+  ]);
+  if (!task) throw new Error("Tâche introuvable.");
+  if (!worker) throw new Error("Travailleur introuvable ou inactif.");
+  if (task.status !== "open" && task.status !== "claimed") {
+    throw new Error("Cette tâche ne peut plus être réattribuée (déjà démarrée ou terminée).");
+  }
+
+  const [updated] = await prisma.$transaction([
+    prisma.task.update({
+      where: { id: taskId },
+      data: { assignedToId: workerId, status: "claimed" },
+    }),
+    prisma.taskClaim.updateMany({
+      where: { taskId, status: "pending" },
+      data: {
+        status: "rejected",
+        decidedAt: new Date(),
+        decisionReason: "Tâche attribuée directement par le sous-traitant.",
+      },
+    }),
+  ]);
+  return updated;
 }
 
 export function listMyClaims(userId: string) {

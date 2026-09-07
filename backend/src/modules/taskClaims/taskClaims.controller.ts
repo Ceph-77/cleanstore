@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import type { ClaimStatus } from "@prisma/client";
-import { claimDecisionSchema, createClaimSchema } from "./taskClaims.schema";
+import { claimDecisionSchema, createClaimSchema, directAssignSchema } from "./taskClaims.schema";
 import * as taskClaimsService from "./taskClaims.service";
 
 export async function listMarketplace(req: Request, res: Response) {
@@ -24,6 +24,28 @@ export async function create(req: Request, res: Response) {
 export async function listMine(req: Request, res: Response) {
   const claims = await taskClaimsService.listMyClaims(req.session.userId!);
   res.json({ claims });
+}
+
+export async function assignableWorkers(_req: Request, res: Response) {
+  const workers = await taskClaimsService.listAssignableWorkers();
+  res.json({ workers });
+}
+
+export async function directAssign(req: Request, res: Response) {
+  const parsed = directAssignSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.flatten() });
+  }
+  try {
+    const task = await taskClaimsService.directAssignTask(
+      parsed.data.taskId,
+      parsed.data.workerId,
+      req.session.userId!
+    );
+    res.json({ task });
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
+  }
 }
 
 export async function list(req: Request, res: Response) {
