@@ -72,7 +72,11 @@ function InstructionsDetails({ task }: { task: Task }) {
         <p className="whitespace-pre-line text-sm text-canvas-900">{task.howToText}</p>
       )}
       {task.steps && task.steps.length > 0 && (
-        <ul className="mt-2 space-y-1.5">
+        <>
+          <p className="mt-2 text-[11px] font-medium uppercase tracking-wide text-canvas-500">
+            Points de contrôle — auto-vérification
+          </p>
+          <ul className="mt-1 space-y-1.5">
           {task.steps.map((step) => (
             <li key={step.id} className="flex items-center gap-2 text-sm">
               <input
@@ -86,10 +90,11 @@ function InstructionsDetails({ task }: { task: Task }) {
               <span className={step.isDone ? "text-canvas-500 line-through" : "text-canvas-900"}>{step.text}</span>
             </li>
           ))}
-        </ul>
+          </ul>
+        </>
       )}
       {!task.howToText && (!task.steps || task.steps.length === 0) && (
-        <p className="text-xs text-canvas-600">Aucune instruction fournie pour cette tâche.</p>
+        <p className="text-xs text-canvas-600">Aucune précision fournie pour cette tâche.</p>
       )}
     </div>
   );
@@ -103,6 +108,7 @@ function TaskRow({ task }: { task: Task }) {
   const [showInstructions, setShowInstructions] = useState(false);
   const [locating, setLocating] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
+  const [startNote, setStartNote] = useState<string | null>(null);
 
   async function handleComplete() {
     await updateStatus.mutateAsync({ taskId: task.id, status: "completed", note: note || undefined });
@@ -112,10 +118,22 @@ function TaskRow({ task }: { task: Task }) {
 
   async function handleStart() {
     setStartError(null);
+    setStartNote(null);
     setLocating(true);
+    // Position is best-effort: a denial or timeout must not block the start.
+    let position: Awaited<ReturnType<typeof getCurrentPosition>> | undefined;
     try {
-      const position = await getCurrentPosition();
-      await updateStatus.mutateAsync({ taskId: task.id, status: "in_progress", position });
+      position = await getCurrentPosition();
+    } catch {
+      position = undefined;
+    }
+    try {
+      const { task: updated } = await updateStatus.mutateAsync({
+        taskId: task.id,
+        status: "in_progress",
+        position,
+      });
+      if (updated.startGeoNote) setStartNote(updated.startGeoNote);
     } catch (err) {
       setStartError(err instanceof Error ? err.message : "Impossible de démarrer la tâche.");
     } finally {
@@ -153,7 +171,7 @@ function TaskRow({ task }: { task: Task }) {
               className="w-full sm:w-auto"
               onClick={() => setShowInstructions((v) => !v)}
             >
-              {showInstructions ? "Masquer les instructions" : "Voir les instructions"}
+              {showInstructions ? "Masquer les précisions" : "Voir les précisions"}
             </Button>
           )}
           {task.status === "claimed" && (
@@ -182,7 +200,14 @@ function TaskRow({ task }: { task: Task }) {
       {task.status === "claimed" && (
         <p className="mt-2 flex items-center gap-1.5 text-xs text-canvas-500">
           <IconMapPin className="h-3 w-3 shrink-0" />
-          Vous devez être à moins de 100 m du magasin pour démarrer.
+          Ta position est notée au démarrage (assurance qualité). Autorise la
+          localisation si possible.
+        </p>
+      )}
+
+      {startNote && (
+        <p className="mt-2 rounded-lg bg-linen-50 px-3 py-2 text-xs text-linen-800 ring-1 ring-linen-200">
+          Démarré. {startNote} — sans effet sur le démarrage, c'est juste noté.
         </p>
       )}
 

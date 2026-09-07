@@ -30,11 +30,15 @@ type GeofenceStore = {
 };
 
 /**
- * A worker can only start a task while physically near the store. Reference point
- * is the on-site walked geofence when available, otherwise the address-geocoded
- * coordinates (with a wider radius to absorb geocoding imprecision).
+ * Records where the worker was when they started, for quality/assurance — but
+ * never blocks the start. GPS on mobile (indoors, in a mall) is unreliable, and a
+ * hard geo-gate on the "start" action reads as time-clock control (a labour-law
+ * subordination signal). Returns a short note only when something is off.
  */
-function assertWorkerAtStore(store: GeofenceStore, pos: WorkerPosition | undefined) {
+function evaluateStartLocation(
+  store: GeofenceStore,
+  pos: WorkerPosition | undefined
+): string | null {
   let ref: { lat: number; lng: number } | null = null;
   let radius = DEFAULT_START_RADIUS_M;
 
@@ -46,24 +50,18 @@ function assertWorkerAtStore(store: GeofenceStore, pos: WorkerPosition | undefin
     radius = store.geofenceRadiusM ?? FALLBACK_START_RADIUS_M;
   }
 
-  if (!ref) {
-    throw new Error(
-      "Ce magasin n'a pas d'emplacement GPS enregistré. Contactez un administrateur pour l'ajouter."
-    );
-  }
+  if (!ref) return "Aucun emplacement GPS enregistré pour ce magasin.";
 
   if (pos?.lat == null || pos?.lng == null || !Number.isFinite(pos.lat) || !Number.isFinite(pos.lng)) {
-    throw new Error("Activez la localisation pour démarrer la tâche.");
+    return "Position non fournie au démarrage.";
   }
 
   const distance = haversineMeters(ref, { lat: pos.lat, lng: pos.lng });
   const tolerance = Number.isFinite(pos.accuracy ?? NaN) ? Math.max(0, pos.accuracy as number) : 0;
   if (distance - tolerance > radius) {
-    throw new Error(
-      `Vous êtes à environ ${Math.round(distance)} m du magasin. ` +
-        `Rapprochez-vous à moins de ${radius} m pour démarrer la tâche.`
-    );
+    return `Démarrage à ~${Math.round(distance)} m du magasin (repère ${radius} m).`;
   }
+  return null;
 }
 
 export function listMyTasks(userId: string) {
@@ -124,14 +122,14 @@ export async function updateMyTaskStatus(
     throw new Error(`Cannot move a task from "${task.status}" to "${nextStatus}"`);
   }
 
-  if (nextStatus === "in_progress") {
-    assertWorkerAtStore(task.store, position);
-  }
+  const startGeoNote =
+    nextStatus === "in_progress" ? evaluateStartLocation(task.store, position) : undefined;
+
   const updated = await prisma.task.update({
     where: { id: taskId },
     data: {
       status: nextStatus,
-      ...(nextStatus === "in_progress" ? { startedAt: new Date() } : {}),
+      ...(nextStatus === "in_progress" ? { startedAt: new Date(), startGeoNote } : {}),
       ...(note !== undefined ? { workerNote: note } : {}),
     },
   });

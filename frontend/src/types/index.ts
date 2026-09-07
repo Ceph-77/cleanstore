@@ -164,6 +164,7 @@ export interface Task {
   requiredEquipment: string[];
   estimatedDurationMinutes: number | null;
   startedAt: string | null;
+  startGeoNote: string | null;
   isRecurring: boolean;
   store?: { id: string; name: string; city: string | null; address: string | null };
   inspection?: { id: string; score: number } | null;

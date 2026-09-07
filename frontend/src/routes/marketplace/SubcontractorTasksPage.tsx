@@ -17,7 +17,7 @@ export function SubcontractorTasksPage() {
         Tâches de mes magasins
       </h1>
       <p className="mt-1 text-sm text-canvas-600">
-        Renseigne le résultat attendu, comment faire, et les étapes de chaque tâche.
+        Renseigne les attentes du client, les précisions et les points de contrôle de chaque tâche.
       </p>
 
       {isLoading && <p className="mt-8 text-sm text-canvas-600">Chargement...</p>}
@@ -52,7 +52,7 @@ export function SubcontractorTasksPage() {
                   className="shrink-0"
                   onClick={() => setEditingTaskId(editingTaskId === task.id ? null : task.id)}
                 >
-                  {editingTaskId === task.id ? "Fermer" : "Instructions"}
+                  {editingTaskId === task.id ? "Fermer" : "Précisions"}
                 </Button>
               </div>
               {editingTaskId === task.id && (

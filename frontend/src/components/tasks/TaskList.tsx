@@ -96,7 +96,7 @@ export function TaskList({
                   <span className="text-canvas-600">Inspectée : {task.inspection.score}/100</span>
                 )}
                 <button className="text-flow-700 hover:text-flow-900" onClick={() => onInstructions(task)}>
-                  Instructions
+                  Précisions
                 </button>
                 <button className="text-flow-700 hover:text-flow-900" onClick={() => onEdit(task)}>
                   Modifier

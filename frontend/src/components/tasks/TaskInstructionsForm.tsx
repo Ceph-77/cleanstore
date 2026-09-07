@@ -78,7 +78,7 @@ export function TaskInstructionsForm({ taskId, onClose }: { taskId: string; onCl
     <div className="space-y-6 rounded-2xl border border-flow-200 bg-flow-50/60 p-5">
       <div className="flex items-center justify-between">
         <p className="text-sm text-canvas-700">
-          Instructions pour : <span className="font-medium text-canvas-900">{task.description}</span>
+          Précisions pour : <span className="font-medium text-canvas-900">{task.description}</span>
         </p>
         <Button type="button" variant="secondary" onClick={onClose}>
           Fermer
@@ -86,7 +86,7 @@ export function TaskInstructionsForm({ taskId, onClose }: { taskId: string; onCl
       </div>
 
       <form onSubmit={handleSaveText} className="space-y-4">
-        <Field label="Résultat attendu (visible avant réclamation)">
+        <Field label="Attentes du client — résultat (visible avant réclamation)">
           <textarea
             value={expectedResultText}
             onChange={(e) => setExpectedResultText(e.target.value)}
@@ -96,7 +96,7 @@ export function TaskInstructionsForm({ taskId, onClose }: { taskId: string; onCl
           />
         </Field>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Produits/équipement requis (séparés par virgule)">
+          <Field label="Équipement à prévoir (séparé par virgule)">
             <Input
               value={requiredEquipment}
               onChange={(e) => setRequiredEquipment(e.target.value)}
@@ -112,12 +112,12 @@ export function TaskInstructionsForm({ taskId, onClose }: { taskId: string; onCl
             />
           </Field>
         </div>
-        <Field label="Comment faire (visible seulement après réclamation)">
+        <Field label="Précisions du client (visible après réclamation)">
           <textarea
             value={howToText}
             onChange={(e) => setHowToText(e.target.value)}
             rows={4}
-            placeholder="Étapes générales, précautions, produits à ne pas mélanger..."
+            placeholder="Précautions, produits à ne pas mélanger, particularités du site..."
             className={textareaClass}
           />
         </Field>
@@ -171,7 +171,7 @@ export function TaskInstructionsForm({ taskId, onClose }: { taskId: string; onCl
 
       <div>
         <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-canvas-600">
-          Étapes (visibles seulement après réclamation)
+          Points de contrôle (visibles après réclamation)
         </p>
         {task.steps && task.steps.length > 0 && (
           <ul className="mb-2 space-y-1">
@@ -198,7 +198,7 @@ export function TaskInstructionsForm({ taskId, onClose }: { taskId: string; onCl
           <Input
             value={newStepText}
             onChange={(e) => setNewStepText(e.target.value)}
-            placeholder="Nouvelle étape"
+            placeholder="Nouveau point de contrôle"
           />
           <Button type="submit" variant="secondary" disabled={addStep.isPending}>
             Ajouter

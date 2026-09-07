@@ -230,6 +230,7 @@ model Task {
   requiredEquipment        String[]   @map("required_equipment")
   estimatedDurationMinutes Int?       @map("estimated_duration_minutes")
   startedAt                DateTime?  @map("started_at")
+  startGeoNote             String?    @map("start_geo_note")
   isRecurring              Boolean    @default(false) @map("is_recurring")
   lastRecurredOn           DateTime?  @map("last_recurred_on") @db.Date
   createdById              String?    @map("created_by")
