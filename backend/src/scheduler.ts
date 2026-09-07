@@ -4,9 +4,10 @@ import { localDayKey } from "./utils/week";
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
- * In-process scheduler. Render's free tier has no cron jobs, so recurring work
- * runs here on a plain interval. Every job it calls must be idempotent — the
- * interval drifts while the instance sleeps, and resets on every deploy.
+ * In-process scheduler — now a FALLBACK. The primary scheduler is the dedicated
+ * Cloudflare Cron Worker (`cron-worker/`), which is precise and independent of
+ * Render's sleeping free tier. This keeps running as a harmless safety net; every
+ * job it calls is idempotent, so a double run (here + the cron worker) is a no-op.
  */
 export function startScheduler() {
   const tick = async () => {

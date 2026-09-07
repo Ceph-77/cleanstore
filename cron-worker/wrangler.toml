@@ -1,0 +1,14 @@
+name = "cleanstore-cron"
+main = "src/worker.js"
+compatibility_date = "2026-09-01"
+workers_dev = false
+
+# Fires hourly; the handler decides which /api/system/* job(s) to run from the
+# scheduled time. Keeps the schedule logic in one place and avoids depending on
+# Cloudflare's exact cron-string normalisation.
+[triggers]
+crons = ["0 * * * *"]
+
+# CRON_SECRET is a Worker secret (not in this file) — must equal the CRON_SECRET
+# env var on the Render backend. Set it with:
+#   npx wrangler secret put CRON_SECRET
