@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Field } from "../components/common/Field";
@@ -6,6 +6,7 @@ import { Input } from "../components/common/Input";
 import { Button } from "../components/common/Button";
 import { Logo } from "../components/common/Logo";
 import { ApiError } from "../api/client";
+import { track } from "../analytics";
 
 export function LoginPage() {
   const { login } = useAuth();
@@ -15,14 +16,20 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    track("login_viewed");
+  }, []);
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
+    track("login_submitted");
     try {
       await login(email, password);
       navigate("/stores");
     } catch (err) {
+      track("login_failed");
       setError(err instanceof ApiError ? err.message : "Erreur de connexion");
     } finally {
       setSubmitting(false);

@@ -1,6 +1,7 @@
 import { prisma } from "../../db/prisma";
 import { getStripeClient } from "../../utils/stripe";
 import { env } from "../../config/env";
+import { recordServerEvent } from "../analytics/analytics.service";
 
 const EARNING_HOLD_MS = 24 * 60 * 60 * 1000;
 const PASSING_SCORE = 50;
@@ -254,6 +255,11 @@ export async function runDuePayouts() {
       where: { id: earning.id },
       data: { status: "available", chargeId },
     });
+    void recordServerEvent("earning_paid", {
+      userId: earning.workerId,
+      role: "travailleur",
+      props: { taskId: earning.taskId },
+    }).catch(() => {});
     processed += 1;
   }
 

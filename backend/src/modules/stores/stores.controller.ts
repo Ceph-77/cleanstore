@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import { pageParamsSchema } from "../../utils/pagination";
 import { storeCreateSchema, storeUpdateSchema, storeGeofenceSchema } from "./stores.schema";
 import * as storesService from "./stores.service";
+import { recordServerEvent } from "../analytics/analytics.service";
 
 export async function list(req: Request, res: Response) {
   const page = pageParamsSchema.safeParse(req.query);
@@ -34,6 +35,11 @@ export async function create(req: Request, res: Response) {
     return res.status(400).json({ error: parsed.error.flatten() });
   }
   const store = await storesService.createStore(parsed.data, req.session.userId!);
+  void recordServerEvent("store_created", {
+    userId: req.session.userId,
+    role: req.session.roleKey ?? null,
+    props: { storeId: store.id },
+  }).catch(() => {});
   res.status(201).json({ store });
 }
 

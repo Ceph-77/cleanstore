@@ -481,6 +481,26 @@ model Feedback {
   @@map("feedback_entries")
 }
 
+/// Product-analytics events (page views, funnel steps, server milestones).
+/// userId is a plain string, not a relation: events outlive the user and a
+/// delete must not cascade them away. Internal use only — never shown to a
+/// worker or their sous-traitant.
+model AnalyticsEvent {
+  id        String   @id @default(uuid())
+  name      String
+  userId    String?  @map("user_id")
+  role      String?
+  sessionId String?  @map("session_id")
+  path      String?
+  props     Json?
+  source    String   @default("client")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([name, createdAt])
+  @@index([sessionId])
+  @@map("analytics_events")
+}
+
 model PointEntry {
   id        String   @id @default(uuid())
   workerId  String   @map("worker_id")

@@ -4,6 +4,7 @@ import { Button } from "../../components/common/Button";
 import { IconStore, IconMapPin, IconSearch } from "../../components/common/icons";
 import { useAvailableStores, useMyStoreClaims, useClaimStore } from "../../hooks/useMarketplace";
 import { useMarkDecisionsSeen } from "../../hooks/useNotifications";
+import { track } from "../../analytics";
 
 export function StoreMarketplacePage() {
   const { data: stores, isLoading } = useAvailableStores();
@@ -16,6 +17,7 @@ export function StoreMarketplacePage() {
 
   useEffect(() => {
     markSeen.mutate();
+    track("store_marketplace_viewed");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

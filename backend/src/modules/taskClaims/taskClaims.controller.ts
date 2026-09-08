@@ -3,6 +3,7 @@ import type { ClaimStatus } from "@prisma/client";
 import { pageParamsSchema } from "../../utils/pagination";
 import { claimDecisionSchema, createClaimSchema, directAssignSchema } from "./taskClaims.schema";
 import * as taskClaimsService from "./taskClaims.service";
+import { recordServerEvent } from "../analytics/analytics.service";
 
 export async function listMarketplace(req: Request, res: Response) {
   const page = pageParamsSchema.safeParse(req.query);
@@ -18,6 +19,11 @@ export async function create(req: Request, res: Response) {
   }
   try {
     const claim = await taskClaimsService.createClaim(req.params.taskId, req.session.userId!, parsed.data.note);
+    void recordServerEvent("task_claim_submitted", {
+      userId: req.session.userId,
+      role: req.session.roleKey ?? null,
+      props: { taskId: req.params.taskId },
+    }).catch(() => {});
     res.status(201).json({ claim });
   } catch (err) {
     res.status(400).json({ error: (err as Error).message });
@@ -45,6 +51,11 @@ export async function directAssign(req: Request, res: Response) {
       parsed.data.workerId,
       req.session.userId!
     );
+    void recordServerEvent("task_direct_assigned", {
+      userId: parsed.data.workerId,
+      role: "travailleur",
+      props: { taskId: parsed.data.taskId },
+    }).catch(() => {});
     res.json({ task });
   } catch (err) {
     res.status(400).json({ error: (err as Error).message });
@@ -65,5 +76,9 @@ export async function decide(req: Request, res: Response) {
     return res.status(400).json({ error: parsed.error.flatten() });
   }
   const claim = await taskClaimsService.decideClaim(req.params.id, parsed.data.status, parsed.data.reason);
+  void recordServerEvent(
+    parsed.data.status === "approved" ? "task_claim_approved" : "task_claim_rejected",
+    { userId: claim.workerId, role: "travailleur", props: { taskId: claim.taskId } }
+  ).catch(() => {});
   res.json({ claim });
 }

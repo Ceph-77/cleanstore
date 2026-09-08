@@ -13,6 +13,7 @@ import {
   IconWallet,
   IconSettings,
   IconFeedback,
+  IconFile,
   IconTrophy,
   IconX,
 } from "./icons";
@@ -92,6 +93,7 @@ function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
       <NavItem to="/leaderboard" icon={<IconTrophy />} label="Classement" onNavigate={onNavigate} />
       <NavItem to="/admin/settings" icon={<IconSettings />} label="Réglages" onNavigate={onNavigate} />
       <NavItem to="/admin/feedback" icon={<IconFeedback />} label="Feedback" onNavigate={onNavigate} />
+      <NavItem to="/admin/analytics" icon={<IconFile />} label="Parcours" onNavigate={onNavigate} />
       <NavItem to="/inventory" icon={<IconInventory />} label="Inventaire" disabled />
     </>
   );

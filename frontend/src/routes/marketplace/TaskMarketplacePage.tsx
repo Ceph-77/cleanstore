@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppLayout } from "../../components/common/AppLayout";
 import { Button } from "../../components/common/Button";
 import { LoadMore } from "../../components/common/LoadMore";
+import { track } from "../../analytics";
 import { IconTasks, IconMapPin, IconSearch, IconFile } from "../../components/common/icons";
 import { useMarketplaceTasks, useMyTaskClaims, useClaimTask } from "../../hooks/useMarketplace";
 import type { Task } from "../../types";
@@ -62,6 +63,10 @@ export function TaskMarketplacePage() {
   const [note, setNote] = useState("");
   const [claimError, setClaimError] = useState<string | null>(null);
 
+  useEffect(() => {
+    track("task_marketplace_viewed");
+  }, []);
+
   function claimFor(taskId: string) {
     return myClaims?.find((c) => c.taskId === taskId);
   }
@@ -70,6 +75,7 @@ export function TaskMarketplacePage() {
     setClaimError(null);
     try {
       await claimTask.mutateAsync({ taskId, note: note.trim() || undefined });
+      track("task_claim_submitted", { taskId });
       setClaimingTaskId(null);
       setNote("");
     } catch (err) {
@@ -224,6 +230,7 @@ export function TaskMarketplacePage() {
                         onClick={() => {
                           setClaimError(null);
                           setClaimingTaskId(task.id);
+                          track("task_claim_opened", { taskId: task.id });
                         }}
                       >
                         Je suis intéressé

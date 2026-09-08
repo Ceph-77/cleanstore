@@ -3,6 +3,7 @@ import type { TaskStatus } from "@prisma/client";
 import { pageParamsSchema } from "../../utils/pagination";
 import { taskCreateSchema, taskUpdateSchema } from "./tasks.schema";
 import * as tasksService from "./tasks.service";
+import { recordServerEvent } from "../analytics/analytics.service";
 
 export async function list(req: Request, res: Response) {
   const tasks = await tasksService.listTasksForStore(req.params.storeId);
@@ -29,6 +30,11 @@ export async function update(req: Request, res: Response) {
 
 export async function publish(req: Request, res: Response) {
   const task = await tasksService.publishTask(req.params.id);
+  void recordServerEvent("task_published", {
+    userId: req.session.userId,
+    role: req.session.roleKey ?? null,
+    props: { taskId: task.id, storeId: task.storeId },
+  }).catch(() => {});
   res.json({ task });
 }
 

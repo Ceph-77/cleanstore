@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { Field } from "../components/common/Field";
@@ -6,6 +6,7 @@ import { Input } from "../components/common/Input";
 import { Button } from "../components/common/Button";
 import { Logo } from "../components/common/Logo";
 import { ApiError } from "../api/client";
+import { track } from "../analytics";
 
 const initialValues = { fullName: "", email: "", password: "", phone: "", address: "" };
 
@@ -17,10 +18,15 @@ export function RegisterWorkerPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
+  useEffect(() => {
+    track("register_viewed");
+  }, []);
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
+    track("register_submitted");
     try {
       await registerWorker({ ...values, acceptedTerms });
       navigate("/markettask/tasks");

@@ -1,7 +1,8 @@
-import { lazy, Suspense } from "react";
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { lazy, Suspense, useEffect } from "react";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./queryClient";
+import { track } from "./analytics";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { LoginPage } from "./routes/LoginPage";
 import type { RoleKey } from "./types";
@@ -38,6 +39,15 @@ const FeedbackPage = lazy(() => import("./routes/admin/FeedbackPage").then(named
 const ProfilePage = lazy(() => import("./routes/ProfilePage").then(named("ProfilePage")));
 const LeaderboardPage = lazy(() => import("./routes/LeaderboardPage").then(named("LeaderboardPage")));
 const WalletPage = lazy(() => import("./routes/WalletPage").then(named("WalletPage")));
+const AnalyticsPage = lazy(() => import("./routes/admin/AnalyticsPage").then(named("AnalyticsPage")));
+
+function RouteTracker() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    track("page_view");
+  }, [pathname]);
+  return null;
+}
 
 function Loading() {
   return (
@@ -194,6 +204,14 @@ function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/admin/analytics"
+          element={
+            <ProtectedRoute roles={["admin"]}>
+              <AnalyticsPage />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/markettask/stores"
@@ -280,6 +298,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
+          <RouteTracker />
           <AppRoutes />
         </AuthProvider>
       </BrowserRouter>

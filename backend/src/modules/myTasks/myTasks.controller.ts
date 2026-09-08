@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { myTaskStatusUpdateSchema, myTaskStepToggleSchema } from "./myTasks.schema";
 import * as myTasksService from "./myTasks.service";
+import { recordServerEvent } from "../analytics/analytics.service";
 
 export async function list(req: Request, res: Response) {
   const tasks = await myTasksService.listMyTasksWithUrls(req.session.userId!);
@@ -21,6 +22,11 @@ export async function updateStatus(req: Request, res: Response) {
       parsed.data.note,
       { lat: parsed.data.lat, lng: parsed.data.lng, accuracy: parsed.data.accuracy }
     );
+    void recordServerEvent(parsed.data.status === "completed" ? "task_completed" : "task_started", {
+      userId: req.session.userId,
+      role: req.session.roleKey ?? null,
+      props: { taskId: task.id },
+    }).catch(() => {});
     res.json({ task });
   } catch (err) {
     res.status(400).json({ error: (err as Error).message });
