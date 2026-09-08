@@ -78,47 +78,47 @@ model Role {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
-  passwordHash String?  @map("password_hash")
-  fullName     String?  @map("full_name")
-  phone        String?
-  address      String?
-  avatarKey    String?  @map("avatar_key")
-  availability Json?
-  adminNote    String?  @map("admin_note")
-  isActive     Boolean  @default(true) @map("is_active")
-  stripeAccountId      String?  @map("stripe_account_id")
-  stripeOnboardingDone Boolean  @default(false) @map("stripe_onboarding_done")
+  id                   String    @id @default(uuid())
+  email                String    @unique
+  passwordHash         String?   @map("password_hash")
+  fullName             String?   @map("full_name")
+  phone                String?
+  address              String?
+  avatarKey            String?   @map("avatar_key")
+  availability         Json?
+  adminNote            String?   @map("admin_note")
+  isActive             Boolean   @default(true) @map("is_active")
+  stripeAccountId      String?   @map("stripe_account_id")
+  stripeOnboardingDone Boolean   @default(false) @map("stripe_onboarding_done")
   termsAcceptedAt      DateTime? @map("terms_accepted_at")
   termsVersion         String?   @map("terms_version")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
 
-  roles              UserRole[]
-  inspectedStores     StoreInspector[]
-  assignedStores      Store[]          @relation("StoreAssignedWorker")
-  createdStores       Store[]          @relation("StoreCreatedBy")
-  assignedTasks       Task[]           @relation("TaskAssignedTo")
-  createdTasks        Task[]           @relation("TaskCreatedBy")
-  storeNotes          StoreNote[]
-  uploadedDocuments   StoreDocument[]
+  roles                UserRole[]
+  inspectedStores      StoreInspector[]
+  assignedStores       Store[]              @relation("StoreAssignedWorker")
+  createdStores        Store[]              @relation("StoreCreatedBy")
+  assignedTasks        Task[]               @relation("TaskAssignedTo")
+  createdTasks         Task[]               @relation("TaskCreatedBy")
+  storeNotes           StoreNote[]
+  uploadedDocuments    StoreDocument[]
   storeClaimsRequested StoreClaim[]
-  taskClaims          TaskClaim[]
-  passwordResetTokens PasswordResetToken[]
-  workerEarnings      WorkerEarning[]
-  withdrawals         Withdrawal[]
-  feedbackEntries     Feedback[]
-  pointEntries        PointEntry[]
-  workerMoments       WorkerMoment[]
+  taskClaims           TaskClaim[]
+  passwordResetTokens  PasswordResetToken[]
+  workerEarnings       WorkerEarning[]
+  withdrawals          Withdrawal[]
+  feedbackEntries      Feedback[]
+  pointEntries         PointEntry[]
+  workerMoments        WorkerMoment[]
 
   @@map("users")
 }
 
 model UserRole {
-  userId         String        @map("user_id")
-  roleId         Int           @map("role_id")
-  organizationId String?       @map("organization_id")
+  userId         String  @map("user_id")
+  roleId         Int     @map("role_id")
+  organizationId String? @map("organization_id")
 
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   role         Role          @relation(fields: [roleId], references: [id])
@@ -129,20 +129,20 @@ model UserRole {
 }
 
 model Organization {
-  id           String           @id @default(uuid())
-  name         String
-  type         OrganizationType
-  contactName  String?          @map("contact_name")
-  contactEmail String?          @map("contact_email")
-  contactPhone String?          @map("contact_phone")
-  address      String?
-  stripeCustomerId      String? @map("stripe_customer_id")
-  stripePaymentMethodId String? @map("stripe_payment_method_id")
-  createdAt    DateTime         @default(now()) @map("created_at")
+  id                    String           @id @default(uuid())
+  name                  String
+  type                  OrganizationType
+  contactName           String?          @map("contact_name")
+  contactEmail          String?          @map("contact_email")
+  contactPhone          String?          @map("contact_phone")
+  address               String?
+  stripeCustomerId      String?          @map("stripe_customer_id")
+  stripePaymentMethodId String?          @map("stripe_payment_method_id")
+  createdAt             DateTime         @default(now()) @map("created_at")
 
-  userRoles              UserRole[]
-  storesAsGrandeCompagnie Store[]  @relation("StoreGrandeCompagnie")
-  storesAsSubcontractor   Store[]  @relation("StoreSubcontractor")
+  userRoles               UserRole[]
+  storesAsGrandeCompagnie Store[]         @relation("StoreGrandeCompagnie")
+  storesAsSubcontractor   Store[]         @relation("StoreSubcontractor")
   storeClaims             StoreClaim[]
   workerEarnings          WorkerEarning[]
 
@@ -150,44 +150,44 @@ model Organization {
 }
 
 model Store {
-  id                       String    @id @default(uuid())
-  name                     String
-  banner                   String?
-  address                  String?
-  city                     String?
-  postalCode               String?   @map("postal_code")
-  latitude                 Decimal?  @db.Decimal(9, 6)
-  longitude                Decimal?  @db.Decimal(9, 6)
-  geofenceLat              Decimal?  @map("geofence_lat") @db.Decimal(9, 6)
-  geofenceLng              Decimal?  @map("geofence_lng") @db.Decimal(9, 6)
-  geofenceRadiusM          Int?      @map("geofence_radius_m")
-  geofencePoints           Json?     @map("geofence_points")
-  storeManagerName         String?   @map("store_manager_name")
-  storeManagerPhone        String?   @map("store_manager_phone")
-  storeManagerEmail        String?   @map("store_manager_email")
-  squareFootage            Decimal?  @map("square_footage")
-  surfaceType              String?   @map("surface_type")
-  zones                    String[]
-  cleaningFrequency        String?   @map("cleaning_frequency")
-  cleaningSchedule         String?   @map("cleaning_schedule")
-  contractStartDate        DateTime? @map("contract_start_date") @db.Date
-  contractEndDate          DateTime? @map("contract_end_date") @db.Date
-  contractRate             Decimal?  @map("contract_rate")
-  securityAccessInfo       String?   @map("security_access_info")
-  storeHours               String?   @map("store_hours")
-  specialRequirements      String?   @map("special_requirements")
-  grandeCompagnieId        String?   @map("grande_compagnie_id")
-  assignedSubcontractorId  String?   @map("assigned_subcontractor_id")
-  assignedWorkerId         String?   @map("assigned_worker_id")
-  isActive                 Boolean   @default(true) @map("is_active")
-  createdById              String?   @map("created_by")
-  createdAt                DateTime  @default(now()) @map("created_at")
-  updatedAt                DateTime  @updatedAt @map("updated_at")
+  id                      String    @id @default(uuid())
+  name                    String
+  banner                  String?
+  address                 String?
+  city                    String?
+  postalCode              String?   @map("postal_code")
+  latitude                Decimal?  @db.Decimal(9, 6)
+  longitude               Decimal?  @db.Decimal(9, 6)
+  geofenceLat             Decimal?  @map("geofence_lat") @db.Decimal(9, 6)
+  geofenceLng             Decimal?  @map("geofence_lng") @db.Decimal(9, 6)
+  geofenceRadiusM         Int?      @map("geofence_radius_m")
+  geofencePoints          Json?     @map("geofence_points")
+  storeManagerName        String?   @map("store_manager_name")
+  storeManagerPhone       String?   @map("store_manager_phone")
+  storeManagerEmail       String?   @map("store_manager_email")
+  squareFootage           Decimal?  @map("square_footage")
+  surfaceType             String?   @map("surface_type")
+  zones                   String[]
+  cleaningFrequency       String?   @map("cleaning_frequency")
+  cleaningSchedule        String?   @map("cleaning_schedule")
+  contractStartDate       DateTime? @map("contract_start_date") @db.Date
+  contractEndDate         DateTime? @map("contract_end_date") @db.Date
+  contractRate            Decimal?  @map("contract_rate")
+  securityAccessInfo      String?   @map("security_access_info")
+  storeHours              String?   @map("store_hours")
+  specialRequirements     String?   @map("special_requirements")
+  grandeCompagnieId       String?   @map("grande_compagnie_id")
+  assignedSubcontractorId String?   @map("assigned_subcontractor_id")
+  assignedWorkerId        String?   @map("assigned_worker_id")
+  isActive                Boolean   @default(true) @map("is_active")
+  createdById             String?   @map("created_by")
+  createdAt               DateTime  @default(now()) @map("created_at")
+  updatedAt               DateTime  @updatedAt @map("updated_at")
 
-  grandeCompagnie       Organization?    @relation("StoreGrandeCompagnie", fields: [grandeCompagnieId], references: [id])
-  assignedSubcontractor Organization?    @relation("StoreSubcontractor", fields: [assignedSubcontractorId], references: [id])
-  assignedWorker        User?            @relation("StoreAssignedWorker", fields: [assignedWorkerId], references: [id])
-  createdBy             User?            @relation("StoreCreatedBy", fields: [createdById], references: [id])
+  grandeCompagnie       Organization?     @relation("StoreGrandeCompagnie", fields: [grandeCompagnieId], references: [id])
+  assignedSubcontractor Organization?     @relation("StoreSubcontractor", fields: [assignedSubcontractorId], references: [id])
+  assignedWorker        User?             @relation("StoreAssignedWorker", fields: [assignedWorkerId], references: [id])
+  createdBy             User?             @relation("StoreCreatedBy", fields: [createdById], references: [id])
   inspectors            StoreInspector[]
   tasks                 Task[]
   contacts              StoreContact[]
@@ -199,6 +199,9 @@ model Store {
 
   @@index([name])
   @@index([isActive])
+  // "Available stores" (assignedSubcontractorId IS NULL) is polled by every
+  // subcontractor; the subcontractor task list filters by this too.
+  @@index([assignedSubcontractorId])
   @@map("stores")
 }
 
@@ -249,7 +252,11 @@ model Task {
   workerMoments  WorkerMoment[]
 
   @@index([storeId])
-  @@index([status])
+  // Marketplace list filters status = 'open' AND is_published = true; prefix
+  // queries on status alone still use this composite.
+  @@index([status, isPublished])
+  // Worker's own task list, plus inspection/leaderboard joins, filter on assignedTo.
+  @@index([assignedToId])
   @@map("tasks")
 }
 
@@ -345,16 +352,16 @@ model StoreInvoice {
 }
 
 model StoreClaim {
-  id             String      @id @default(uuid())
-  storeId        String      @map("store_id")
-  organizationId String      @map("organization_id")
-  requestedById  String      @map("requested_by")
-  status         ClaimStatus @default(pending)
+  id                String      @id @default(uuid())
+  storeId           String      @map("store_id")
+  organizationId    String      @map("organization_id")
+  requestedById     String      @map("requested_by")
+  status            ClaimStatus @default(pending)
   note              String?
-  decisionReason    String?   @map("decision_reason")
-  seenByRequesterAt DateTime? @map("seen_by_requester_at")
-  createdAt      DateTime    @default(now()) @map("created_at")
-  decidedAt      DateTime?   @map("decided_at")
+  decisionReason    String?     @map("decision_reason")
+  seenByRequesterAt DateTime?   @map("seen_by_requester_at")
+  createdAt         DateTime    @default(now()) @map("created_at")
+  decidedAt         DateTime?   @map("decided_at")
 
   store        Store        @relation(fields: [storeId], references: [id], onDelete: Cascade)
   organization Organization @relation(fields: [organizationId], references: [id])
@@ -366,21 +373,24 @@ model StoreClaim {
 }
 
 model TaskClaim {
-  id        String      @id @default(uuid())
-  taskId    String      @map("task_id")
-  workerId  String      @map("worker_id")
-  status    ClaimStatus @default(pending)
+  id                String      @id @default(uuid())
+  taskId            String      @map("task_id")
+  workerId          String      @map("worker_id")
+  status            ClaimStatus @default(pending)
   note              String?
-  decisionReason    String?   @map("decision_reason")
-  seenByRequesterAt DateTime? @map("seen_by_requester_at")
-  createdAt DateTime    @default(now()) @map("created_at")
-  decidedAt DateTime?   @map("decided_at")
+  decisionReason    String?     @map("decision_reason")
+  seenByRequesterAt DateTime?   @map("seen_by_requester_at")
+  createdAt         DateTime    @default(now()) @map("created_at")
+  decidedAt         DateTime?   @map("decided_at")
 
   task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
   worker User @relation(fields: [workerId], references: [id])
 
   @@index([taskId])
   @@index([status])
+  // "My claims", the claim-decision notification poll, and the per-store weekly
+  // claim-count all filter on workerId; createdAt second serves the time range.
+  @@index([workerId, createdAt])
   @@map("task_claims")
 }
 
