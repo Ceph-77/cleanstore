@@ -1,11 +1,13 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as storesApi from "../api/stores";
 import type { Store } from "../types";
 
 export function useStores() {
-  return useQuery({
-    queryKey: ["stores"],
-    queryFn: () => storesApi.listStores().then((r) => r.stores),
+  return useInfiniteQuery({
+    queryKey: ["stores", "list"],
+    queryFn: ({ pageParam }) => storesApi.listStores(pageParam),
+    initialPageParam: null as string | null,
+    getNextPageParam: (last) => last.nextCursor,
   });
 }
 
@@ -13,6 +15,13 @@ export function useStoreMapPoints() {
   return useQuery({
     queryKey: ["stores", "map-points"],
     queryFn: () => storesApi.listStoreMapPoints().then((r) => r.stores),
+  });
+}
+
+export function useStoreOptions() {
+  return useQuery({
+    queryKey: ["stores", "options"],
+    queryFn: () => storesApi.listStoreOptions().then((r) => r.stores),
   });
 }
 

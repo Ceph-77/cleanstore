@@ -5,6 +5,7 @@ import type { z } from "zod";
 import type { userCreateSchema } from "./users.schema";
 import { hashPassword } from "../../utils/password";
 import { getSignedDownloadUrl, uploadFile, deleteFile } from "../../utils/storage";
+import { pageArgs, toPage, type PageParams } from "../../utils/pagination";
 
 const userDetailSelect = {
   id: true,
@@ -32,8 +33,8 @@ async function withAvatarUrl<T extends { avatarKey: string | null }>(user: T) {
 
 type UserCreateInput = z.infer<typeof userCreateSchema>;
 
-export function listUsersByRole(role?: RoleKey) {
-  return prisma.user.findMany({
+export async function listUsersByRole(page: PageParams, role?: RoleKey) {
+  const rows = await prisma.user.findMany({
     where: role
       ? {
           roles: { some: { role: { key: role } } },
@@ -53,8 +54,10 @@ export function listUsersByRole(role?: RoleKey) {
         },
       },
     },
-    orderBy: { fullName: "asc" },
+    orderBy: [{ fullName: "asc" }, { id: "asc" }],
+    ...pageArgs(page),
   });
+  return toPage(rows, page.limit);
 }
 
 export function findUserByEmail(email: string) {

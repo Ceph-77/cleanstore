@@ -7,7 +7,7 @@ import { Input } from "../../components/common/Input";
 import { IconMapPin } from "../../components/common/icons";
 import { ApiError } from "../../api/client";
 import { useUser, useUpdateUser, useUploadUserAvatar } from "../../hooks/useUsers";
-import { useStores } from "../../hooks/useStores";
+import { useStoreOptions } from "../../hooks/useStores";
 import { useTasks } from "../../hooks/useTasks";
 import * as organizationsApi from "../../api/organizations";
 import {
@@ -41,7 +41,7 @@ export function WorkerDetailPage() {
   const { data: user } = useUser(id);
   const { data: summary } = useWorkerSummary(id);
   const { data: strip } = useWorkerStreak(id);
-  const { data: stores } = useStores();
+  const { data: stores } = useStoreOptions();
 
   const addPastTask = useAddPastTask(id);
   const updatePastTask = useUpdatePastTask(id);

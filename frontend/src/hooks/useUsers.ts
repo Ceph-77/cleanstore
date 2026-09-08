@@ -1,11 +1,13 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as usersApi from "../api/users";
 import type { RoleKey } from "../types";
 
 export function useUsers(role?: RoleKey) {
-  return useQuery({
-    queryKey: ["admin", "users", role ?? "all"],
-    queryFn: () => usersApi.listUsers(role).then((r) => r.users),
+  return useInfiniteQuery({
+    queryKey: ["admin", "users", "list", role ?? "all"],
+    queryFn: ({ pageParam }) => usersApi.listUsers(role, pageParam),
+    initialPageParam: null as string | null,
+    getNextPageParam: (last) => last.nextCursor,
   });
 }
 

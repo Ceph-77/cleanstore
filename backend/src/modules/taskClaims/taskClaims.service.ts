@@ -2,20 +2,22 @@ import { prisma } from "../../db/prisma";
 import { getSignedDownloadUrl } from "../../utils/storage";
 import { sendClaimDecisionEmail } from "../../utils/email";
 import { startOfCurrentWeek } from "../../utils/week";
+import { pageArgs, toPage, type PageParams } from "../../utils/pagination";
 import { assertCanEditTask } from "../taskInstructions/taskInstructions.service";
 import type { ClaimStatus } from "@prisma/client";
 
 /** A worker may submit at most this many task claims per store per calendar week. */
 export const MAX_CLAIMS_PER_STORE_PER_WEEK = 3;
 
-export function listMarketplaceTasks() {
-  return prisma.task.findMany({
+export async function listMarketplaceTasks(page: PageParams) {
+  const rows = await prisma.task.findMany({
     where: {
       status: "open",
       isPublished: true,
       store: { assignedSubcontractorId: { not: null }, isActive: true },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    ...pageArgs(page),
     select: {
       id: true,
       storeId: true,
@@ -36,12 +38,13 @@ export function listMarketplaceTasks() {
       expectedPhotos: true,
     },
   });
+  return toPage(rows, page.limit);
 }
 
-export async function listMarketplaceTasksWithUrls() {
-  const tasks = await listMarketplaceTasks();
-  return Promise.all(
-    tasks.map(async (task) => ({
+export async function listMarketplaceTasksWithUrls(page: PageParams) {
+  const { items, nextCursor } = await listMarketplaceTasks(page);
+  const withUrls = await Promise.all(
+    items.map(async (task) => ({
       ...task,
       expectedPhotos: await Promise.all(
         task.expectedPhotos.map(async (photo) => ({
@@ -51,6 +54,7 @@ export async function listMarketplaceTasksWithUrls() {
       ),
     }))
   );
+  return { items: withUrls, nextCursor };
 }
 
 export async function createClaim(taskId: string, workerId: string, note?: string) {
@@ -141,8 +145,8 @@ export function listMyClaims(userId: string) {
   });
 }
 
-export async function listClaims(status?: ClaimStatus) {
-  const claims = await prisma.taskClaim.findMany({
+export async function listClaims(page: PageParams, status?: ClaimStatus) {
+  const rows = await prisma.taskClaim.findMany({
     where: status ? { status } : undefined,
     include: {
       task: { include: { store: { select: { id: true, name: true } } } },
@@ -160,8 +164,10 @@ export async function listClaims(status?: ClaimStatus) {
         },
       },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    ...pageArgs(page),
   });
+  const { items: claims, nextCursor } = toPage(rows, page.limit);
 
   const workerIds = [...new Set(claims.map((c) => c.workerId))];
   const inspections = await prisma.taskInspection.findMany({
@@ -177,11 +183,12 @@ export async function listClaims(status?: ClaimStatus) {
     scoresByWorker.set(workerId, scores);
   }
 
-  return claims.map((claim) => {
+  const items = claims.map((claim) => {
     const scores = scoresByWorker.get(claim.workerId);
     const averageScore = scores && scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
     return { ...claim, worker: { ...claim.worker, averageInspectionScore: averageScore } };
   });
+  return { items, nextCursor };
 }
 
 export async function decideClaim(id: string, status: "approved" | "rejected", reason?: string) {

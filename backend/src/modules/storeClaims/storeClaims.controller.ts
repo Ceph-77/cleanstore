@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import type { ClaimStatus } from "@prisma/client";
+import { pageParamsSchema } from "../../utils/pagination";
 import { claimDecisionSchema, createClaimSchema } from "./storeClaims.schema";
 import * as storeClaimsService from "./storeClaims.service";
 
@@ -27,9 +28,11 @@ export async function listMine(req: Request, res: Response) {
 }
 
 export async function list(req: Request, res: Response) {
+  const page = pageParamsSchema.safeParse(req.query);
+  if (!page.success) return res.status(400).json({ error: page.error.flatten() });
   const status = req.query.status as ClaimStatus | undefined;
-  const claims = await storeClaimsService.listClaims(status);
-  res.json({ claims });
+  const { items, nextCursor } = await storeClaimsService.listClaims(page.data, status);
+  res.json({ claims: items, nextCursor });
 }
 
 export async function decide(req: Request, res: Response) {

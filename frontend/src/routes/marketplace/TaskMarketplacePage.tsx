@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { AppLayout } from "../../components/common/AppLayout";
 import { Button } from "../../components/common/Button";
+import { LoadMore } from "../../components/common/LoadMore";
 import { IconTasks, IconMapPin, IconSearch, IconFile } from "../../components/common/icons";
 import { useMarketplaceTasks, useMyTaskClaims, useClaimTask } from "../../hooks/useMarketplace";
 import type { Task } from "../../types";
@@ -49,7 +50,8 @@ function ExpectedResultPreview({ task }: { task: Task }) {
 }
 
 export function TaskMarketplacePage() {
-  const { data: tasks, isLoading } = useMarketplaceTasks();
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useMarketplaceTasks();
+  const tasks = useMemo(() => data?.pages.flatMap((p) => p.items) ?? [], [data]);
   const { data: myClaims } = useMyTaskClaims();
   const claimTask = useClaimTask();
 
@@ -117,7 +119,7 @@ export function TaskMarketplacePage() {
         Manifeste ton intérêt pour une tâche — l'admin confirme qui l'obtient.
       </p>
 
-      {tasks && tasks.length > 0 && (
+      {tasks.length > 0 && (
         <div className="mt-6 flex flex-col gap-3 sm:flex-row">
           <div className="relative flex-1">
             <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-canvas-600" />
@@ -144,13 +146,13 @@ export function TaskMarketplacePage() {
 
       {isLoading && <p className="mt-8 text-sm text-canvas-600">Chargement...</p>}
 
-      {tasks && tasks.length === 0 && (
+      {!isLoading && tasks.length === 0 && (
         <div className="mt-8 rounded-2xl border border-dashed border-canvas-300 bg-white px-6 py-16 text-center">
           <p className="text-sm text-canvas-600">Aucune tâche disponible pour l'instant.</p>
         </div>
       )}
 
-      {tasks && tasks.length > 0 && filteredTasks.length === 0 && (
+      {tasks.length > 0 && filteredTasks.length === 0 && (
         <p className="mt-8 text-center text-sm text-canvas-600">Aucune tâche ne correspond à ta recherche.</p>
       )}
 
@@ -266,6 +268,12 @@ export function TaskMarketplacePage() {
           })}
         </div>
       )}
+
+      <LoadMore
+        hasNextPage={!!hasNextPage}
+        isFetching={isFetchingNextPage}
+        onClick={() => fetchNextPage()}
+      />
     </AppLayout>
   );
 }

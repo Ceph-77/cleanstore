@@ -2,14 +2,17 @@ import { Link } from "react-router-dom";
 import { useStores } from "../hooks/useStores";
 import { Button } from "../components/common/Button";
 import { AppLayout } from "../components/common/AppLayout";
+import { LoadMore } from "../components/common/LoadMore";
 import { StatCard } from "../components/common/StatCard";
 import { IconStore, IconMapPin, IconBuilding } from "../components/common/icons";
 
 export function StoresListPage() {
-  const { data: stores, isLoading, error } = useStores();
+  const { data, isLoading, error, fetchNextPage, hasNextPage, isFetchingNextPage } = useStores();
+  const stores = data?.pages.flatMap((p) => p.items) ?? [];
 
-  const villesDesservies = stores ? new Set(stores.map((s) => s.city).filter(Boolean)).size : 0;
-  const sousTraitesAssignes = stores ? stores.filter((s) => s.assignedSubcontractorId).length : 0;
+  // Stats reflect the pages loaded so far (grow as you "Charger plus").
+  const villesDesservies = new Set(stores.map((s) => s.city).filter(Boolean)).size;
+  const sousTraitesAssignes = stores.filter((s) => s.assignedSubcontractorId).length;
 
   return (
     <AppLayout>
@@ -49,7 +52,7 @@ export function StoresListPage() {
         </p>
       )}
 
-      {stores && stores.length === 0 && (
+      {!isLoading && !error && stores.length === 0 && (
         <div className="mt-8 rounded-2xl border border-dashed border-canvas-300 bg-white px-6 py-16 text-center">
           <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-flow-100 text-flow-700">
             <IconStore className="h-6 w-6" />
@@ -61,7 +64,7 @@ export function StoresListPage() {
         </div>
       )}
 
-      {stores && stores.length > 0 && (
+      {stores.length > 0 && (
         <>
           <h2 className="mt-10 mb-4 text-sm font-semibold uppercase tracking-wide text-canvas-600">
             Tous les magasins
@@ -99,6 +102,11 @@ export function StoresListPage() {
               </Link>
             ))}
           </div>
+          <LoadMore
+            hasNextPage={!!hasNextPage}
+            isFetching={isFetchingNextPage}
+            onClick={() => fetchNextPage()}
+          />
         </>
       )}
     </AppLayout>

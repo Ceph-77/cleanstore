@@ -1,7 +1,13 @@
 import { apiClient } from "./client";
+import { pageQuery, type Page } from "./pagination";
 import type { Task, TaskStatus } from "../types";
 
-export function listDashboardTasks(status?: TaskStatus) {
-  const query = status ? `?status=${status}` : "";
-  return apiClient.get<{ tasks: Task[] }>(`/tasks/dashboard${query}`);
+export async function listDashboardTasks(
+  status?: TaskStatus,
+  cursor?: string | null
+): Promise<Page<Task>> {
+  const r = await apiClient.get<{ tasks: Task[]; nextCursor: string | null }>(
+    `/tasks/dashboard${pageQuery(cursor, { status })}`
+  );
+  return { items: r.tasks, nextCursor: r.nextCursor };
 }

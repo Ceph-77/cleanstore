@@ -1,4 +1,5 @@
 import { apiClient } from "./client";
+import { pageQuery, type Page } from "./pagination";
 import type { GeoPoint, Store, StoreMapPoint } from "../types";
 
 export interface StoreGeofencePayload {
@@ -8,12 +9,26 @@ export interface StoreGeofencePayload {
   geofencePoints?: GeoPoint[] | null;
 }
 
-export function listStores() {
-  return apiClient.get<{ stores: Store[] }>("/stores");
+export async function listStores(cursor?: string | null): Promise<Page<Store>> {
+  const r = await apiClient.get<{ stores: Store[]; nextCursor: string | null }>(
+    `/stores${pageQuery(cursor)}`
+  );
+  return { items: r.stores, nextCursor: r.nextCursor };
 }
 
 export function listStoreMapPoints() {
   return apiClient.get<{ stores: StoreMapPoint[] }>("/stores/map-points");
+}
+
+export interface StoreOption {
+  id: string;
+  name: string;
+  city: string | null;
+}
+
+/** Every active store, id/name/city only — for pickers. Not paginated. */
+export function listStoreOptions() {
+  return apiClient.get<{ stores: StoreOption[] }>("/stores/options");
 }
 
 export function getStore(id: string) {

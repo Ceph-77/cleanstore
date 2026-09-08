@@ -1,12 +1,15 @@
 import type { Request, Response } from "express";
 import type { RoleKey } from "@prisma/client";
+import { pageParamsSchema } from "../../utils/pagination";
 import { userCreateSchema, userUpdateSchema } from "./users.schema";
 import * as usersService from "./users.service";
 
 export async function list(req: Request, res: Response) {
+  const page = pageParamsSchema.safeParse(req.query);
+  if (!page.success) return res.status(400).json({ error: page.error.flatten() });
   const role = req.query.role as RoleKey | undefined;
-  const users = await usersService.listUsersByRole(role);
-  res.json({ users });
+  const { items, nextCursor } = await usersService.listUsersByRole(page.data, role);
+  res.json({ users: items, nextCursor });
 }
 
 export async function getOne(req: Request, res: Response) {

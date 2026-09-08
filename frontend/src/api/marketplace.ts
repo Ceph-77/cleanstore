@@ -1,4 +1,5 @@
 import { apiClient } from "./client";
+import { pageQuery, type Page } from "./pagination";
 import type { StoreClaim, TaskClaim, Task } from "../types";
 
 export interface MarketplaceStore {
@@ -23,8 +24,11 @@ export function listMyStoreClaims() {
   return apiClient.get<{ claims: StoreClaim[] }>("/marketplace/my-store-claims");
 }
 
-export function listMarketplaceTasks() {
-  return apiClient.get<{ tasks: Task[] }>("/marketplace/tasks");
+export async function listMarketplaceTasks(cursor?: string | null): Promise<Page<Task>> {
+  const r = await apiClient.get<{ tasks: Task[]; nextCursor: string | null }>(
+    `/marketplace/tasks${pageQuery(cursor)}`
+  );
+  return { items: r.tasks, nextCursor: r.nextCursor };
 }
 
 export function claimTask(taskId: string, note?: string) {

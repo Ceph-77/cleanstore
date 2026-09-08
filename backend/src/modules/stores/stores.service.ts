@@ -3,16 +3,28 @@ import { prisma } from "../../db/prisma";
 import type { z } from "zod";
 import type { storeCreateSchema, storeUpdateSchema, storeGeofenceSchema } from "./stores.schema";
 import { geocodeAddress } from "../../utils/geocode";
+import { pageArgs, toPage, type PageParams } from "../../utils/pagination";
 
 type StoreCreateInput = z.infer<typeof storeCreateSchema>;
 type StoreUpdateInput = z.infer<typeof storeUpdateSchema>;
 type StoreGeofenceInput = z.infer<typeof storeGeofenceSchema>;
 
-export function listStores() {
+export async function listStores(page: PageParams) {
+  const rows = await prisma.store.findMany({
+    where: { isActive: true },
+    orderBy: [{ name: "asc" }, { id: "asc" }],
+    ...pageArgs(page),
+    include: { grandeCompagnie: true, assignedSubcontractor: true },
+  });
+  return toPage(rows, page.limit);
+}
+
+/** Minimal id/name/city for every active store — for pickers/dropdowns, not paginated. */
+export function listStoreOptions() {
   return prisma.store.findMany({
     where: { isActive: true },
+    select: { id: true, name: true, city: true },
     orderBy: { name: "asc" },
-    include: { grandeCompagnie: true, assignedSubcontractor: true },
   });
 }
 

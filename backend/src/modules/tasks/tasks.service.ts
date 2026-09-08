@@ -2,6 +2,7 @@ import { prisma } from "../../db/prisma";
 import type { z } from "zod";
 import type { TaskStatus } from "@prisma/client";
 import type { taskCreateSchema, taskUpdateSchema } from "./tasks.schema";
+import { pageArgs, toPage, type PageParams } from "../../utils/pagination";
 
 type TaskCreateInput = z.infer<typeof taskCreateSchema>;
 type TaskUpdateInput = z.infer<typeof taskUpdateSchema>;
@@ -41,15 +42,17 @@ export function unpublishTask(id: string) {
   });
 }
 
-export function listAllTasksForDashboard(status?: TaskStatus) {
-  return prisma.task.findMany({
+export async function listAllTasksForDashboard(page: PageParams, status?: TaskStatus) {
+  const rows = await prisma.task.findMany({
     where: status ? { status } : { status: { notIn: ["open", "cancelled"] } },
     include: {
       store: { select: { id: true, name: true, city: true } },
       assignedTo: { select: { id: true, fullName: true, email: true } },
     },
-    orderBy: { updatedAt: "desc" },
+    orderBy: [{ updatedAt: "desc" }, { id: "desc" }],
+    ...pageArgs(page),
   });
+  return toPage(rows, page.limit);
 }
 
 export function deleteTask(id: string) {

@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import type { TaskStatus } from "@prisma/client";
+import { pageParamsSchema } from "../../utils/pagination";
 import { taskCreateSchema, taskUpdateSchema } from "./tasks.schema";
 import * as tasksService from "./tasks.service";
 
@@ -37,9 +38,11 @@ export async function unpublish(req: Request, res: Response) {
 }
 
 export async function dashboard(req: Request, res: Response) {
+  const page = pageParamsSchema.safeParse(req.query);
+  if (!page.success) return res.status(400).json({ error: page.error.flatten() });
   const status = req.query.status as TaskStatus | undefined;
-  const tasks = await tasksService.listAllTasksForDashboard(status);
-  res.json({ tasks });
+  const { items, nextCursor } = await tasksService.listAllTasksForDashboard(page.data, status);
+  res.json({ tasks: items, nextCursor });
 }
 
 export async function remove(req: Request, res: Response) {

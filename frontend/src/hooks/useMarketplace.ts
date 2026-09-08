@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as marketplaceApi from "../api/marketplace";
 import { POLL_MS } from "../queryClient";
 
@@ -31,9 +31,11 @@ export function useClaimStore() {
 }
 
 export function useMarketplaceTasks() {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ["marketplace", "tasks"],
-    queryFn: () => marketplaceApi.listMarketplaceTasks().then((r) => r.tasks),
+    queryFn: ({ pageParam }) => marketplaceApi.listMarketplaceTasks(pageParam),
+    initialPageParam: null as string | null,
+    getNextPageParam: (last) => last.nextCursor,
     refetchInterval: POLL_MS,
   });
 }

@@ -6,6 +6,7 @@ import { Field } from "../../components/common/Field";
 import { Input } from "../../components/common/Input";
 import { IconUser } from "../../components/common/icons";
 import { useUsers, useCreateUser, useSetUserActive, useDeleteUser } from "../../hooks/useUsers";
+import { LoadMore } from "../../components/common/LoadMore";
 import * as organizationsApi from "../../api/organizations";
 import { ApiError } from "../../api/client";
 import { useAuth } from "../../context/AuthContext";
@@ -27,7 +28,8 @@ const initialValues = {
 };
 
 export function UsersPage() {
-  const { data: users } = useUsers();
+  const { data: usersData, fetchNextPage, hasNextPage, isFetchingNextPage } = useUsers();
+  const users = usersData?.pages.flatMap((p) => p.items) ?? [];
   const createUser = useCreateUser();
   const setUserActive = useSetUserActive();
   const deleteUser = useDeleteUser();
@@ -175,7 +177,7 @@ export function UsersPage() {
       )}
 
       <div className="mt-6 space-y-3">
-        {users?.map((user) => {
+        {users.map((user) => {
           const isSelf = user.id === authUser?.id;
           const busy =
             (deleteUser.isPending && deleteUser.variables === user.id) ||
@@ -249,6 +251,11 @@ export function UsersPage() {
           );
         })}
       </div>
+      <LoadMore
+        hasNextPage={!!hasNextPage}
+        isFetching={isFetchingNextPage}
+        onClick={() => fetchNextPage()}
+      />
     </AppLayout>
   );
 }

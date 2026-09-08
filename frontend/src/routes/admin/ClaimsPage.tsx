@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { AppLayout } from "../../components/common/AppLayout";
 import { Button } from "../../components/common/Button";
+import { LoadMore } from "../../components/common/LoadMore";
 import {
   useStoreClaimsAdmin,
   useDecideStoreClaim,
@@ -169,9 +170,11 @@ function TaskClaimRow({
 }
 
 export function ClaimsPage() {
-  const { data: storeClaims } = useStoreClaimsAdmin("pending");
+  const storeClaimsQuery = useStoreClaimsAdmin("pending");
+  const storeClaims = storeClaimsQuery.data?.pages.flatMap((p) => p.items) ?? [];
   const decideStoreClaim = useDecideStoreClaim();
-  const { data: taskClaims } = useTaskClaimsAdmin("pending");
+  const taskClaimsQuery = useTaskClaimsAdmin("pending");
+  const taskClaims = taskClaimsQuery.data?.pages.flatMap((p) => p.items) ?? [];
   const decideTaskClaim = useDecideTaskClaim();
 
   return (
@@ -183,12 +186,12 @@ export function ClaimsPage() {
 
       <h2 className="mt-8 text-sm font-semibold uppercase tracking-wide text-canvas-600">Magasins</h2>
       <div className="mt-3 space-y-3">
-        {storeClaims && storeClaims.length === 0 && (
+        {!storeClaimsQuery.isLoading && storeClaims.length === 0 && (
           <p className="rounded-2xl border border-dashed border-canvas-300 bg-white px-6 py-8 text-center text-sm text-canvas-600">
             Aucune demande de magasin en attente.
           </p>
         )}
-        {storeClaims?.map((claim) => (
+        {storeClaims.map((claim) => (
           <StoreClaimRow
             key={claim.id}
             claim={claim}
@@ -197,15 +200,20 @@ export function ClaimsPage() {
           />
         ))}
       </div>
+      <LoadMore
+        hasNextPage={!!storeClaimsQuery.hasNextPage}
+        isFetching={storeClaimsQuery.isFetchingNextPage}
+        onClick={() => storeClaimsQuery.fetchNextPage()}
+      />
 
       <h2 className="mt-10 text-sm font-semibold uppercase tracking-wide text-canvas-600">Tâches</h2>
       <div className="mt-3 space-y-3">
-        {taskClaims && taskClaims.length === 0 && (
+        {!taskClaimsQuery.isLoading && taskClaims.length === 0 && (
           <p className="rounded-2xl border border-dashed border-canvas-300 bg-white px-6 py-8 text-center text-sm text-canvas-600">
             Aucune demande de tâche en attente.
           </p>
         )}
-        {taskClaims?.map((claim) => (
+        {taskClaims.map((claim) => (
           <TaskClaimRow
             key={claim.id}
             claim={claim}
@@ -214,6 +222,11 @@ export function ClaimsPage() {
           />
         ))}
       </div>
+      <LoadMore
+        hasNextPage={!!taskClaimsQuery.hasNextPage}
+        isFetching={taskClaimsQuery.isFetchingNextPage}
+        onClick={() => taskClaimsQuery.fetchNextPage()}
+      />
     </AppLayout>
   );
 }

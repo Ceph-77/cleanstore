@@ -1,9 +1,12 @@
 import { apiClient } from "./client";
+import { pageQuery, type Page } from "./pagination";
 import type { AppUser, RoleKey } from "../types";
 
-export function listUsers(role?: RoleKey) {
-  const query = role ? `?role=${role}` : "";
-  return apiClient.get<{ users: AppUser[] }>(`/users${query}`);
+export async function listUsers(role?: RoleKey, cursor?: string | null): Promise<Page<AppUser>> {
+  const r = await apiClient.get<{ users: AppUser[]; nextCursor: string | null }>(
+    `/users${pageQuery(cursor, { role })}`
+  );
+  return { items: r.users, nextCursor: r.nextCursor };
 }
 
 export function getUser(id: string) {

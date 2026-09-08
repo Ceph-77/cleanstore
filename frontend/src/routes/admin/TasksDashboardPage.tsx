@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { AppLayout } from "../../components/common/AppLayout";
+import { LoadMore } from "../../components/common/LoadMore";
 import { TaskStatusBadge } from "../../components/tasks/TaskStatusBadge";
 import { useTasksDashboard } from "../../hooks/useTasksDashboard";
 import type { TaskStatus } from "../../types";
@@ -15,7 +16,10 @@ const FILTERS: { key: TaskStatus | "all"; label: string }[] = [
 
 export function TasksDashboardPage() {
   const [filter, setFilter] = useState<TaskStatus | "all">("all");
-  const { data: tasks, isLoading } = useTasksDashboard(filter === "all" ? undefined : filter);
+  const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useTasksDashboard(
+    filter === "all" ? undefined : filter
+  );
+  const tasks = data?.pages.flatMap((p) => p.items) ?? [];
 
   return (
     <AppLayout>
@@ -42,13 +46,13 @@ export function TasksDashboardPage() {
 
       {isLoading && <p className="mt-8 text-sm text-canvas-600">Chargement...</p>}
 
-      {tasks && tasks.length === 0 && (
+      {!isLoading && tasks.length === 0 && (
         <p className="mt-8 rounded-2xl border border-dashed border-canvas-300 bg-white px-6 py-16 text-center text-sm text-canvas-600">
           Aucune tâche à afficher pour ce filtre.
         </p>
       )}
 
-      {tasks && tasks.length > 0 && (
+      {tasks.length > 0 && (
         <div className="mt-6 overflow-hidden rounded-2xl border border-canvas-200 bg-white shadow-sm shadow-canvas-900/5">
           <div className="overflow-x-auto p-5">
             <table className="w-full text-sm">
@@ -86,6 +90,12 @@ export function TasksDashboardPage() {
           </div>
         </div>
       )}
+
+      <LoadMore
+        hasNextPage={!!hasNextPage}
+        isFetching={isFetchingNextPage}
+        onClick={() => fetchNextPage()}
+      />
     </AppLayout>
   );
 }

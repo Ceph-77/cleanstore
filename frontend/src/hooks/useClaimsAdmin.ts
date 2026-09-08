@@ -1,12 +1,14 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import * as claimsAdminApi from "../api/claimsAdmin";
 import { POLL_MS } from "../queryClient";
 import type { ClaimStatus } from "../types";
 
 export function useStoreClaimsAdmin(status?: ClaimStatus) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ["admin", "store-claims", status ?? "all"],
-    queryFn: () => claimsAdminApi.listStoreClaims(status).then((r) => r.claims),
+    queryFn: ({ pageParam }) => claimsAdminApi.listStoreClaims(status, pageParam),
+    initialPageParam: null as string | null,
+    getNextPageParam: (last) => last.nextCursor,
     refetchInterval: POLL_MS,
   });
 }
@@ -24,9 +26,11 @@ export function useDecideStoreClaim() {
 }
 
 export function useTaskClaimsAdmin(status?: ClaimStatus) {
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: ["admin", "task-claims", status ?? "all"],
-    queryFn: () => claimsAdminApi.listTaskClaims(status).then((r) => r.claims),
+    queryFn: ({ pageParam }) => claimsAdminApi.listTaskClaims(status, pageParam),
+    initialPageParam: null as string | null,
+    getNextPageParam: (last) => last.nextCursor,
     refetchInterval: POLL_MS,
   });
 }

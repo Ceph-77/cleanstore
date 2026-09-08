@@ -1,5 +1,6 @@
 import { prisma } from "../../db/prisma";
 import { sendClaimDecisionEmail } from "../../utils/email";
+import { pageArgs, toPage, type PageParams } from "../../utils/pagination";
 import type { ClaimStatus } from "@prisma/client";
 
 export function listAvailableStores() {
@@ -48,8 +49,8 @@ export function listMyClaims(userId: string) {
   });
 }
 
-export function listClaims(status?: ClaimStatus) {
-  return prisma.storeClaim.findMany({
+export async function listClaims(page: PageParams, status?: ClaimStatus) {
+  const rows = await prisma.storeClaim.findMany({
     where: status ? { status } : undefined,
     include: {
       store: { select: { id: true, name: true, city: true } },
@@ -58,8 +59,10 @@ export function listClaims(status?: ClaimStatus) {
       },
       requestedBy: { select: { id: true, fullName: true, email: true, createdAt: true } },
     },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+    ...pageArgs(page),
   });
+  return toPage(rows, page.limit);
 }
 
 export async function decideClaim(id: string, status: "approved" | "rejected", reason?: string) {

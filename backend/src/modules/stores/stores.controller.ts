@@ -1,14 +1,22 @@
 import type { Request, Response } from "express";
+import { pageParamsSchema } from "../../utils/pagination";
 import { storeCreateSchema, storeUpdateSchema, storeGeofenceSchema } from "./stores.schema";
 import * as storesService from "./stores.service";
 
 export async function list(req: Request, res: Response) {
-  const stores = await storesService.listStores();
-  res.json({ stores });
+  const page = pageParamsSchema.safeParse(req.query);
+  if (!page.success) return res.status(400).json({ error: page.error.flatten() });
+  const { items, nextCursor } = await storesService.listStores(page.data);
+  res.json({ stores: items, nextCursor });
 }
 
 export async function listMapPoints(req: Request, res: Response) {
   const stores = await storesService.listStoresWithCoordinates();
+  res.json({ stores });
+}
+
+export async function listOptions(req: Request, res: Response) {
+  const stores = await storesService.listStoreOptions();
   res.json({ stores });
 }
 
