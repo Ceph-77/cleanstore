@@ -1,15 +1,40 @@
 const DEFAULT_TZ = "America/Toronto";
 
 /**
- * Midnight (00:00) of the given local calendar day, expressed as a UTC Date.
- * Uses the well-known offset trick: accurate outside the ~1h DST transition,
- * which is irrelevant for a weekly counter.
+ * Milliseconds that `tz` is ahead of UTC at `instant` (negative for the
+ * Americas). Reads the wall clock via Intl parts, so it is independent of the
+ * host machine's own timezone — unlike parsing a `toLocaleString()` string,
+ * which the previous implementation did and which only worked on a UTC host.
+ */
+function tzOffsetMs(instant: number, tz: string): number {
+  const p: Record<string, number> = {};
+  for (const { type, value } of new Intl.DateTimeFormat("en-US", {
+    timeZone: tz,
+    hourCycle: "h23",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).formatToParts(new Date(instant))) {
+    if (type !== "literal") p[type] = Number(value);
+  }
+  const asUtc = Date.UTC(p.year!, p.month! - 1, p.day!, p.hour!, p.minute!, p.second!);
+  return asUtc - instant;
+}
+
+/**
+ * Midnight (00:00) of the given local calendar day in `tz`, as a UTC Date.
+ * Correct on any host timezone. The second offset read resolves the ~1h
+ * ambiguity when the requested day is itself a DST-transition day.
  */
 function zonedStartOfDay(year: number, month: number, day: number, tz: string): Date {
-  const utcGuess = Date.UTC(year, month - 1, day, 0, 0, 0, 0);
-  const asLocal = new Date(new Date(utcGuess).toLocaleString("en-US", { timeZone: tz }));
-  const offset = utcGuess - asLocal.getTime();
-  return new Date(utcGuess + offset);
+  const guess = Date.UTC(year, month - 1, day, 0, 0, 0, 0);
+  const o1 = tzOffsetMs(guess, tz);
+  const t1 = guess - o1;
+  const o2 = tzOffsetMs(t1, tz);
+  return new Date(o1 === o2 ? t1 : guess - o2);
 }
 
 /**
@@ -34,8 +59,11 @@ export function startOfCurrentWeek(now: Date = new Date(), tz: string = DEFAULT_
   const weekdayIndex = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(get("weekday"));
   const daysSinceMonday = (weekdayIndex + 6) % 7;
 
-  const todayStart = zonedStartOfDay(year, month, day, tz);
-  return new Date(todayStart.getTime() - daysSinceMonday * 24 * 60 * 60 * 1000);
+  // Walk back to Monday's calendar date with plain UTC-date arithmetic (no DST),
+  // then take that day's local midnight — so a week straddling a DST change is
+  // still anchored exactly at 00:00 local, not 01:00.
+  const monday = new Date(Date.UTC(year, month - 1, day) - daysSinceMonday * 86_400_000);
+  return zonedStartOfDay(monday.getUTCFullYear(), monday.getUTCMonth() + 1, monday.getUTCDate(), tz);
 }
 
 /** Start of the current calendar month (1st, 00:00 in `tz`), as a UTC Date. */

@@ -7,8 +7,9 @@ import {
   startOfLocalDay,
 } from "./week";
 
-// All expectations assume TZ=UTC (set in src/test/setup.ts), matching Render/CI.
-// America/Toronto is EST (UTC-5) in winter, EDT (UTC-4) from mid-March to early Nov.
+// All results are absolute UTC instants and must not depend on the host's own
+// timezone (the offset math was host-TZ-dependent before — this is the regression
+// net). America/Toronto is EST (UTC-5) in winter, EDT (UTC-4) mid-March to early Nov.
 
 describe("localDayKey", () => {
   it("returns the calendar day in the target zone", () => {
@@ -32,6 +33,16 @@ describe("startOfLocalDay", () => {
 
   it("resolves summer midnight to 04:00Z (DST)", () => {
     expect(startOfLocalDay("2026-07-12").toISOString()).toBe("2026-07-12T04:00:00.000Z");
+  });
+
+  it("handles the spring-forward day (still EST at local midnight)", () => {
+    // 2026 DST starts 02:00 on Sun Mar 8; midnight that day is still UTC-5.
+    expect(startOfLocalDay("2026-03-08").toISOString()).toBe("2026-03-08T05:00:00.000Z");
+  });
+
+  it("handles the fall-back day (still EDT at local midnight)", () => {
+    // 2026 DST ends 02:00 on Sun Nov 1; midnight that day is still UTC-4.
+    expect(startOfLocalDay("2026-11-01").toISOString()).toBe("2026-11-01T04:00:00.000Z");
   });
 });
 
