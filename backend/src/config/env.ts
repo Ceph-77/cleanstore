@@ -30,6 +30,8 @@ const envSchema = z.object({
   CRON_SECRET: z.string().optional(),
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  // Read directly in src/instrument.ts (before this file parses); listed here for docs.
+  SENTRY_DSN: z.string().optional(),
 });
 
 const parsed = envSchema.parse(process.env);

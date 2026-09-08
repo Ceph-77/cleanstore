@@ -1,3 +1,4 @@
+import "./instrument"; // must be first — sets up Sentry auto-instrumentation
 import { app } from "./app";
 import { env } from "./config/env";
 import { startScheduler } from "./scheduler";

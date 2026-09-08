@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/node";
 import express from "express";
 import cors from "cors";
 import session from "express-session";
@@ -88,6 +89,9 @@ app.use("/api/feedback", requireAuth, feedbackRouter);
 app.use("/api/engagement", requireAuth, engagementRouter);
 app.use("/api/store-claims", storeClaimsAdminRouter);
 app.use("/api/task-claims", taskClaimsAdminRouter);
+
+// Captures unhandled errors from the routes above; no-op if SENTRY_DSN is unset.
+Sentry.setupExpressErrorHandler(app);
 
 app.use(notFound);
 app.use(errorHandler);
