@@ -10,10 +10,16 @@ import {
 import * as engagement from "../engagement/engagement.service";
 import type { TaskStatus, Prisma } from "@prisma/client";
 
-const ALLOWED_TRANSITIONS: Partial<Record<TaskStatus, TaskStatus>> = {
+/** The only worker-driven status moves. Each status has at most one legal next step. */
+export const ALLOWED_TRANSITIONS: Partial<Record<TaskStatus, TaskStatus>> = {
   claimed: "in_progress",
   in_progress: "completed",
 };
+
+/** Whether a worker may move a task from `from` to `to`. */
+export function isAllowedTransition(from: TaskStatus, to: TaskStatus): boolean {
+  return ALLOWED_TRANSITIONS[from] === to;
+}
 
 export interface WorkerPosition {
   lat?: number;
@@ -21,7 +27,7 @@ export interface WorkerPosition {
   accuracy?: number;
 }
 
-type GeofenceStore = {
+export type GeofenceStore = {
   geofenceLat: Prisma.Decimal | null;
   geofenceLng: Prisma.Decimal | null;
   geofenceRadiusM: number | null;
@@ -35,7 +41,7 @@ type GeofenceStore = {
  * hard geo-gate on the "start" action reads as time-clock control (a labour-law
  * subordination signal). Returns a short note only when something is off.
  */
-function evaluateStartLocation(
+export function evaluateStartLocation(
   store: GeofenceStore,
   pos: WorkerPosition | undefined
 ): string | null {
@@ -118,7 +124,7 @@ export async function updateMyTaskStatus(
   if (!task || task.assignedToId !== userId) {
     throw new Error("Task not found or not assigned to you");
   }
-  if (ALLOWED_TRANSITIONS[task.status] !== nextStatus) {
+  if (!isAllowedTransition(task.status, nextStatus)) {
     throw new Error(`Cannot move a task from "${task.status}" to "${nextStatus}"`);
   }
 

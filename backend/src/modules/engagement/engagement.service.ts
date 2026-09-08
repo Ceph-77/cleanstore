@@ -71,7 +71,7 @@ async function createMoment(m: MomentInput) {
 // Streak
 // ─────────────────────────────────────────────────────────────────────────────
 
-function streakFromDayKeys(dayKeys: Set<string>, now = new Date()): number {
+export function streakFromDayKeys(dayKeys: Set<string>, now = new Date()): number {
   const today = localDayKey(now);
   const yesterday = localDayKey(new Date(now.getTime() - DAY_MS));
   const anchor = dayKeys.has(today) ? today : dayKeys.has(yesterday) ? yesterday : null;

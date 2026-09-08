@@ -37,6 +37,9 @@ jobs:
       - run: npx prisma generate
       # `npm run build` is `tsc -p tsconfig.json`; it fails on any type error.
       - run: npm run build
+      # Pure-logic unit tests (vitest): timezone math, streak, geofence,
+      # status transitions, point bonuses. No DB / network.
+      - run: npm test
 
   frontend:
     name: frontend (lint + typecheck + build)
