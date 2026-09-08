@@ -1,0 +1,57 @@
+name: CI
+
+# Typecheck + lint + build both packages on every push to main and every PR.
+# This is the safety net the project didn't have: nothing here needs secrets or
+# a database — `tsc` and `vite build` validate types and the build, `oxlint`
+# checks the frontend. If a job is red, the branch is broken.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push to the same branch/PR cancels the in-flight run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: backend (typecheck + build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+      # Generates @prisma/client types from schema.prisma — no DB connection needed.
+      - run: npx prisma generate
+      # `npm run build` is `tsc -p tsconfig.json`; it fails on any type error.
+      - run: npm run build
+
+  frontend:
+    name: frontend (lint + typecheck + build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      # `npm run build` is `tsc -b && vite build` — typecheck then production build.
+      - run: npm run build
