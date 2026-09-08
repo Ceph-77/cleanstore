@@ -43,7 +43,84 @@ async function main() {
     create: { userId: admin.id, roleId: adminRole.id },
   });
 
+  await seedTaskTemplates();
+
   console.log(`Seeded roles and admin user: ${adminEmail}`);
+}
+
+/**
+ * Starter task templates — deliberately generic. Céphas edits the real content
+ * (equipment, checkpoints, targets, price) in /admin/task-templates.
+ * Upsert by name so re-seeding never duplicates or overwrites his edits
+ * (update: {} = leave existing rows alone).
+ */
+async function seedTaskTemplates() {
+  const templates: {
+    name: string;
+    description: string;
+    taskType: string;
+    estimatedDurationMinutes: number;
+    isRecurringDefault: boolean;
+    expectedResultText: string;
+    howToText: string;
+    requiredEquipment: string[];
+    metricLabel?: string;
+    metricUnit?: string;
+    defaultMetricTarget?: number;
+    steps: string[];
+  }[] = [
+    {
+      name: "Polissage",
+      description: "Polissage des planchers durs de la surface de vente.",
+      taskType: "Entretien plancher",
+      estimatedDurationMinutes: 90,
+      isRecurringDefault: true,
+      expectedResultText:
+        "Planchers uniformément brillants, sans traces ni marques de talon, allées dégagées. Aucune zone sautée.",
+      howToText:
+        "Passer l'autolaveuse puis la polisseuse haute vitesse sur toutes les allées de la surface de vente. Reprendre les bordures et sous les présentoirs accessibles.",
+      requiredEquipment: ["Polisseuse haute vitesse", "Tampons de polissage", "Autolaveuse", "Balai à franges"],
+      metricLabel: "Distance polie",
+      metricUnit: "km",
+      defaultMetricTarget: 1.6,
+      steps: [
+        "Zone de vente dégagée et signalisation « plancher glissant » posée",
+        "Toutes les allées principales polies",
+        "Bordures et pourtours des présentoirs repris",
+        "Aucune trace ni résidu de tampon visible",
+        "Équipement rincé et rangé, signalisation retirée",
+      ],
+    },
+    {
+      name: "Balayage",
+      description: "Balayage et ramassage des débris de la surface de vente et de l'entrepôt.",
+      taskType: "Entretien plancher",
+      estimatedDurationMinutes: 45,
+      isRecurringDefault: true,
+      expectedResultText: "Sols exempts de débris, poussière et emballages. Coins et dessous de présentoirs inclus.",
+      howToText:
+        "Balayer toutes les allées, l'entrepôt et les zones de caisses. Ramasser et jeter les débris. Vider les poubelles de plancher.",
+      requiredEquipment: ["Balai", "Porte-poussière", "Sacs à ordures"],
+      steps: [
+        "Allées de vente balayées",
+        "Entrepôt et réserve balayés",
+        "Coins et dessous de présentoirs dégagés",
+        "Débris jetés, poubelles de plancher vidées",
+      ],
+    },
+  ];
+
+  for (const t of templates) {
+    const { steps, ...scalars } = t;
+    await prisma.taskTemplate.upsert({
+      where: { name: t.name },
+      update: {},
+      create: {
+        ...scalars,
+        steps: { create: steps.map((text, i) => ({ order: i, text })) },
+      },
+    });
+  }
 }
 
 main()

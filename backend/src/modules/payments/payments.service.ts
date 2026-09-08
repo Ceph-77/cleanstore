@@ -6,6 +6,31 @@ import { recordServerEvent } from "../analytics/analytics.service";
 const EARNING_HOLD_MS = 24 * 60 * 60 * 1000;
 const PASSING_SCORE = 50;
 
+/**
+ * Fraction of the task price to pay based on a reported performance metric.
+ * No target (or non-positive) → 1 (flat price, unchanged behaviour).
+ * Linear pro-rata, capped at 100%: hitting the target or exceeding it pays full.
+ * A missing/negative reported value pays nothing.
+ */
+export function metricPayoutRatio(
+  target: number | null | undefined,
+  reported: number | null | undefined
+): number {
+  if (target == null || !Number.isFinite(target) || target <= 0) return 1;
+  if (reported == null || !Number.isFinite(reported) || reported < 0) return 0;
+  return Math.min(1, reported / target);
+}
+
+/** price × ratio, rounded to the cent. */
+export function scaleEarning(price: number, ratio: number): number {
+  return Math.round(price * ratio * 100) / 100;
+}
+
+function num(d: { toNumber: () => number } | number | null | undefined): number | null {
+  if (d == null) return null;
+  return typeof d === "number" ? d : d.toNumber();
+}
+
 async function getSubcontractorOrganizationId(userId: string) {
   const userRole = await prisma.userRole.findFirst({
     where: { userId, role: { key: "sous_traitant" } },
@@ -190,16 +215,35 @@ export async function createEarningForCompletedTask(taskId: string) {
     return existing;
   }
 
+  const ratio = metricPayoutRatio(num(task.metricTarget), num(task.reportedMetricValue));
+  const grossAmount = scaleEarning(Number(task.price), ratio);
+
   return prisma.workerEarning.create({
     data: {
       taskId,
       workerId: task.assignedToId,
       organizationId: task.store.assignedSubcontractorId,
-      grossAmount: task.price,
+      grossAmount,
       status: "pending",
       availableAt: new Date(Date.now() + EARNING_HOLD_MS),
     },
   });
+}
+
+/**
+ * Recompute an earning's gross when the reported metric value is corrected
+ * (by an inspector). No-op once the earning has been withdrawn.
+ */
+export async function reevaluateEarningForMetric(taskId: string, reportedValue: number | null) {
+  const [earning, task] = await Promise.all([
+    prisma.workerEarning.findUnique({ where: { taskId } }),
+    prisma.task.findUnique({ where: { id: taskId }, select: { price: true, metricTarget: true } }),
+  ]);
+  if (!earning || earning.status === "withdrawn" || !task) return;
+
+  const ratio = metricPayoutRatio(num(task.metricTarget), reportedValue);
+  const grossAmount = scaleEarning(Number(task.price), ratio);
+  await prisma.workerEarning.update({ where: { id: earning.id }, data: { grossAmount } });
 }
 
 export async function resolveEarningOnInspection(taskId: string, score: number) {

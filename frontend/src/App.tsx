@@ -40,6 +40,7 @@ const ProfilePage = lazy(() => import("./routes/ProfilePage").then(named("Profil
 const LeaderboardPage = lazy(() => import("./routes/LeaderboardPage").then(named("LeaderboardPage")));
 const WalletPage = lazy(() => import("./routes/WalletPage").then(named("WalletPage")));
 const AnalyticsPage = lazy(() => import("./routes/admin/AnalyticsPage").then(named("AnalyticsPage")));
+const TaskTemplatesPage = lazy(() => import("./routes/admin/TaskTemplatesPage").then(named("TaskTemplatesPage")));
 
 function RouteTracker() {
   const { pathname } = useLocation();
@@ -209,6 +210,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute roles={["admin"]}>
               <AnalyticsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/task-templates"
+          element={
+            <ProtectedRoute roles={["admin"]}>
+              <TaskTemplatesPage />
             </ProtectedRoute>
           }
         />

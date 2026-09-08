@@ -87,6 +87,7 @@ function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
     <>
       <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">Opérations</p>
       <NavItem to="/stores" icon={<IconStore />} label="Magasins" onNavigate={onNavigate} />
+      <NavItem to="/admin/task-templates" icon={<IconTasks />} label="Modèles de tâches" onNavigate={onNavigate} />
       <NavItem to="/admin/tasks" icon={<IconTasks />} label="Suivi des travaux" onNavigate={onNavigate} />
       <NavItem to="/admin/claims" icon={<IconInspection />} label="Demandes" onNavigate={onNavigate} />
       <NavItem to="/admin/users" icon={<IconUser />} label="Utilisateurs" onNavigate={onNavigate} />

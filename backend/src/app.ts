@@ -19,6 +19,7 @@ import { storeMarketplaceRouter, storeClaimsAdminRouter } from "./modules/storeC
 import { taskMarketplaceRouter, taskClaimsAdminRouter } from "./modules/taskClaims/taskClaims.routes";
 import { myTasksRouter } from "./modules/myTasks/myTasks.routes";
 import { taskInstructionsRouter } from "./modules/taskInstructions/taskInstructions.routes";
+import { taskTemplatesRouter } from "./modules/taskTemplates/taskTemplates.routes";
 import { systemRouter } from "./modules/system/system.routes";
 import { paymentsRouter, paymentsWebhookRouter } from "./modules/payments/payments.routes";
 import { notificationsRouter } from "./modules/notifications/notifications.routes";
@@ -83,6 +84,7 @@ app.use("/api/marketplace", requireAuth, storeMarketplaceRouter);
 app.use("/api/marketplace", requireAuth, taskMarketplaceRouter);
 app.use("/api/marketplace", requireAuth, myTasksRouter);
 app.use("/api/task-instructions", requireAuth, taskInstructionsRouter);
+app.use("/api/task-templates", requireAuth, taskTemplatesRouter);
 app.use("/api/system", systemRouter);
 app.use("/api/payments", requireAuth, paymentsRouter);
 app.use("/api/notifications", requireAuth, notificationsRouter);

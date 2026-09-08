@@ -6,6 +6,8 @@ export const myTaskStatusUpdateSchema = z.object({
   lat: z.number().min(-90).max(90).optional(),
   lng: z.number().min(-180).max(180).optional(),
   accuracy: z.number().nonnegative().optional(),
+  // Required on completion when the task carries a performance target.
+  reportedMetricValue: z.coerce.number().nonnegative().optional(),
 });
 
 export const myTaskStepToggleSchema = z.object({

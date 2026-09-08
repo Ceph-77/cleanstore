@@ -81,7 +81,18 @@ export function TasksDashboardPage() {
                     <td className="py-3 pr-3 font-medium text-canvas-900">{Number(task.price).toFixed(2)} $</td>
                     <td className="py-3 pr-3 text-canvas-700">{task.dueDate ? task.dueDate.slice(0, 10) : "—"}</td>
                     <td className="py-3">
-                      <TaskStatusBadge status={task.status} />
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <TaskStatusBadge status={task.status} />
+                        {task.status === "completed" &&
+                          task.metricTarget != null &&
+                          task.reportedMetricValue != null &&
+                          Number(task.reportedMetricValue) < Number(task.metricTarget) && (
+                            <span className="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-700">
+                              à vérifier · {Number(task.reportedMetricValue)}/{Number(task.metricTarget)}{" "}
+                              {task.metricUnit ?? ""}
+                            </span>
+                          )}
+                      </div>
                     </td>
                   </tr>
                 ))}

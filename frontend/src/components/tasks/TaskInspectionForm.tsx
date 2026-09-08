@@ -14,17 +14,25 @@ export function TaskInspectionForm({
 }: {
   task: Task;
   onSubmit: (values: {
-    data: { score: number; notes: string };
+    data: { score: number; notes: string; correctedMetricValue?: number | null };
     photosBefore: File[];
     photosAfter: File[];
   }) => Promise<void>;
   onCancel: () => void;
   submitting?: boolean;
-  initial?: { score: number; notes: string };
+  initial?: { score: number; notes: string; correctedMetricValue?: number | null };
 }) {
   const isEdit = !!initial;
+  const hasMetric = task.metricTarget != null;
   const [score, setScore] = useState(initial ? String(initial.score) : "100");
   const [notes, setNotes] = useState(initial?.notes ?? "");
+  const [metricValue, setMetricValue] = useState(
+    initial?.correctedMetricValue != null
+      ? String(initial.correctedMetricValue)
+      : task.reportedMetricValue != null
+        ? String(Number(task.reportedMetricValue))
+        : ""
+  );
   const [error, setError] = useState<string | null>(null);
   const beforeInputRef = useRef<HTMLInputElement>(null);
   const afterInputRef = useRef<HTMLInputElement>(null);
@@ -34,7 +42,13 @@ export function TaskInspectionForm({
     setError(null);
     try {
       await onSubmit({
-        data: { score: Number(score), notes },
+        data: {
+          score: Number(score),
+          notes,
+          ...(hasMetric && metricValue.trim() !== ""
+            ? { correctedMetricValue: Number(metricValue) }
+            : {}),
+        },
         photosBefore: beforeInputRef.current?.files ? Array.from(beforeInputRef.current.files) : [],
         photosAfter: afterInputRef.current?.files ? Array.from(afterInputRef.current.files) : [],
       });
@@ -60,6 +74,24 @@ export function TaskInspectionForm({
       <Field label="Score (0-100)">
         <Input type="number" min={0} max={100} value={score} onChange={(e) => setScore(e.target.value)} />
       </Field>
+      {hasMetric && (
+        <Field
+          label={`${task.metricLabel ?? "Valeur"} — déclaré : ${
+            task.reportedMetricValue != null ? Number(task.reportedMetricValue) : "—"
+          } ${task.metricUnit ?? ""} · cible ${Number(task.metricTarget)} ${task.metricUnit ?? ""}`}
+        >
+          <Input
+            type="number"
+            min={0}
+            step="0.1"
+            value={metricValue}
+            onChange={(e) => setMetricValue(e.target.value)}
+          />
+          <p className="mt-1 text-[11px] text-canvas-600">
+            Corrige si nécessaire — le gain est recalculé au prorata.
+          </p>
+        </Field>
+      )}
       <Field label="Note">
         <textarea
           value={notes}

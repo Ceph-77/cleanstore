@@ -104,16 +104,35 @@ function TaskRow({ task }: { task: Task }) {
   const updateStatus = useUpdateMyTaskStatus();
   const [showNoteField, setShowNoteField] = useState(false);
   const [note, setNote] = useState("");
+  const [metricValue, setMetricValue] = useState("");
+  const [completeError, setCompleteError] = useState<string | null>(null);
   const [showInspection, setShowInspection] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
   const [locating, setLocating] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
   const [startNote, setStartNote] = useState<string | null>(null);
 
+  const needsMetric = task.metricTarget != null;
+
   async function handleComplete() {
-    await updateStatus.mutateAsync({ taskId: task.id, status: "completed", note: note || undefined });
-    setShowNoteField(false);
-    setNote("");
+    setCompleteError(null);
+    if (needsMetric && metricValue.trim() === "") {
+      setCompleteError(`Saisis « ${task.metricLabel ?? "la valeur réalisée"} » avant de confirmer.`);
+      return;
+    }
+    try {
+      await updateStatus.mutateAsync({
+        taskId: task.id,
+        status: "completed",
+        note: note || undefined,
+        reportedMetricValue: needsMetric ? Number(metricValue) : undefined,
+      });
+      setShowNoteField(false);
+      setNote("");
+      setMetricValue("");
+    } catch (err) {
+      setCompleteError(err instanceof Error ? err.message : "Impossible de marquer complétée.");
+    }
   }
 
   async function handleStart() {
@@ -221,6 +240,31 @@ function TaskRow({ task }: { task: Task }) {
 
       {showNoteField && (
         <div className="mt-3 space-y-2 rounded-xl bg-flow-50/60 p-3">
+          {needsMetric && (
+            <div>
+              <label className="text-xs font-medium text-canvas-800">
+                {task.metricLabel ?? "Valeur réalisée"} — obligatoire
+                {task.metricUnit ? ` (${task.metricUnit})` : ""}
+                {task.metricTarget && (
+                  <span className="text-canvas-600">
+                    {" "}
+                    · cible {Number(task.metricTarget)} {task.metricUnit ?? ""}
+                  </span>
+                )}
+              </label>
+              <input
+                type="number"
+                min={0}
+                step="0.1"
+                value={metricValue}
+                onChange={(e) => setMetricValue(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
+              />
+              <p className="mt-1 text-[11px] text-canvas-600">
+                Le paiement est au prorata : sous la cible, tu es payé proportionnellement.
+              </p>
+            </div>
+          )}
           <textarea
             value={note}
             onChange={(e) => setNote(e.target.value)}
@@ -228,6 +272,11 @@ function TaskRow({ task }: { task: Task }) {
             placeholder="Remarque optionnelle (ex: il manquait du produit à vitres)"
             className="w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
           />
+          {completeError && (
+            <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700 ring-1 ring-red-200">
+              {completeError}
+            </p>
+          )}
           <div className="flex justify-end gap-2">
             <Button variant="secondary" onClick={() => setShowNoteField(false)}>
               Annuler

@@ -147,6 +147,31 @@ export interface TaskStep {
   createdAt: string;
 }
 
+export interface TaskTemplateStep {
+  id: string;
+  order: number;
+  text: string;
+}
+
+export interface TaskTemplate {
+  id: string;
+  name: string;
+  description: string;
+  taskType: string | null;
+  defaultPrice: string | null;
+  isNegotiable: boolean;
+  isRecurringDefault: boolean;
+  expectedResultText: string | null;
+  howToText: string | null;
+  requiredEquipment: string[];
+  estimatedDurationMinutes: number | null;
+  metricLabel: string | null;
+  metricUnit: string | null;
+  defaultMetricTarget: string | null;
+  isActive: boolean;
+  steps: TaskTemplateStep[];
+}
+
 export interface Task {
   id: string;
   storeId: string;
@@ -166,6 +191,12 @@ export interface Task {
   startedAt: string | null;
   startGeoNote: string | null;
   isRecurring: boolean;
+  templateId: string | null;
+  metricLabel: string | null;
+  metricUnit: string | null;
+  metricTarget: string | null;
+  reportedMetricValue: string | null;
+  metricValueSource: "worker" | "inspector" | null;
   store?: { id: string; name: string; city: string | null; address: string | null };
   inspection?: { id: string; score: number } | null;
   assignedTo?: { id: string; fullName: string | null; email: string } | null;
@@ -189,6 +220,7 @@ export interface TaskInspection {
   taskId: string;
   score: number;
   notes: string | null;
+  correctedMetricValue: string | null;
   createdById: string | null;
   createdAt: string;
   photos: InspectionPhoto[];

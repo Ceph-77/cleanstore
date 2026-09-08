@@ -105,7 +105,8 @@ export async function updateMyTaskStatus(
   userId: string,
   nextStatus: "in_progress" | "completed",
   note: string | undefined,
-  position?: WorkerPosition
+  position?: WorkerPosition,
+  reportedMetricValue?: number
 ) {
   const task = await prisma.task.findUnique({
     where: { id: taskId },
@@ -128,6 +129,15 @@ export async function updateMyTaskStatus(
     throw new Error(`Cannot move a task from "${task.status}" to "${nextStatus}"`);
   }
 
+  // A task with a performance target can't be completed without reporting a value.
+  const hasTarget = nextStatus === "completed" && task.metricTarget != null;
+  if (hasTarget && (reportedMetricValue == null || !Number.isFinite(reportedMetricValue))) {
+    const unit = task.metricUnit ? ` (${task.metricUnit})` : "";
+    throw new Error(
+      `Saisis « ${task.metricLabel ?? "la valeur réalisée"} »${unit} avant de marquer cette tâche complétée.`
+    );
+  }
+
   const startGeoNote =
     nextStatus === "in_progress" ? evaluateStartLocation(task.store, position) : undefined;
 
@@ -137,6 +147,7 @@ export async function updateMyTaskStatus(
       status: nextStatus,
       ...(nextStatus === "in_progress" ? { startedAt: new Date(), startGeoNote } : {}),
       ...(note !== undefined ? { workerNote: note } : {}),
+      ...(hasTarget ? { reportedMetricValue, metricValueSource: "worker" } : {}),
     },
   });
 

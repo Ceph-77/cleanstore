@@ -12,8 +12,13 @@ export function useTaskInspection(taskId: string) {
 export function useUpdateTaskInspection(storeId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ taskId, data }: { taskId: string; data: { score?: number; notes?: string | null } }) =>
-      taskInspectionsApi.updateTaskInspection(taskId, data),
+    mutationFn: ({
+      taskId,
+      data,
+    }: {
+      taskId: string;
+      data: { score?: number; notes?: string | null; correctedMetricValue?: number | null };
+    }) => taskInspectionsApi.updateTaskInspection(taskId, data),
     onSuccess: (_, { taskId }) => {
       queryClient.invalidateQueries({ queryKey: ["tasks", taskId, "inspection"] });
       queryClient.invalidateQueries({ queryKey: ["stores", storeId, "tasks"] });
@@ -32,7 +37,7 @@ export function useCreateTaskInspection(storeId: string) {
       photosAfter,
     }: {
       taskId: string;
-      data: { score: number; notes: string };
+      data: taskInspectionsApi.InspectionData;
       photosBefore: File[];
       photosAfter: File[];
     }) => taskInspectionsApi.createTaskInspection(taskId, data, photosBefore, photosAfter),

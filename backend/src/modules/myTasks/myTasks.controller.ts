@@ -20,7 +20,8 @@ export async function updateStatus(req: Request, res: Response) {
       req.session.userId!,
       parsed.data.status,
       parsed.data.note,
-      { lat: parsed.data.lat, lng: parsed.data.lng, accuracy: parsed.data.accuracy }
+      { lat: parsed.data.lat, lng: parsed.data.lng, accuracy: parsed.data.accuracy },
+      parsed.data.reportedMetricValue
     );
     void recordServerEvent(parsed.data.status === "completed" ? "task_completed" : "task_started", {
       userId: req.session.userId,

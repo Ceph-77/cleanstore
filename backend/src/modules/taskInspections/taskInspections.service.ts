@@ -1,7 +1,11 @@
 import { randomUUID } from "crypto";
 import { prisma } from "../../db/prisma";
 import { getSignedDownloadUrl, uploadFile } from "../../utils/storage";
-import { resolveEarningOnInspection, reevaluateEarningForScore } from "../payments/payments.service";
+import {
+  resolveEarningOnInspection,
+  reevaluateEarningForScore,
+  reevaluateEarningForMetric,
+} from "../payments/payments.service";
 import * as engagement from "../engagement/engagement.service";
 import type { z } from "zod";
 import type { taskInspectionCreateSchema } from "./taskInspections.schema";
@@ -60,16 +64,28 @@ export async function createInspection(
         taskId,
         score: data.score,
         notes: data.notes,
+        correctedMetricValue: data.correctedMetricValue,
         createdById,
         photos: { create: uploaded },
       },
       include: { photos: true },
     });
-    await tx.task.update({ where: { id: taskId }, data: { status: "inspected" } });
+    await tx.task.update({
+      where: { id: taskId },
+      data: {
+        status: "inspected",
+        ...(data.correctedMetricValue != null
+          ? { reportedMetricValue: data.correctedMetricValue, metricValueSource: "inspector" }
+          : {}),
+      },
+    });
     return created;
   });
 
   await resolveEarningOnInspection(taskId, data.score);
+  if (data.correctedMetricValue != null) {
+    await reevaluateEarningForMetric(taskId, data.correctedMetricValue);
+  }
 
   void engagement.onTaskInspected(taskId, data.score).catch(() => {});
 
@@ -77,7 +93,10 @@ export async function createInspection(
 }
 
 /** Edit an existing task inspection's score/notes (admin correction). */
-export async function updateInspection(taskId: string, patch: { score?: number; notes?: string | null }) {
+export async function updateInspection(
+  taskId: string,
+  patch: { score?: number; notes?: string | null; correctedMetricValue?: number | null }
+) {
   const existing = await prisma.taskInspection.findUnique({ where: { taskId } });
   if (!existing) throw new Error("Aucune inspection pour cette tâche.");
 
@@ -86,9 +105,20 @@ export async function updateInspection(taskId: string, patch: { score?: number; 
     data: {
       ...(patch.score !== undefined ? { score: patch.score } : {}),
       ...(patch.notes !== undefined ? { notes: patch.notes } : {}),
+      ...(patch.correctedMetricValue !== undefined
+        ? { correctedMetricValue: patch.correctedMetricValue }
+        : {}),
     },
     include: { photos: true },
   });
+
+  if (patch.correctedMetricValue != null) {
+    await prisma.task.update({
+      where: { id: taskId },
+      data: { reportedMetricValue: patch.correctedMetricValue, metricValueSource: "inspector" },
+    });
+    await reevaluateEarningForMetric(taskId, patch.correctedMetricValue);
+  }
 
   if (patch.score !== undefined) {
     await reevaluateEarningForScore(taskId, patch.score);

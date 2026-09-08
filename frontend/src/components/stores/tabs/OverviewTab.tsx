@@ -20,6 +20,7 @@ import {
   useTaskInspection,
 } from "../../../hooks/useTaskInspections";
 import { StoreGeofenceCard } from "../StoreGeofenceCard";
+import { useTaskTemplates, useInstantiateTemplates } from "../../../hooks/useTaskTemplates";
 import type { Store, Task } from "../../../types";
 
 function InfoItem({ label, value }: { label: string; value: string }) {
@@ -40,6 +41,11 @@ export function OverviewTab({ store }: { store: Store }) {
   const unpublishTask = useUnpublishTask(store.id);
   const createInspection = useCreateTaskInspection(store.id);
   const updateInspection = useUpdateTaskInspection(store.id);
+
+  const { data: templates } = useTaskTemplates();
+  const instantiate = useInstantiateTemplates(store.id);
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+  const [pickedTemplateIds, setPickedTemplateIds] = useState<string[]>([]);
 
   const [showForm, setShowForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -96,18 +102,80 @@ export function OverviewTab({ store }: { store: Store }) {
 
       <StoreGeofenceCard store={store} />
 
-      <div className="mt-10 flex items-center justify-between">
+      <div className="mt-10 flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-heading text-lg font-semibold text-canvas-900">Tâches</h2>
-        <Button
-          variant="accent"
-          onClick={() => {
-            setEditingTask(null);
-            setShowForm(true);
-          }}
-        >
-          + Ajouter une tâche
-        </Button>
+        <div className="flex gap-2">
+          {templates && templates.length > 0 && (
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setPickedTemplateIds([]);
+                setShowTemplatePicker((v) => !v);
+              }}
+            >
+              + depuis un modèle
+            </Button>
+          )}
+          <Button
+            variant="accent"
+            onClick={() => {
+              setEditingTask(null);
+              setShowForm(true);
+            }}
+          >
+            + Ajouter une tâche
+          </Button>
+        </div>
       </div>
+
+      {showTemplatePicker && templates && (
+        <div className="mt-4 space-y-3 rounded-2xl border border-flow-200 bg-flow-50/60 p-5">
+          <p className="text-sm text-canvas-700">
+            Coche les modèles à ajouter. Les tâches sont créées <strong>non publiées</strong> — ajuste
+            le prix, la cible et les précisions, puis publie.
+          </p>
+          <div className="space-y-2">
+            {templates.map((t) => (
+              <label key={t.id} className="flex items-start gap-2 text-sm text-canvas-800">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={pickedTemplateIds.includes(t.id)}
+                  onChange={(e) =>
+                    setPickedTemplateIds((ids) =>
+                      e.target.checked ? [...ids, t.id] : ids.filter((id) => id !== t.id)
+                    )
+                  }
+                />
+                <span>
+                  <span className="font-medium">{t.name}</span>
+                  {t.metricLabel && (
+                    <span className="text-canvas-600">
+                      {" "}
+                      — cible {t.defaultMetricTarget ?? "?"} {t.metricUnit ?? ""}
+                    </span>
+                  )}
+                </span>
+              </label>
+            ))}
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={() => setShowTemplatePicker(false)}>
+              Annuler
+            </Button>
+            <Button
+              variant="accent"
+              disabled={pickedTemplateIds.length === 0 || instantiate.isPending}
+              onClick={async () => {
+                await instantiate.mutateAsync(pickedTemplateIds);
+                setShowTemplatePicker(false);
+              }}
+            >
+              {instantiate.isPending ? "..." : `Créer ${pickedTemplateIds.length} tâche(s)`}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {showForm && (
         <div className="mt-4">
@@ -129,7 +197,14 @@ export function OverviewTab({ store }: { store: Store }) {
             task={inspectingTask}
             initial={
               existingInspection
-                ? { score: existingInspection.score, notes: existingInspection.notes ?? "" }
+                ? {
+                    score: existingInspection.score,
+                    notes: existingInspection.notes ?? "",
+                    correctedMetricValue:
+                      existingInspection.correctedMetricValue != null
+                        ? Number(existingInspection.correctedMetricValue)
+                        : undefined,
+                  }
                 : undefined
             }
             submitting={createInspection.isPending || updateInspection.isPending}

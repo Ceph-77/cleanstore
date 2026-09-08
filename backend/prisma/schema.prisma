@@ -236,6 +236,15 @@ model Task {
   startGeoNote             String?    @map("start_geo_note")
   isRecurring              Boolean    @default(false) @map("is_recurring")
   lastRecurredOn           DateTime?  @map("last_recurred_on") @db.Date
+  templateId               String?    @map("template_id")
+  // Per-store performance target copied from the template, editable. When set,
+  // the worker must report a value on completion and the earning is scaled
+  // min(1, reported / target). See payments.service metricPayoutRatio.
+  metricLabel              String?    @map("metric_label")
+  metricUnit               String?    @map("metric_unit")
+  metricTarget             Decimal?   @map("metric_target")
+  reportedMetricValue      Decimal?   @map("reported_metric_value")
+  metricValueSource        String?    @map("metric_value_source")
   createdById              String?    @map("created_by")
   createdAt                DateTime   @default(now()) @map("created_at")
   updatedAt                DateTime   @updatedAt @map("updated_at")
@@ -243,6 +252,7 @@ model Task {
   store          Store               @relation(fields: [storeId], references: [id], onDelete: Cascade)
   assignedTo     User?               @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
   createdBy      User?               @relation("TaskCreatedBy", fields: [createdById], references: [id])
+  template       TaskTemplate?       @relation(fields: [templateId], references: [id])
   claims         TaskClaim[]
   inspection     TaskInspection?
   expectedPhotos TaskExpectedPhoto[]
@@ -258,6 +268,46 @@ model Task {
   // Worker's own task list, plus inspection/leaderboard joins, filter on assignedTo.
   @@index([assignedToId])
   @@map("tasks")
+}
+
+/// Reusable task blueprint ("Polissage", "Balayage"…). Applying one to a store
+/// copies its fields into a fresh unpublished Task (one-time copy, no live link).
+model TaskTemplate {
+  id                       String   @id @default(uuid())
+  name                     String   @unique
+  description              String
+  taskType                 String?  @map("task_type")
+  defaultPrice             Decimal? @map("default_price")
+  isNegotiable             Boolean  @default(false) @map("is_negotiable")
+  isRecurringDefault       Boolean  @default(false) @map("is_recurring_default")
+  expectedResultText       String?  @map("expected_result_text")
+  howToText                String?  @map("how_to_text")
+  requiredEquipment        String[] @map("required_equipment")
+  estimatedDurationMinutes Int?     @map("estimated_duration_minutes")
+  metricLabel              String?  @map("metric_label")
+  metricUnit               String?  @map("metric_unit")
+  defaultMetricTarget      Decimal? @map("default_metric_target")
+  isActive                 Boolean  @default(true) @map("is_active")
+  createdAt                DateTime @default(now()) @map("created_at")
+  updatedAt                DateTime @updatedAt @map("updated_at")
+
+  steps TaskTemplateStep[]
+  tasks Task[]
+
+  @@index([isActive])
+  @@map("task_templates")
+}
+
+model TaskTemplateStep {
+  id         String @id @default(uuid())
+  templateId String @map("template_id")
+  order      Int
+  text       String
+
+  template TaskTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([templateId])
+  @@map("task_template_steps")
 }
 
 model TaskExpectedPhoto {
@@ -395,12 +445,14 @@ model TaskClaim {
 }
 
 model TaskInspection {
-  id          String   @id @default(uuid())
-  taskId      String   @unique @map("task_id")
-  score       Int
-  notes       String?
-  createdById String?  @map("created_by")
-  createdAt   DateTime @default(now()) @map("created_at")
+  id                   String   @id @default(uuid())
+  taskId               String   @unique @map("task_id")
+  score                Int
+  notes                String?
+  /// Inspector's correction of the worker-reported metric value; recomputes the earning.
+  correctedMetricValue Decimal? @map("corrected_metric_value")
+  createdById          String?  @map("created_by")
+  createdAt            DateTime @default(now()) @map("created_at")
 
   task   Task                  @relation(fields: [taskId], references: [id], onDelete: Cascade)
   photos TaskInspectionPhoto[]

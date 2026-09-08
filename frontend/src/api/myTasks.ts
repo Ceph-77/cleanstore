@@ -15,7 +15,8 @@ export function updateMyTaskStatus(
   taskId: string,
   status: Extract<TaskStatus, "in_progress" | "completed">,
   note?: string,
-  position?: WorkerPosition
+  position?: WorkerPosition,
+  reportedMetricValue?: number
 ) {
   return apiClient.patch<{ task: Task }>(`/marketplace/my-tasks/${taskId}/status`, {
     status,
@@ -23,6 +24,7 @@ export function updateMyTaskStatus(
     lat: position?.lat,
     lng: position?.lng,
     accuracy: position?.accuracy,
+    reportedMetricValue,
   });
 }
 
