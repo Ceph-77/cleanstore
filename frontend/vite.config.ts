@@ -44,4 +44,21 @@ export default defineConfig({
     port: 5173,
     host: true,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Keep the big, rarely-changing vendors in their own long-cache chunks.
+        // Leaflet and Stripe are deliberately left out: route-level lazy loading
+        // now pulls them only into the map / wallet chunks that actually use them.
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          if (id.includes("@sentry")) return "sentry";
+          if (id.includes("@tanstack")) return "query";
+          if (/[\\/]node_modules[\\/](react|react-dom|react-router-dom|scheduler)[\\/]/.test(id)) {
+            return "react";
+          }
+        },
+      },
+    },
+  },
 })

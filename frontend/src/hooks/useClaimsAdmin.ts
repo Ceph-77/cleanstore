@@ -1,12 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as claimsAdminApi from "../api/claimsAdmin";
+import { POLL_MS } from "../queryClient";
 import type { ClaimStatus } from "../types";
 
 export function useStoreClaimsAdmin(status?: ClaimStatus) {
   return useQuery({
     queryKey: ["admin", "store-claims", status ?? "all"],
     queryFn: () => claimsAdminApi.listStoreClaims(status).then((r) => r.claims),
-    refetchInterval: 10000,
+    refetchInterval: POLL_MS,
   });
 }
 
@@ -26,7 +27,7 @@ export function useTaskClaimsAdmin(status?: ClaimStatus) {
   return useQuery({
     queryKey: ["admin", "task-claims", status ?? "all"],
     queryFn: () => claimsAdminApi.listTaskClaims(status).then((r) => r.claims),
-    refetchInterval: 10000,
+    refetchInterval: POLL_MS,
   });
 }
 

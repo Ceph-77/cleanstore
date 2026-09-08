@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as notificationsApi from "../api/notifications";
+import { POLL_MS } from "../queryClient";
 
 export function useUnseenDecisionsCount() {
   return useQuery({
     queryKey: ["notifications", "unseen-count"],
     queryFn: () => notificationsApi.getUnseenCount().then((r) => r.count),
-    refetchInterval: 20000,
+    refetchInterval: POLL_MS,
   });
 }
 

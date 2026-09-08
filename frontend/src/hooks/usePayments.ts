@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as paymentsApi from "../api/payments";
+import { POLL_MS } from "../queryClient";
 
 export function useWalletBalance() {
   return useQuery({
     queryKey: ["payments", "balance"],
     queryFn: () => paymentsApi.getBalance().then((r) => r.balance),
-    refetchInterval: 15000,
+    refetchInterval: POLL_MS,
   });
 }
 
@@ -13,7 +14,7 @@ export function useWalletHistory() {
   return useQuery({
     queryKey: ["payments", "history"],
     queryFn: () => paymentsApi.getHistory(),
-    refetchInterval: 15000,
+    refetchInterval: POLL_MS,
   });
 }
 

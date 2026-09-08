@@ -1,12 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as myTasksApi from "../api/myTasks";
+import { POLL_MS } from "../queryClient";
 import type { TaskStatus } from "../types";
 
 export function useMyTasks() {
   return useQuery({
     queryKey: ["marketplace", "my-tasks"],
     queryFn: () => myTasksApi.listMyTasks().then((r) => r.tasks),
-    refetchInterval: 10000,
+    refetchInterval: POLL_MS,
   });
 }
 

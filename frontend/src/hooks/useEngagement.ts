@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as engagementApi from "../api/engagement";
+import { POLL_MS } from "../queryClient";
 import { useAuth } from "../context/AuthContext";
 
 export function useMyEngagement() {
@@ -17,7 +18,7 @@ export function useUnseenMoments() {
     queryKey: ["engagement", "moments", "unseen"],
     queryFn: () => engagementApi.getUnseenMoments().then((r) => r.moments),
     enabled: user?.roleKey === "travailleur",
-    refetchInterval: 15000,
+    refetchInterval: POLL_MS,
   });
 }
 
