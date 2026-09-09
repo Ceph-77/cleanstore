@@ -320,6 +320,48 @@ export async function getStreakStrip(workerId: string, n = 7) {
   return { streakDays: await computeStreak(workerId), days };
 }
 
+const pad2 = (n: number) => String(n).padStart(2, "0");
+
+/**
+ * Completed-task flags for every calendar day in [fromKey, toKey] (inclusive),
+ * for the week / month / year history views. Iterates by UTC calendar date so
+ * DST never skips or doubles a day. Span capped at 400 days.
+ */
+export async function getStreakRange(workerId: string, fromKey: string, toKey: string) {
+  const [fy, fm, fd] = fromKey.split("-").map(Number);
+  const [ty, tm, td] = toKey.split("-").map(Number);
+  const cursor = new Date(Date.UTC(fy, fm - 1, fd));
+  const end = new Date(Date.UTC(ty, tm - 1, td));
+  const span = Math.round((end.getTime() - cursor.getTime()) / DAY_MS) + 1;
+  if (Number.isNaN(span) || span < 1 || span > 400) {
+    throw new Error("Plage de dates invalide (1 à 400 jours).");
+  }
+
+  const entries = await prisma.pointEntry.findMany({
+    where: {
+      workerId,
+      kind: "task_completed",
+      createdAt: { gte: startOfLocalDay(fromKey), lt: new Date(startOfLocalDay(toKey).getTime() + DAY_MS) },
+    },
+    select: { createdAt: true },
+  });
+  const counts = new Map<string, number>();
+  for (const e of entries) {
+    const k = localDayKey(e.createdAt);
+    counts.set(k, (counts.get(k) ?? 0) + 1);
+  }
+
+  const days: { date: string; label: string; done: boolean; count: number }[] = [];
+  while (cursor <= end) {
+    const key = `${cursor.getUTCFullYear()}-${pad2(cursor.getUTCMonth() + 1)}-${pad2(cursor.getUTCDate())}`;
+    const c = counts.get(key) ?? 0;
+    days.push({ date: key, label: WEEKDAY_LABELS[cursor.getUTCDay()]!, done: c > 0, count: c });
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+
+  return { streakDays: await computeStreak(workerId), days };
+}
+
 export interface BackfillInput {
   workerId: string;
   storeId: string;

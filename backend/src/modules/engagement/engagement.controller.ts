@@ -22,9 +22,25 @@ export async function markAllSeen(req: Request, res: Response) {
   res.status(204).send();
 }
 
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
+async function streakFor(workerId: string, req: Request, res: Response) {
+  const { from, to } = req.query;
+  if (typeof from === "string" && typeof to === "string") {
+    if (!DATE_RE.test(from) || !DATE_RE.test(to)) {
+      return res.status(400).json({ error: "Dates attendues au format YYYY-MM-DD." });
+    }
+    try {
+      return res.json(await engagementService.getStreakRange(workerId, from, to));
+    } catch (err) {
+      return res.status(400).json({ error: (err as Error).message });
+    }
+  }
+  res.json(await engagementService.getStreakStrip(workerId));
+}
+
 export async function streakStrip(req: Request, res: Response) {
-  const strip = await engagementService.getStreakStrip(req.session.userId!);
-  res.json(strip);
+  await streakFor(req.session.userId!, req, res);
 }
 
 export async function dayTasks(req: Request, res: Response) {
@@ -48,7 +64,7 @@ export async function workerSummary(req: Request, res: Response) {
 }
 
 export async function workerStreak(req: Request, res: Response) {
-  res.json(await engagementService.getStreakStrip(req.params.workerId));
+  await streakFor(req.params.workerId, req, res);
 }
 
 export async function workerDayTasks(req: Request, res: Response) {

@@ -50,6 +50,24 @@ export function useStreakDay(date: string | null) {
   });
 }
 
+/**
+ * Streak flags for an arbitrary date range. `workerId` null = the logged-in
+ * worker's own streak (/profile); a value = admin viewing that worker.
+ */
+export function useStreakHistory(workerId: string | null, range: { from: string; to: string }) {
+  const { user } = useAuth();
+  const isSelf = workerId == null;
+  return useQuery({
+    queryKey: isSelf
+      ? ["engagement", "streak", "range", range.from, range.to]
+      : ["engagement", "worker", workerId, "streak", "range", range.from, range.to],
+    queryFn: () =>
+      isSelf ? engagementApi.getStreak(range) : engagementApi.getWorkerStreak(workerId!, range),
+    enabled: isSelf ? user?.roleKey === "travailleur" : !!workerId,
+    placeholderData: (prev) => prev,
+  });
+}
+
 export function useWorkerSummary(workerId: string) {
   return useQuery({
     queryKey: ["engagement", "worker", workerId, "summary"],

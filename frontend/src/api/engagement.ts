@@ -21,8 +21,12 @@ export function getLeaderboard() {
   return apiClient.get<{ rows: LeaderboardRow[] }>("/engagement/leaderboard");
 }
 
-export function getStreak() {
-  return apiClient.get<StreakStrip>("/engagement/streak");
+function rangeQuery(range?: { from: string; to: string }) {
+  return range ? `?from=${range.from}&to=${range.to}` : "";
+}
+
+export function getStreak(range?: { from: string; to: string }) {
+  return apiClient.get<StreakStrip>(`/engagement/streak${rangeQuery(range)}`);
 }
 
 export function getStreakDay(date: string) {
@@ -35,8 +39,8 @@ export function getWorkerSummary(workerId: string) {
   return apiClient.get<{ summary: EngagementSummary }>(`/engagement/workers/${workerId}/summary`);
 }
 
-export function getWorkerStreak(workerId: string) {
-  return apiClient.get<StreakStrip>(`/engagement/workers/${workerId}/streak`);
+export function getWorkerStreak(workerId: string, range?: { from: string; to: string }) {
+  return apiClient.get<StreakStrip>(`/engagement/workers/${workerId}/streak${rangeQuery(range)}`);
 }
 
 export function getWorkerStreakDay(workerId: string, date: string) {

@@ -12,17 +12,18 @@ import { useTasks } from "../../hooks/useTasks";
 import * as organizationsApi from "../../api/organizations";
 import {
   useWorkerSummary,
-  useWorkerStreak,
   useWorkerStreakDay,
   useAddPastTask,
   useUpdatePastTask,
   useDeletePastTask,
 } from "../../hooks/useEngagement";
+import { StreakHistory } from "../../components/engagement/StreakHistory";
 import type { DayTask, Organization, RoleKey } from "../../types";
 
-function Flame({ lit }: { lit: boolean }) {
-  return <span className={lit ? "" : "opacity-30 grayscale"} aria-hidden="true">🔥</span>;
-}
+const todayKey = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
 
 const DAY_LABELS = ["L", "M", "M", "J", "V", "S", "D"]; // Mon..Sun -> indices 1..0
 const DAY_INDEX = [1, 2, 3, 4, 5, 6, 0]; // JS getDay values, Monday first
@@ -40,7 +41,6 @@ export function WorkerDetailPage() {
   const { id = "" } = useParams();
   const { data: user } = useUser(id);
   const { data: summary } = useWorkerSummary(id);
-  const { data: strip } = useWorkerStreak(id);
   const { data: stores } = useStoreOptions();
 
   const addPastTask = useAddPastTask(id);
@@ -84,11 +84,10 @@ export function WorkerDetailPage() {
   );
 
   const { data: day, isLoading: dayLoading } = useWorkerStreakDay(id, selected);
-  const today = strip?.days[strip.days.length - 1];
 
   useEffect(() => {
-    if (!selected && today) setSelected(today.date);
-  }, [selected, today]);
+    if (!selected) setSelected(todayKey());
+  }, [selected]);
 
   useEffect(() => {
     organizationsApi.listOrganizations("sous_traitant").then((r) => setOrgs(r.organizations));
@@ -365,37 +364,19 @@ export function WorkerDetailPage() {
         </div>
       )}
 
-      <h2 className="mt-8 text-sm font-semibold text-canvas-900">Série — 7 derniers jours</h2>
-      {strip && (
-        <div className="mt-2 rounded-2xl border border-canvas-200 bg-white p-4 shadow-sm shadow-canvas-900/5">
-          <div className="flex justify-between gap-1.5">
-            {strip.days.map((d) => {
-              const isSel = d.date === selected;
-              const isToday = d.date === today?.date;
-              return (
-                <button
-                  key={d.date}
-                  type="button"
-                  onClick={() => {
-                    setSelected(d.date);
-                    setMode(null);
-                    setNotice(null);
-                  }}
-                  className={`flex flex-1 flex-col items-center gap-1 rounded-xl px-1 py-2 transition-colors ${
-                    isSel ? "bg-flow-50 ring-1 ring-flow-200" : "hover:bg-canvas-50"
-                  }`}
-                >
-                  <span className="text-[11px] font-medium text-canvas-500">{d.label}</span>
-                  <Flame lit={d.done} />
-                  <span className={`text-[10px] ${isToday ? "font-semibold text-flow-700" : "text-canvas-400"}`}>
-                    {isToday ? "auj." : d.date.slice(8)}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+      <h2 className="mt-8 text-sm font-semibold text-canvas-900">Série</h2>
+      <div className="mt-2 rounded-2xl border border-canvas-200 bg-white p-4 shadow-sm shadow-canvas-900/5">
+        <StreakHistory
+          workerId={id}
+          selected={selected}
+          onSelect={(d) => {
+            setSelected(d);
+            setMode(null);
+            setNotice(null);
+          }}
+        />
 
-          <div className="mt-3 border-t border-canvas-100 pt-3">
+        <div className="mt-3 border-t border-canvas-100 pt-3">
             <div className="flex items-center justify-between">
               <p className="text-xs font-medium text-canvas-600">
                 {selected} — {day?.tasks.length ?? 0} tâche{(day?.tasks.length ?? 0) > 1 ? "s" : ""}
@@ -552,7 +533,6 @@ export function WorkerDetailPage() {
             )}
           </div>
         </div>
-      )}
     </AppLayout>
   );
 }
