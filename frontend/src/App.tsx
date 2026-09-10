@@ -29,6 +29,7 @@ const StoreMapPage = lazy(() => import("./routes/StoreMapPage").then(named("Stor
 const StoreMarketplacePage = lazy(() => import("./routes/marketplace/StoreMarketplacePage").then(named("StoreMarketplacePage")));
 const TaskMarketplacePage = lazy(() => import("./routes/marketplace/TaskMarketplacePage").then(named("TaskMarketplacePage")));
 const MyTasksPage = lazy(() => import("./routes/marketplace/MyTasksPage").then(named("MyTasksPage")));
+const ClansPage = lazy(() => import("./routes/marketplace/ClansPage").then(named("ClansPage")));
 const SubcontractorTasksPage = lazy(() => import("./routes/marketplace/SubcontractorTasksPage").then(named("SubcontractorTasksPage")));
 const PaymentSettingsPage = lazy(() => import("./routes/marketplace/PaymentSettingsPage").then(named("PaymentSettingsPage")));
 const ClaimsPage = lazy(() => import("./routes/admin/ClaimsPage").then(named("ClaimsPage")));
@@ -280,6 +281,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute roles={["travailleur"]}>
               <MyTasksPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/markettask/clans"
+          element={
+            <ProtectedRoute roles={["travailleur"]}>
+              <ClansPage />
             </ProtectedRoute>
           }
         />

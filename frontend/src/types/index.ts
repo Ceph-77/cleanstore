@@ -485,3 +485,29 @@ export interface ConsoleAlerts {
   /** Sections de la console visibles pour l'utilisateur courant (ordre canonique). */
   sections: string[];
 }
+
+export interface ClanMemberRow {
+  clanId: string;
+  userId: string;
+  joinedAt: string;
+  defaultSharePct: number | null;
+  user: { id: string; fullName: string | null; email: string };
+}
+
+export interface Clan {
+  id: string;
+  name: string;
+  founderId: string;
+  inviteCode: string;
+  createdAt: string;
+  members: ClanMemberRow[];
+}
+
+export interface ClanInviteRow {
+  id: string;
+  clanId: string;
+  email: string;
+  createdAt: string;
+  acceptedAt: string | null;
+  clan: { id: string; name: string };
+}

@@ -178,6 +178,7 @@ function TravailleurNav({ onNavigate, unseenCount }: { onNavigate?: () => void; 
         onNavigate={onNavigate}
         badge={unseenCount}
       />
+      <NavItem to="/markettask/clans" icon={<IconUser />} label="Mes clans" onNavigate={onNavigate} />
       <NavItem to="/wallet" icon={<IconWallet />} label="Portefeuille" onNavigate={onNavigate} />
     </>
   );

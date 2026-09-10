@@ -125,6 +125,8 @@ model User {
   feedbackEntries      Feedback[]
   pointEntries         PointEntry[]
   workerMoments        WorkerMoment[]
+  foundedClans         Clan[]               @relation("ClanFounder")
+  clanMemberships      ClanMember[]
 
   @@map("users")
 }
@@ -735,4 +737,51 @@ model AuditLog {
   @@index([section, createdAt])
   @@index([entityType, entityId])
   @@map("audit_logs")
+}
+
+/// Clan = groupe de travailleurs autonomes qui se réunissent pour réserver des
+/// tâches plus grosses et paralléliser. ≠ sous-traitant (pas de comptes gérés).
+/// Un travailleur peut appartenir à plusieurs clans.
+model Clan {
+  id         String   @id @default(uuid())
+  name       String
+  founderId  String   @map("founder_id")
+  inviteCode String   @unique @map("invite_code")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  founder User         @relation("ClanFounder", fields: [founderId], references: [id])
+  members ClanMember[]
+  invites ClanInvite[]
+
+  @@index([founderId])
+  @@map("clans")
+}
+
+model ClanMember {
+  clanId          String   @map("clan_id")
+  userId          String   @map("user_id")
+  joinedAt        DateTime @default(now()) @map("joined_at")
+  /// Part par défaut proposée à ce membre quand il rejoint une tâche du clan (%).
+  defaultSharePct Int?     @map("default_share_pct")
+
+  clan Clan @relation(fields: [clanId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([clanId, userId])
+  @@index([userId])
+  @@map("clan_members")
+}
+
+model ClanInvite {
+  id         String    @id @default(uuid())
+  clanId     String    @map("clan_id")
+  email      String
+  createdAt  DateTime  @default(now()) @map("created_at")
+  acceptedAt DateTime? @map("accepted_at")
+
+  clan Clan @relation(fields: [clanId], references: [id], onDelete: Cascade)
+
+  @@index([email])
+  @@index([clanId])
+  @@map("clan_invites")
 }
