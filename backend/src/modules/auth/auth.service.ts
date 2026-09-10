@@ -5,6 +5,8 @@ import { sendPasswordResetEmail, isEmailConfigured } from "../../utils/email";
 import { env } from "../../config/env";
 import type { registerWorkerSchema } from "./auth.schema";
 import type { z } from "zod";
+import type { RoleKey } from "@prisma/client";
+import { primaryRole } from "./permissions";
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
 export const CURRENT_TERMS_VERSION = "1.0-2026-08-21";
@@ -30,13 +32,14 @@ export async function authenticate(email: string, password: string) {
     return null;
   }
 
-  const primaryRole = user.roles[0]?.role.key ?? null;
+  const roleKeys = user.roles.map((r) => r.role.key);
 
   return {
     id: user.id,
     email: user.email,
     fullName: user.fullName,
-    roleKey: primaryRole,
+    roleKey: primaryRole(roleKeys),
+    roleKeys,
     termsAcceptedAt: user.termsAcceptedAt,
   };
 }
@@ -68,6 +71,7 @@ export async function registerWorker(data: RegisterWorkerInput) {
     email: user.email,
     fullName: user.fullName,
     roleKey: "travailleur" as const,
+    roleKeys: ["travailleur"] as RoleKey[],
     termsAcceptedAt: user.termsAcceptedAt,
   };
 }
@@ -82,13 +86,16 @@ export async function getUserById(userId: string) {
     return null;
   }
 
+  const roleKeys = user.roles.map((r) => r.role.key);
+
   return {
     id: user.id,
     email: user.email,
     fullName: user.fullName,
     phone: user.phone,
     address: user.address,
-    roleKey: user.roles[0]?.role.key ?? null,
+    roleKey: primaryRole(roleKeys),
+    roleKeys,
     termsAcceptedAt: user.termsAcceptedAt,
   };
 }

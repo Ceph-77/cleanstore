@@ -31,6 +31,7 @@ export async function login(req: Request, res: Response) {
 
   req.session.userId = user.id;
   req.session.roleKey = user.roleKey ?? undefined;
+  req.session.roleKeys = user.roleKeys;
 
   res.json({ user });
 }
@@ -45,6 +46,7 @@ export async function registerWorkerHandler(req: Request, res: Response) {
     const user = await registerWorker(parsed.data);
     req.session.userId = user.id;
     req.session.roleKey = user.roleKey;
+    req.session.roleKeys = user.roleKeys;
     res.status(201).json({ user });
   } catch (err) {
     res.status(409).json({ error: (err as Error).message });
@@ -107,8 +109,10 @@ export async function impersonate(req: Request, res: Response) {
 
   req.session.impersonatorId = req.session.userId;
   req.session.impersonatorRoleKey = req.session.roleKey;
+  req.session.impersonatorRoleKeys = req.session.roleKeys;
   req.session.userId = target.id;
   req.session.roleKey = target.roleKey;
+  req.session.roleKeys = target.roleKeys;
 
   res.json({ user: target });
 }
@@ -120,8 +124,10 @@ export async function stopImpersonating(req: Request, res: Response) {
 
   req.session.userId = req.session.impersonatorId;
   req.session.roleKey = req.session.impersonatorRoleKey;
+  req.session.roleKeys = req.session.impersonatorRoleKeys;
   delete req.session.impersonatorId;
   delete req.session.impersonatorRoleKey;
+  delete req.session.impersonatorRoleKeys;
 
   const user = await getUserById(req.session.userId!);
   res.json({ user });

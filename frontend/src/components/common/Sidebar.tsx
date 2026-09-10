@@ -26,6 +26,10 @@ export const ROLE_LABELS: Record<string, string> = {
   travailleur: "Travailleur autonome",
   grande_compagnie: "Grande compagnie",
   inspecteur: "Inspecteur",
+  chef_equipe: "Chef d'équipe",
+  comptable: "Comptable",
+  mecanicien: "Mécanicien",
+  developpeur: "Développeur",
 };
 
 function NavItem({
@@ -139,6 +143,8 @@ function SidebarContent({ onNavigate, onCloseButton }: { onNavigate?: () => void
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const role = user?.roleKey as RoleKey | undefined;
+  const roleKeys = (user?.roleKeys?.length ? user.roleKeys : role ? [role] : []) as RoleKey[];
+  const has = (r: RoleKey) => roleKeys.includes(r);
   const { data: unseenCount } = useUnseenDecisionsCount();
 
   const prevUnseen = useRef<number | undefined>(undefined);
@@ -174,9 +180,13 @@ function SidebarContent({ onNavigate, onCloseButton }: { onNavigate?: () => void
       </div>
 
       <nav className="mt-10 flex-1 space-y-1">
-        {role === "admin" && <AdminNav onNavigate={onNavigate} />}
-        {role === "sous_traitant" && <SousTraitantNav onNavigate={onNavigate} unseenCount={unseenCount} />}
-        {role === "travailleur" && <TravailleurNav onNavigate={onNavigate} unseenCount={unseenCount} />}
+        {has("admin") && <AdminNav onNavigate={onNavigate} />}
+        {!has("admin") && has("sous_traitant") && (
+          <SousTraitantNav onNavigate={onNavigate} unseenCount={unseenCount} />
+        )}
+        {!has("admin") && !has("sous_traitant") && has("travailleur") && (
+          <TravailleurNav onNavigate={onNavigate} unseenCount={unseenCount} />
+        )}
       </nav>
 
       <div className="mt-auto space-y-3 border-t border-white/10 pt-4">

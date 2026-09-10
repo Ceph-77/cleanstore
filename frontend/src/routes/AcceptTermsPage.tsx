@@ -4,13 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { Button } from "../components/common/Button";
 import { Logo } from "../components/common/Logo";
 import { ApiError } from "../api/client";
-import type { RoleKey } from "../types";
-
-function homeForRole(role: RoleKey | null | undefined) {
-  if (role === "sous_traitant") return "/markettask/stores";
-  if (role === "travailleur") return "/markettask/tasks";
-  return "/stores";
-}
+import { homeForRole } from "../lib/homeForRole";
 
 export function AcceptTermsPage() {
   const { user, acceptTerms } = useAuth();

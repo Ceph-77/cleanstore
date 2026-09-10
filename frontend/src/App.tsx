@@ -5,6 +5,7 @@ import { queryClient } from "./queryClient";
 import { track } from "./analytics";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { LoginPage } from "./routes/LoginPage";
+import { homeForRole } from "./lib/homeForRole";
 import type { RoleKey } from "./types";
 
 // Everything except the login screen (the cold-start entry for logged-out users)
@@ -56,12 +57,6 @@ function Loading() {
   );
 }
 
-function homeForRole(role: RoleKey | null | undefined) {
-  if (role === "sous_traitant") return "/markettask/stores";
-  if (role === "travailleur") return "/markettask/tasks";
-  return "/stores";
-}
-
 function ProtectedRoute({
   children,
   roles,
@@ -85,8 +80,16 @@ function ProtectedRoute({
     return <Navigate to="/accept-terms" replace />;
   }
 
-  if (roles && !roles.includes(user.roleKey as RoleKey)) {
-    return <Navigate to={homeForRole(user.roleKey)} replace />;
+  if (roles) {
+    // accès = union des rôles de l'utilisateur (retombe sur roleKey si besoin)
+    const userRoles = user.roleKeys?.length
+      ? user.roleKeys
+      : user.roleKey
+        ? [user.roleKey]
+        : [];
+    if (!roles.some((r) => userRoles.includes(r))) {
+      return <Navigate to={homeForRole(user.roleKey)} replace />;
+    }
   }
 
   return <>{children}</>;

@@ -95,6 +95,31 @@ const PERMISSIONS: Record<RoleKey, Matrix> = {
   travailleur: {},
 };
 
+/**
+ * Ordre de priorité des rôles — du plus « opérationnel » au moins. Sert à
+ * choisir le rôle PRINCIPAL d'un compte multi-rôle : redirection post-login,
+ * libellé affiché, tag analytics, `session.roleKey` legacy. N'affecte PAS les
+ * droits d'accès (ça, c'est l'union via `can()`).
+ */
+const ROLE_PRIORITY: RoleKey[] = [
+  "admin",
+  "sous_traitant",
+  "travailleur",
+  "inspecteur",
+  "comptable",
+  "developpeur",
+  "mecanicien",
+  "chef_equipe",
+  "grande_compagnie",
+];
+
+export function primaryRole(roleKeys: readonly RoleKey[]): RoleKey | null {
+  for (const rk of ROLE_PRIORITY) {
+    if (roleKeys.includes(rk)) return rk;
+  }
+  return roleKeys[0] ?? null;
+}
+
 /** L'un des rôles de l'utilisateur autorise-t-il `action` sur `section` ? */
 export function can(
   roleKeys: readonly RoleKey[],

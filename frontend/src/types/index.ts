@@ -1,4 +1,13 @@
-export type RoleKey = "admin" | "grande_compagnie" | "sous_traitant" | "inspecteur" | "travailleur";
+export type RoleKey =
+  | "admin"
+  | "grande_compagnie"
+  | "sous_traitant"
+  | "inspecteur"
+  | "travailleur"
+  | "chef_equipe"
+  | "comptable"
+  | "mecanicien"
+  | "developpeur";
 
 export interface AuthUser {
   id: string;
@@ -6,7 +15,10 @@ export interface AuthUser {
   fullName: string | null;
   phone?: string | null;
   address?: string | null;
+  /** Rôle principal — redirection, libellé affiché. */
   roleKey: RoleKey | null;
+  /** Tous les rôles. L'accès aux écrans = l'union (voir ProtectedRoute). */
+  roleKeys: RoleKey[];
   termsAcceptedAt: string | null;
 }
 
