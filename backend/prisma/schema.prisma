@@ -24,6 +24,10 @@ enum RoleKey {
   sous_traitant
   inspecteur
   travailleur
+  chef_equipe
+  comptable
+  mecanicien
+  developpeur
 }
 
 enum OrganizationType {
@@ -632,4 +636,29 @@ model Withdrawal {
   earnings WorkerEarning[]
 
   @@map("withdrawals")
+}
+
+/// Journal d'audit de la Console de gestion : qui a fait quoi, quand.
+/// Écrit uniquement pour les actions de gestion (create/update/delete/décision
+/// sur magasins, utilisateurs, rôles, modèles, demandes, feedback, réglages,
+/// finances) — pas les changements de statut de tâche côté travailleur.
+/// Aucune FK vers User : une entrée survit à la suppression du compte acteur
+/// (identité figée dans actorLabel). Append-only : jamais modifié, jamais purgé.
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?  @map("actor_id")
+  actorLabel String?  @map("actor_label")
+  action     String
+  section    String
+  entityType String   @map("entity_type")
+  entityId   String?  @map("entity_id")
+  summary    String?
+  before     Json?
+  after      Json?
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@index([section, createdAt])
+  @@index([entityType, entityId])
+  @@map("audit_logs")
 }

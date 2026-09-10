@@ -10,6 +10,10 @@ const ROLE_LABELS: Record<RoleKey, string> = {
   sous_traitant: "Sous-traitant",
   inspecteur: "Inspecteur",
   travailleur: "Travailleur autonome",
+  chef_equipe: "Chef d'équipe",
+  comptable: "Comptable",
+  mecanicien: "Mécanicien",
+  developpeur: "Développeur",
 };
 
 async function main() {
