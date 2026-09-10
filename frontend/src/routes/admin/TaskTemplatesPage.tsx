@@ -43,6 +43,7 @@ type FormState = {
   recurrenceType: "daily" | "weekly" | "monthly";
   recurrenceWeekdays: number[];
   recurrenceMonthdays: string;
+  variants: { name: string; price: string; metricTarget: string; durationMinutes: string }[];
   steps: string[];
 };
 
@@ -75,6 +76,7 @@ const EMPTY: FormState = {
   recurrenceType: "daily",
   recurrenceWeekdays: [],
   recurrenceMonthdays: "",
+  variants: [],
   steps: [],
 };
 
@@ -117,6 +119,12 @@ function toForm(t: TaskTemplate): FormState {
     recurrenceType: t.recurrence?.type ?? "daily",
     recurrenceWeekdays: t.recurrence?.type === "weekly" ? t.recurrence.days : [],
     recurrenceMonthdays: t.recurrence?.type === "monthly" ? t.recurrence.days.join(", ") : "",
+    variants: t.variants.map((v) => ({
+      name: v.name,
+      price: v.price ?? "",
+      metricTarget: v.metricTarget ?? "",
+      durationMinutes: v.durationMinutes?.toString() ?? "",
+    })),
     steps: t.steps.map((s) => s.text),
   };
 }
@@ -165,6 +173,14 @@ function toPayload(f: FormState): TemplateInput {
                 .filter((n) => Number.isInteger(n) && n >= 1 && n <= 31),
             }
           : { type: "daily" },
+    variants: f.variants
+      .filter((v) => v.name.trim())
+      .map((v) => ({
+        name: v.name.trim(),
+        price: num(v.price),
+        metricTarget: num(v.metricTarget),
+        durationMinutes: num(v.durationMinutes),
+      })),
     steps: f.steps.map((s) => s.trim()).filter(Boolean),
   };
 }
@@ -501,6 +517,76 @@ function TemplateForm({
             </div>
           </>
         )}
+      </fieldset>
+
+      <fieldset className="rounded-xl border border-canvas-200 bg-white p-3">
+        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-canvas-600">
+          Variantes (petit / grand…) — optionnel
+        </legend>
+        <p className="mb-2 text-xs text-canvas-600">
+          Chaque variante surcharge le prix, la cible et/ou la durée. On choisit la variante en
+          appliquant le modèle à un magasin.
+        </p>
+        <div className="space-y-2">
+          {f.variants.map((v, i) => (
+            <div key={i} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr,7rem,7rem,7rem,auto]">
+              <Input
+                placeholder="Nom (ex. Grand)"
+                value={v.name}
+                onChange={(e) =>
+                  set("variants", f.variants.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)))
+                }
+              />
+              <Input
+                type="number"
+                placeholder="Prix $"
+                value={v.price}
+                onChange={(e) =>
+                  set("variants", f.variants.map((x, j) => (j === i ? { ...x, price: e.target.value } : x)))
+                }
+              />
+              <Input
+                type="number"
+                placeholder="Cible"
+                value={v.metricTarget}
+                onChange={(e) =>
+                  set(
+                    "variants",
+                    f.variants.map((x, j) => (j === i ? { ...x, metricTarget: e.target.value } : x)),
+                  )
+                }
+              />
+              <Input
+                type="number"
+                placeholder="Durée min"
+                value={v.durationMinutes}
+                onChange={(e) =>
+                  set(
+                    "variants",
+                    f.variants.map((x, j) => (j === i ? { ...x, durationMinutes: e.target.value } : x)),
+                  )
+                }
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => set("variants", f.variants.filter((_, j) => j !== i))}
+              >
+                ✕
+              </Button>
+            </div>
+          ))}
+        </div>
+        <Button
+          type="button"
+          variant="secondary"
+          className="mt-2"
+          onClick={() =>
+            set("variants", [...f.variants, { name: "", price: "", metricTarget: "", durationMinutes: "" }])
+          }
+        >
+          + Ajouter une variante
+        </Button>
       </fieldset>
 
       <div>

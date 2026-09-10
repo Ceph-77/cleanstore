@@ -29,6 +29,12 @@ export interface TemplateInput {
   recurrence?: Recurrence | null;
   isActive?: boolean;
   steps?: string[];
+  variants?: {
+    name: string;
+    price?: number | null;
+    metricTarget?: number | null;
+    durationMinutes?: number | null;
+  }[];
 }
 
 export function listTaskTemplates(includeInactive = false) {
@@ -53,6 +59,14 @@ export function duplicateTaskTemplate(id: string) {
   return apiClient.post<{ template: TaskTemplate }>(`/task-templates/${id}/duplicate`);
 }
 
-export function instantiateTemplates(storeId: string, templateIds: string[]) {
-  return apiClient.post<{ tasks: Task[] }>("/task-templates/instantiate", { storeId, templateIds });
+export function instantiateTemplates(
+  storeId: string,
+  templateIds: string[],
+  variantByTemplate?: Record<string, string>,
+) {
+  return apiClient.post<{ tasks: Task[] }>("/task-templates/instantiate", {
+    storeId,
+    templateIds,
+    variantByTemplate,
+  });
 }

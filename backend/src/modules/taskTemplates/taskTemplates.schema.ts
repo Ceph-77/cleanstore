@@ -35,6 +35,16 @@ export const templateCreateSchema = z.object({
     .optional(),
   isActive: z.boolean().optional(),
   steps: z.array(z.string().min(1)).optional(),
+  variants: z
+    .array(
+      z.object({
+        name: z.string().min(1).max(60),
+        price: z.coerce.number().nonnegative().nullable().optional(),
+        metricTarget: z.coerce.number().positive().nullable().optional(),
+        durationMinutes: z.coerce.number().int().positive().nullable().optional(),
+      }),
+    )
+    .optional(),
 });
 
 export const templateUpdateSchema = templateCreateSchema.partial();
@@ -43,4 +53,6 @@ export const templateUpdateSchema = templateCreateSchema.partial();
 export const instantiateSchema = z.object({
   storeId: z.string().uuid(),
   templateIds: z.array(z.string().uuid()).min(1).max(50),
+  /** map templateId -> variantId choisi (optionnel). */
+  variantByTemplate: z.record(z.string().uuid(), z.string().uuid()).optional(),
 });

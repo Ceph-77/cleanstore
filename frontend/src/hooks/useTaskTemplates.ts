@@ -44,7 +44,13 @@ export function useDuplicateTaskTemplate() {
 export function useInstantiateTemplates(storeId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (templateIds: string[]) => api.instantiateTemplates(storeId, templateIds),
+    mutationFn: ({
+      templateIds,
+      variantByTemplate,
+    }: {
+      templateIds: string[];
+      variantByTemplate?: Record<string, string>;
+    }) => api.instantiateTemplates(storeId, templateIds, variantByTemplate),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["stores", storeId] });
       qc.invalidateQueries({ queryKey: ["stores", storeId, "tasks"] });

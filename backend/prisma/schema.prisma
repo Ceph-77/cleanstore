@@ -282,6 +282,7 @@ model Task {
   requiresStartPhoto       Boolean    @default(false) @map("requires_start_photo")
   requiresEndPhoto         Boolean    @default(false) @map("requires_end_photo")
   recurrence               Json?
+  variantName              String?    @map("variant_name")
   createdById              String?    @map("created_by")
   createdAt                DateTime   @default(now()) @map("created_at")
   updatedAt                DateTime   @updatedAt @map("updated_at")
@@ -343,8 +344,9 @@ model TaskTemplate {
   createdAt                DateTime @default(now()) @map("created_at")
   updatedAt                DateTime @updatedAt @map("updated_at")
 
-  steps TaskTemplateStep[]
-  tasks Task[]
+  steps    TaskTemplateStep[]
+  variants TaskTemplateVariant[]
+  tasks    Task[]
 
   @@index([isActive])
   @@map("task_templates")
@@ -360,6 +362,24 @@ model TaskTemplateStep {
 
   @@index([templateId])
   @@map("task_template_steps")
+}
+
+/// Variante d'un modèle (« petit » / « grand »…). Surcharge le prix, la cible
+/// métrique et/ou la durée. On choisit la variante en appliquant le modèle à
+/// un magasin ; ses valeurs sont copiées dans la tâche (pas de lien vivant).
+model TaskTemplateVariant {
+  id              String   @id @default(uuid())
+  templateId      String   @map("template_id")
+  name            String
+  price           Decimal?
+  metricTarget    Decimal? @map("metric_target")
+  durationMinutes Int?     @map("duration_minutes")
+  order           Int      @default(0)
+
+  template TaskTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([templateId])
+  @@map("task_template_variants")
 }
 
 model TaskExpectedPhoto {

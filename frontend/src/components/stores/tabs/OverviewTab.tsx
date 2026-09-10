@@ -46,6 +46,7 @@ export function OverviewTab({ store }: { store: Store }) {
   const instantiate = useInstantiateTemplates(store.id);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [pickedTemplateIds, setPickedTemplateIds] = useState<string[]>([]);
+  const [variantByTemplate, setVariantByTemplate] = useState<Record<string, string>>({});
 
   const [showForm, setShowForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -135,29 +136,51 @@ export function OverviewTab({ store }: { store: Store }) {
             le prix, la cible et les précisions, puis publie.
           </p>
           <div className="space-y-2">
-            {templates.map((t) => (
-              <label key={t.id} className="flex items-start gap-2 text-sm text-canvas-800">
-                <input
-                  type="checkbox"
-                  className="mt-1"
-                  checked={pickedTemplateIds.includes(t.id)}
-                  onChange={(e) =>
-                    setPickedTemplateIds((ids) =>
-                      e.target.checked ? [...ids, t.id] : ids.filter((id) => id !== t.id)
-                    )
-                  }
-                />
-                <span>
-                  <span className="font-medium">{t.name}</span>
-                  {t.metricLabel && (
-                    <span className="text-canvas-600">
-                      {" "}
-                      — cible {t.defaultMetricTarget ?? "?"} {t.metricUnit ?? ""}
+            {templates.map((t) => {
+              const picked = pickedTemplateIds.includes(t.id);
+              return (
+                <div key={t.id}>
+                  <label className="flex items-start gap-2 text-sm text-canvas-800">
+                    <input
+                      type="checkbox"
+                      className="mt-1"
+                      checked={picked}
+                      onChange={(e) =>
+                        setPickedTemplateIds((ids) =>
+                          e.target.checked ? [...ids, t.id] : ids.filter((id) => id !== t.id)
+                        )
+                      }
+                    />
+                    <span>
+                      <span className="font-medium">{t.name}</span>
+                      {t.metricLabel && (
+                        <span className="text-canvas-600">
+                          {" "}
+                          — cible {t.defaultMetricTarget ?? "?"} {t.metricUnit ?? ""}
+                        </span>
+                      )}
                     </span>
+                  </label>
+                  {picked && t.variants.length > 0 && (
+                    <select
+                      className="ml-6 mt-1 rounded-lg border border-canvas-300 bg-white px-2 py-1 text-xs"
+                      value={variantByTemplate[t.id] ?? ""}
+                      onChange={(e) =>
+                        setVariantByTemplate((m) => ({ ...m, [t.id]: e.target.value }))
+                      }
+                    >
+                      <option value="">Variante par défaut</option>
+                      {t.variants.map((v) => (
+                        <option key={v.id} value={v.id}>
+                          {v.name}
+                          {v.price != null ? ` — ${Number(v.price)} $` : ""}
+                        </option>
+                      ))}
+                    </select>
                   )}
-                </span>
-              </label>
-            ))}
+                </div>
+              );
+            })}
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="secondary" onClick={() => setShowTemplatePicker(false)}>
@@ -167,7 +190,12 @@ export function OverviewTab({ store }: { store: Store }) {
               variant="accent"
               disabled={pickedTemplateIds.length === 0 || instantiate.isPending}
               onClick={async () => {
-                await instantiate.mutateAsync(pickedTemplateIds);
+                const vbt = Object.fromEntries(
+                  Object.entries(variantByTemplate).filter(
+                    ([id, v]) => v && pickedTemplateIds.includes(id)
+                  )
+                );
+                await instantiate.mutateAsync({ templateIds: pickedTemplateIds, variantByTemplate: vbt });
                 setShowTemplatePicker(false);
               }}
             >

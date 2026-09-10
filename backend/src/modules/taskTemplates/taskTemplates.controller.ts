@@ -90,7 +90,8 @@ export async function instantiate(req: Request, res: Response) {
     const tasks = await service.instantiateMany(
       parsed.data.templateIds,
       parsed.data.storeId,
-      req.session.userId!
+      req.session.userId!,
+      parsed.data.variantByTemplate
     );
     res.status(201).json({ tasks });
   } catch (err) {

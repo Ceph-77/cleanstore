@@ -201,6 +201,16 @@ export interface TaskTemplate {
   recurrence: Recurrence | null;
   isActive: boolean;
   steps: TaskTemplateStep[];
+  variants: TaskTemplateVariant[];
+}
+
+export interface TaskTemplateVariant {
+  id: string;
+  name: string;
+  price: string | null;
+  metricTarget: string | null;
+  durationMinutes: number | null;
+  order: number;
 }
 
 export interface Task {
@@ -237,6 +247,7 @@ export interface Task {
   unitLabel: string | null;
   reportedUnits: string | null;
   workedMinutes: number | null;
+  variantName: string | null;
   requiresOdometer: boolean;
   startOdometer: string | null;
   endOdometer: string | null;
