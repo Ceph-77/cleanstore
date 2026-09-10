@@ -4,6 +4,7 @@ import { pageParamsSchema } from "../../utils/pagination";
 import { claimDecisionSchema, createClaimSchema } from "./storeClaims.schema";
 import * as storeClaimsService from "./storeClaims.service";
 import { recordServerEvent } from "../analytics/analytics.service";
+import { logAudit } from "../audit/audit.service";
 
 export async function listAvailable(req: Request, res: Response) {
   const stores = await storeClaimsService.listAvailableStores();
@@ -51,5 +52,12 @@ export async function decide(req: Request, res: Response) {
     parsed.data.status === "approved" ? "store_claim_approved" : "store_claim_rejected",
     { userId: claim.requestedById, role: "sous_traitant", props: { storeId: claim.storeId } }
   ).catch(() => {});
+  logAudit(req.session.userId, {
+    action: "decision",
+    section: "markettask",
+    entityType: "StoreClaim",
+    entityId: claim.id,
+    summary: `Candidature magasin ${parsed.data.status === "approved" ? "approuvée" : "refusée"}`,
+  });
   res.json({ claim });
 }

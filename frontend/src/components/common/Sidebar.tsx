@@ -14,10 +14,12 @@ import {
   IconSettings,
   IconFeedback,
   IconFile,
+  IconNote,
   IconTrophy,
   IconX,
 } from "./icons";
 import { useUnseenDecisionsCount } from "../../hooks/useNotifications";
+import { useConsoleAlerts } from "../../hooks/useConsoleAlerts";
 import type { RoleKey } from "../../types";
 
 export const ROLE_LABELS: Record<string, string> = {
@@ -86,20 +88,42 @@ function NavItem({
   );
 }
 
-function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
+function AdminNav({
+  onNavigate,
+  pendingClaims,
+  totalAlerts,
+}: {
+  onNavigate?: () => void;
+  pendingClaims?: number;
+  totalAlerts?: number;
+}) {
   return (
     <>
-      <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">Opérations</p>
+      <p className="flex items-center justify-between px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">
+        <span>Gestion</span>
+        {!!totalAlerts && (
+          <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-linen-400 px-1 text-[10px] font-semibold text-linen-900">
+            {totalAlerts}
+          </span>
+        )}
+      </p>
       <NavItem to="/stores" icon={<IconStore />} label="Magasins" onNavigate={onNavigate} />
       <NavItem to="/admin/task-templates" icon={<IconTasks />} label="Modèles de tâches" onNavigate={onNavigate} />
       <NavItem to="/admin/tasks" icon={<IconTasks />} label="Suivi des travaux" onNavigate={onNavigate} />
-      <NavItem to="/admin/claims" icon={<IconInspection />} label="Demandes" onNavigate={onNavigate} />
-      <NavItem to="/admin/users" icon={<IconUser />} label="Utilisateurs" onNavigate={onNavigate} />
-      <NavItem to="/leaderboard" icon={<IconTrophy />} label="Classement" onNavigate={onNavigate} />
-      <NavItem to="/admin/settings" icon={<IconSettings />} label="Réglages" onNavigate={onNavigate} />
+      <NavItem
+        to="/admin/claims"
+        icon={<IconInspection />}
+        label="Demandes"
+        onNavigate={onNavigate}
+        badge={pendingClaims}
+      />
+      <NavItem to="/admin/users" icon={<IconUser />} label="Utilisateurs & équipes" onNavigate={onNavigate} />
       <NavItem to="/admin/feedback" icon={<IconFeedback />} label="Feedback" onNavigate={onNavigate} />
+      <NavItem to="/leaderboard" icon={<IconTrophy />} label="Classement" onNavigate={onNavigate} />
+      <NavItem to="/admin/journal" icon={<IconNote />} label="Journal d'audit" onNavigate={onNavigate} />
       <NavItem to="/admin/analytics" icon={<IconFile />} label="Parcours" onNavigate={onNavigate} />
-      <NavItem to="/inventory" icon={<IconInventory />} label="Inventaire" disabled />
+      <NavItem to="/admin/settings" icon={<IconSettings />} label="Réglages" onNavigate={onNavigate} />
+      <NavItem to="/inventory" icon={<IconInventory />} label="Équipements & stock" disabled />
     </>
   );
 }
@@ -146,6 +170,7 @@ function SidebarContent({ onNavigate, onCloseButton }: { onNavigate?: () => void
   const roleKeys = (user?.roleKeys?.length ? user.roleKeys : role ? [role] : []) as RoleKey[];
   const has = (r: RoleKey) => roleKeys.includes(r);
   const { data: unseenCount } = useUnseenDecisionsCount();
+  const { data: alerts } = useConsoleAlerts();
 
   const prevUnseen = useRef<number | undefined>(undefined);
   useEffect(() => {
@@ -180,7 +205,13 @@ function SidebarContent({ onNavigate, onCloseButton }: { onNavigate?: () => void
       </div>
 
       <nav className="mt-10 flex-1 space-y-1">
-        {has("admin") && <AdminNav onNavigate={onNavigate} />}
+        {has("admin") && (
+          <AdminNav
+            onNavigate={onNavigate}
+            pendingClaims={alerts?.pendingClaims}
+            totalAlerts={alerts?.total}
+          />
+        )}
         {!has("admin") && has("sous_traitant") && (
           <SousTraitantNav onNavigate={onNavigate} unseenCount={unseenCount} />
         )}

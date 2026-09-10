@@ -417,3 +417,24 @@ export interface LeaderboardRow {
   tasksThisMonth: number;
   rank: number;
 }
+
+export interface AuditEntry {
+  id: string;
+  actorId: string | null;
+  actorLabel: string | null;
+  action: string; // "create" | "update" | "delete" | "decision" | ...
+  section: string;
+  entityType: string;
+  entityId: string | null;
+  summary: string | null;
+  before: unknown;
+  after: unknown;
+  createdAt: string;
+}
+
+export interface ConsoleAlerts {
+  pendingClaims: number;
+  openIncidents: number;
+  lowStock: number;
+  total: number;
+}

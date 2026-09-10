@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from "express";
 import type { RoleKey } from "@prisma/client";
-import { can, type PermissionAction, type Section } from "./permissions";
+import { can, hasConsoleAccess, type PermissionAction, type Section } from "./permissions";
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
   if (!req.session.userId) {
@@ -34,6 +34,17 @@ export function requireRole(...allowed: RoleKey[]) {
     }
     next();
   };
+}
+
+/** Passe si l'utilisateur a accès à au moins une section de la console. */
+export function requireConsole(req: Request, res: Response, next: NextFunction) {
+  if (!req.session.userId) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+  if (!hasConsoleAccess(sessionRoles(req))) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+  next();
 }
 
 /**

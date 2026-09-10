@@ -34,6 +34,35 @@ export interface AuditInput {
   after?: unknown;
 }
 
+/** Identité figée « Nom · rôles » pour le journal (survit à la suppression du compte). */
+export async function resolveActor(
+  userId: string | null | undefined,
+): Promise<{ actorId: string | null; actorLabel: string | null }> {
+  if (!userId) return { actorId: null, actorLabel: "Système" };
+  const u = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { fullName: true, email: true, roles: { select: { role: { select: { key: true } } } } },
+  });
+  if (!u) return { actorId: userId, actorLabel: null };
+  const name = u.fullName ?? u.email;
+  const roles = u.roles.map((r) => r.role.key).join(", ");
+  return { actorId: userId, actorLabel: roles ? `${name} · ${roles}` : name };
+}
+
+/**
+ * Journalise une action de gestion, *fire-and-forget* : résout l'acteur puis
+ * écrit l'entrée sans jamais bloquer ni lever. À appeler après une mutation
+ * réussie — `logAudit(req.session.userId, { action, section, entityType, ... })`.
+ */
+export function logAudit(
+  userId: string | null | undefined,
+  input: Omit<AuditInput, "actorId" | "actorLabel">,
+): void {
+  void resolveActor(userId)
+    .then((actor) => recordAudit({ ...actor, ...input }))
+    .catch((err) => console.error("logAudit failed", err));
+}
+
 export async function recordAudit(input: AuditInput): Promise<void> {
   try {
     const data: Prisma.AuditLogCreateInput = {

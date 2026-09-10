@@ -27,6 +27,7 @@ import { feedbackRouter } from "./modules/feedback/feedback.routes";
 import { engagementRouter } from "./modules/engagement/engagement.routes";
 import { analyticsRouter, analyticsAdminRouter } from "./modules/analytics/analytics.routes";
 import { auditAdminRouter } from "./modules/audit/audit.routes";
+import { consoleRouter } from "./modules/console/console.routes";
 import { requireAuth, requireRole } from "./modules/auth/auth.middleware";
 import { notFound } from "./middleware/notFound";
 import { errorHandler } from "./middleware/errorHandler";
@@ -95,6 +96,7 @@ app.use("/api/engagement", requireAuth, engagementRouter);
 app.use("/api/analytics", analyticsRouter);
 app.use("/api/analytics", analyticsAdminRouter);
 app.use("/api/audit", auditAdminRouter);
+app.use("/api/console", consoleRouter);
 app.use("/api/store-claims", storeClaimsAdminRouter);
 app.use("/api/task-claims", taskClaimsAdminRouter);
 

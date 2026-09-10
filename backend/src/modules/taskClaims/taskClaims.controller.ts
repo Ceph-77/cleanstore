@@ -4,6 +4,7 @@ import { pageParamsSchema } from "../../utils/pagination";
 import { claimDecisionSchema, createClaimSchema, directAssignSchema } from "./taskClaims.schema";
 import * as taskClaimsService from "./taskClaims.service";
 import { recordServerEvent } from "../analytics/analytics.service";
+import { logAudit } from "../audit/audit.service";
 
 export async function listMarketplace(req: Request, res: Response) {
   const page = pageParamsSchema.safeParse(req.query);
@@ -80,5 +81,12 @@ export async function decide(req: Request, res: Response) {
     parsed.data.status === "approved" ? "task_claim_approved" : "task_claim_rejected",
     { userId: claim.workerId, role: "travailleur", props: { taskId: claim.taskId } }
   ).catch(() => {});
+  logAudit(req.session.userId, {
+    action: "decision",
+    section: "markettask",
+    entityType: "TaskClaim",
+    entityId: claim.id,
+    summary: `Candidature tâche ${parsed.data.status === "approved" ? "approuvée" : "refusée"}`,
+  });
   res.json({ claim });
 }
