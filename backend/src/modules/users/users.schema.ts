@@ -2,6 +2,24 @@ import { z } from "zod";
 
 export const userRoleKeyEnum = z.enum(["sous_traitant", "travailleur"]);
 
+/** Tous les rôles attribuables (édition multi-rôle sur la fiche utilisateur). */
+export const allRoleKeyEnum = z.enum([
+  "admin",
+  "grande_compagnie",
+  "sous_traitant",
+  "inspecteur",
+  "travailleur",
+  "chef_equipe",
+  "comptable",
+  "mecanicien",
+  "developpeur",
+]);
+
+export const userRolesSchema = z.object({
+  roles: z.array(allRoleKeyEnum).min(1),
+  organizationId: z.string().uuid().nullable().optional(),
+});
+
 export const userCreateSchema = z
   .object({
     email: z.string().email(),

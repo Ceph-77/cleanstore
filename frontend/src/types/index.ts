@@ -437,4 +437,6 @@ export interface ConsoleAlerts {
   openIncidents: number;
   lowStock: number;
   total: number;
+  /** Sections de la console visibles pour l'utilisateur courant (ordre canonique). */
+  sections: string[];
 }

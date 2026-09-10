@@ -128,6 +128,25 @@ function AdminNav({
   );
 }
 
+/**
+ * Menu console pour les rôles non-admin (comptable, développeur…). On ne montre
+ * que les sections dont la PAGE leur est ouverte aujourd'hui — pour l'instant le
+ * Journal d'audit. Les autres pages restent admin-only (interfaces dédiées par
+ * rôle à venir).
+ */
+function ConsoleNav({ sections, onNavigate }: { sections: string[]; onNavigate?: () => void }) {
+  return (
+    <>
+      <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">
+        Gestion
+      </p>
+      {sections.includes("audit") && (
+        <NavItem to="/admin/journal" icon={<IconNote />} label="Journal d'audit" onNavigate={onNavigate} />
+      )}
+    </>
+  );
+}
+
 function SousTraitantNav({ onNavigate, unseenCount }: { onNavigate?: () => void; unseenCount?: number }) {
   return (
     <>
@@ -205,19 +224,19 @@ function SidebarContent({ onNavigate, onCloseButton }: { onNavigate?: () => void
       </div>
 
       <nav className="mt-10 flex-1 space-y-1">
-        {has("admin") && (
+        {has("admin") ? (
           <AdminNav
             onNavigate={onNavigate}
             pendingClaims={alerts?.pendingClaims}
             totalAlerts={alerts?.total}
           />
-        )}
-        {!has("admin") && has("sous_traitant") && (
+        ) : (alerts?.sections?.length ?? 0) > 0 ? (
+          <ConsoleNav sections={alerts!.sections} onNavigate={onNavigate} />
+        ) : has("sous_traitant") ? (
           <SousTraitantNav onNavigate={onNavigate} unseenCount={unseenCount} />
-        )}
-        {!has("admin") && !has("sous_traitant") && has("travailleur") && (
+        ) : has("travailleur") ? (
           <TravailleurNav onNavigate={onNavigate} unseenCount={unseenCount} />
-        )}
+        ) : null}
       </nav>
 
       <div className="mt-auto space-y-3 border-t border-white/10 pt-4">

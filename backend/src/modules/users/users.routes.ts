@@ -12,5 +12,6 @@ usersRouter.get("/", usersController.list);
 usersRouter.get("/:id", usersController.getOne);
 usersRouter.post("/", usersController.create);
 usersRouter.patch("/:id", usersController.update);
+usersRouter.post("/:id/roles", usersController.setRoles);
 usersRouter.post("/:id/avatar", upload.single("avatar"), usersController.uploadAvatar);
 usersRouter.delete("/:id", usersController.remove);

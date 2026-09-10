@@ -3,6 +3,7 @@ import { pageParamsSchema } from "../../utils/pagination";
 import { storeCreateSchema, storeUpdateSchema, storeGeofenceSchema } from "./stores.schema";
 import * as storesService from "./stores.service";
 import { recordServerEvent } from "../analytics/analytics.service";
+import { logAudit } from "../audit/audit.service";
 
 export async function list(req: Request, res: Response) {
   const page = pageParamsSchema.safeParse(req.query);
@@ -40,6 +41,13 @@ export async function create(req: Request, res: Response) {
     role: req.session.roleKey ?? null,
     props: { storeId: store.id },
   }).catch(() => {});
+  logAudit(req.session.userId, {
+    action: "create",
+    section: "stores",
+    entityType: "Store",
+    entityId: store.id,
+    summary: `Magasin créé — ${store.name}`,
+  });
   res.status(201).json({ store });
 }
 
@@ -49,6 +57,13 @@ export async function update(req: Request, res: Response) {
     return res.status(400).json({ error: parsed.error.flatten() });
   }
   const store = await storesService.updateStore(req.params.id, parsed.data);
+  logAudit(req.session.userId, {
+    action: "update",
+    section: "stores",
+    entityType: "Store",
+    entityId: store.id,
+    summary: `Magasin modifié — ${store.name}`,
+  });
   res.json({ store });
 }
 
@@ -63,5 +78,12 @@ export async function setGeofence(req: Request, res: Response) {
 
 export async function archive(req: Request, res: Response) {
   const store = await storesService.archiveStore(req.params.id);
+  logAudit(req.session.userId, {
+    action: "update",
+    section: "stores",
+    entityType: "Store",
+    entityId: store.id,
+    summary: `Magasin archivé — ${store.name}`,
+  });
   res.json({ store });
 }

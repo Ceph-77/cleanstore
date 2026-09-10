@@ -47,6 +47,18 @@ export function useUpdateUser(id: string) {
   });
 }
 
+export function useSetUserRoles(id: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ roles, organizationId }: { roles: RoleKey[]; organizationId?: string | null }) =>
+      usersApi.setUserRoles(id, roles, organizationId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin", "users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin", "users", "detail", id] });
+    },
+  });
+}
+
 export function useUploadUserAvatar(id: string) {
   const queryClient = useQueryClient();
   return useMutation({

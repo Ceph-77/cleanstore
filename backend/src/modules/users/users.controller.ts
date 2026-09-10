@@ -1,8 +1,9 @@
 import type { Request, Response } from "express";
 import type { RoleKey } from "@prisma/client";
 import { pageParamsSchema } from "../../utils/pagination";
-import { userCreateSchema, userUpdateSchema } from "./users.schema";
+import { userCreateSchema, userUpdateSchema, userRolesSchema } from "./users.schema";
 import * as usersService from "./users.service";
+import { logAudit } from "../audit/audit.service";
 
 export async function list(req: Request, res: Response) {
   const page = pageParamsSchema.safeParse(req.query);
@@ -59,6 +60,42 @@ export async function update(req: Request, res: Response) {
   }
   try {
     const user = await usersService.updateUserAdmin(req.params.id, parsed.data);
+    if (parsed.data.isActive !== undefined) {
+      logAudit(req.session.userId, {
+        action: "update",
+        section: "users",
+        entityType: "User",
+        entityId: req.params.id,
+        summary: parsed.data.isActive ? "Compte réactivé" : "Compte désactivé",
+      });
+    }
+    res.json({ user });
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
+  }
+}
+
+export async function setRoles(req: Request, res: Response) {
+  const parsed = userRolesSchema.safeParse(req.body);
+  if (!parsed.success) {
+    return res.status(400).json({ error: parsed.error.flatten() });
+  }
+  if (req.params.id === req.session.userId) {
+    return res.status(400).json({ error: "Vous ne pouvez pas modifier vos propres rôles." });
+  }
+  try {
+    const user = await usersService.setUserRoles(
+      req.params.id,
+      parsed.data.roles,
+      parsed.data.organizationId ?? null,
+    );
+    logAudit(req.session.userId, {
+      action: "update",
+      section: "users",
+      entityType: "User",
+      entityId: req.params.id,
+      summary: `Rôles : ${parsed.data.roles.join(", ")}`,
+    });
     res.json({ user });
   } catch (err) {
     res.status(400).json({ error: (err as Error).message });
@@ -71,6 +108,13 @@ export async function remove(req: Request, res: Response) {
   }
   try {
     const deleted = await usersService.deleteUser(req.params.id);
+    logAudit(req.session.userId, {
+      action: "delete",
+      section: "users",
+      entityType: "User",
+      entityId: req.params.id,
+      summary: `Compte supprimé (${deleted.email})`,
+    });
     res.json({ deleted });
   } catch (err) {
     res.status(409).json({ error: (err as Error).message });

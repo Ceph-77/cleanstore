@@ -14,7 +14,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
  * sessions créées avant l'introduction de `roleKeys` (pas de déconnexion forcée
  * au déploiement — elles se complètent à la prochaine connexion).
  */
-function sessionRoles(req: Request): RoleKey[] {
+export function sessionRoles(req: Request): RoleKey[] {
   if (req.session.roleKeys?.length) return req.session.roleKeys as RoleKey[];
   return req.session.roleKey ? [req.session.roleKey as RoleKey] : [];
 }

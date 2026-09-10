@@ -4,6 +4,7 @@ import {
   templateCreateSchema,
   templateUpdateSchema,
 } from "./taskTemplates.schema";
+import { logAudit } from "../audit/audit.service";
 import * as service from "./taskTemplates.service";
 
 export async function list(req: Request, res: Response) {
@@ -23,6 +24,13 @@ export async function create(req: Request, res: Response) {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
   try {
     const template = await service.createTemplate(parsed.data);
+    logAudit(req.session.userId, {
+      action: "create",
+      section: "task_templates",
+      entityType: "TaskTemplate",
+      entityId: template.id,
+      summary: `Modèle créé — ${template.name}`,
+    });
     res.status(201).json({ template });
   } catch (err) {
     res.status(400).json({ error: (err as Error).message });
@@ -34,6 +42,13 @@ export async function update(req: Request, res: Response) {
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
   try {
     const template = await service.updateTemplate(req.params.id, parsed.data);
+    logAudit(req.session.userId, {
+      action: "update",
+      section: "task_templates",
+      entityType: "TaskTemplate",
+      entityId: template.id,
+      summary: `Modèle modifié — ${template.name}`,
+    });
     res.json({ template });
   } catch (err) {
     res.status(400).json({ error: (err as Error).message });
@@ -42,6 +57,13 @@ export async function update(req: Request, res: Response) {
 
 export async function remove(req: Request, res: Response) {
   await service.deactivateTemplate(req.params.id);
+  logAudit(req.session.userId, {
+    action: "delete",
+    section: "task_templates",
+    entityType: "TaskTemplate",
+    entityId: req.params.id,
+    summary: "Modèle de tâche désactivé",
+  });
   res.status(204).send();
 }
 

@@ -41,6 +41,10 @@ export function updateUser(id: string, patch: UserAdminPatch) {
   return apiClient.patch<{ user: AppUser }>(`/users/${id}`, patch);
 }
 
+export function setUserRoles(id: string, roles: RoleKey[], organizationId?: string | null) {
+  return apiClient.post<{ user: AppUser }>(`/users/${id}/roles`, { roles, organizationId });
+}
+
 export function uploadUserAvatar(id: string, file: File) {
   const fd = new FormData();
   fd.append("avatar", file);

@@ -6,7 +6,8 @@ import { Field } from "../../components/common/Field";
 import { Input } from "../../components/common/Input";
 import { IconMapPin } from "../../components/common/icons";
 import { ApiError } from "../../api/client";
-import { useUser, useUpdateUser, useUploadUserAvatar } from "../../hooks/useUsers";
+import { useAuth } from "../../context/AuthContext";
+import { useUser, useUpdateUser, useUploadUserAvatar, useSetUserRoles } from "../../hooks/useUsers";
 import { useStoreOptions } from "../../hooks/useStores";
 import { useTasks } from "../../hooks/useTasks";
 import * as organizationsApi from "../../api/organizations";
@@ -28,6 +29,18 @@ const todayKey = () => {
 const DAY_LABELS = ["L", "M", "M", "J", "V", "S", "D"]; // Mon..Sun -> indices 1..0
 const DAY_INDEX = [1, 2, 3, 4, 5, 6, 0]; // JS getDay values, Monday first
 
+const ALL_ROLES: { key: RoleKey; label: string }[] = [
+  { key: "travailleur", label: "Travailleur autonome" },
+  { key: "sous_traitant", label: "Sous-traitant" },
+  { key: "chef_equipe", label: "Chef d'équipe" },
+  { key: "inspecteur", label: "Inspecteur" },
+  { key: "comptable", label: "Comptable" },
+  { key: "mecanicien", label: "Mécanicien" },
+  { key: "developpeur", label: "Développeur" },
+  { key: "grande_compagnie", label: "Grande compagnie" },
+  { key: "admin", label: "Administrateur" },
+];
+
 const emptyForm = {
   storeId: "",
   description: "",
@@ -39,6 +52,7 @@ const emptyForm = {
 
 export function WorkerDetailPage() {
   const { id = "" } = useParams();
+  const { user: me } = useAuth();
   const { data: user } = useUser(id);
   const { data: summary } = useWorkerSummary(id);
   const { data: stores } = useStoreOptions();
@@ -48,6 +62,12 @@ export function WorkerDetailPage() {
   const deletePastTask = useDeletePastTask(id);
   const updateUser = useUpdateUser(id);
   const uploadAvatar = useUploadUserAvatar(id);
+  const setUserRoles = useSetUserRoles(id);
+
+  const [roleSel, setRoleSel] = useState<RoleKey[]>([]);
+  const [roleOrgId, setRoleOrgId] = useState("");
+  const [roleErr, setRoleErr] = useState<string | null>(null);
+  const [roleSaved, setRoleSaved] = useState(false);
 
   const [selected, setSelected] = useState<string | null>(null);
   const [mode, setMode] = useState<null | "add" | string>(null); // null | "add" | editTaskId
@@ -105,8 +125,35 @@ export function WorkerDetailPage() {
         role: user.roles[0]?.role.key ?? "travailleur",
         organizationId: user.roles[0]?.organization?.id ?? "",
       });
+      setRoleSel(user.roles.map((r) => r.role.key));
+      setRoleOrgId(user.roles.find((r) => r.role.key === "sous_traitant")?.organization?.id ?? "");
     }
   }, [user]);
+
+  const isSelf = !!user && user.id === me?.id;
+
+  function toggleRole(key: RoleKey) {
+    setRoleSaved(false);
+    setRoleSel((prev) => (prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]));
+  }
+
+  async function handleRolesSave() {
+    setRoleErr(null);
+    setRoleSaved(false);
+    if (roleSel.length === 0) {
+      setRoleErr("Au moins un rôle est requis.");
+      return;
+    }
+    try {
+      await setUserRoles.mutateAsync({
+        roles: roleSel,
+        organizationId: roleSel.includes("sous_traitant") ? roleOrgId || null : null,
+      });
+      setRoleSaved(true);
+    } catch (err) {
+      setRoleErr(err instanceof ApiError ? err.message : "Enregistrement impossible.");
+    }
+  }
 
   function startAdd() {
     setForm({ ...emptyForm, date: selected ?? "" });
@@ -239,6 +286,68 @@ export function WorkerDetailPage() {
           {editProfile ? "Annuler" : "Modifier le profil"}
         </Button>
       </div>
+
+      <section className="mt-4 rounded-2xl border border-canvas-200 bg-white p-4 shadow-sm shadow-canvas-900/5">
+        <h2 className="font-heading text-sm font-semibold text-canvas-900">Rôles &amp; accès</h2>
+        <p className="mt-0.5 text-xs text-canvas-600">
+          Un compte peut cumuler plusieurs rôles — l'accès est l'union de tous ses rôles.
+        </p>
+        {isSelf ? (
+          <p className="mt-3 text-sm text-canvas-500">
+            Vous ne pouvez pas modifier vos propres rôles.
+          </p>
+        ) : (
+          <>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {ALL_ROLES.map((r) => {
+                const on = roleSel.includes(r.key);
+                return (
+                  <button
+                    key={r.key}
+                    type="button"
+                    onClick={() => toggleRole(r.key)}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                      on
+                        ? "border-flow-600 bg-flow-600 text-white"
+                        : "border-canvas-300 bg-white text-canvas-700 hover:bg-canvas-50"
+                    }`}
+                  >
+                    {r.label}
+                  </button>
+                );
+              })}
+            </div>
+            {roleSel.includes("sous_traitant") && (
+              <div className="mt-3 max-w-xs">
+                <Field label="Organisation (sous-traitant)">
+                  <select
+                    className="w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
+                    value={roleOrgId}
+                    onChange={(e) => {
+                      setRoleOrgId(e.target.value);
+                      setRoleSaved(false);
+                    }}
+                  >
+                    <option value="">—</option>
+                    {orgs.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.name}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              </div>
+            )}
+            {roleErr && <p className="mt-2 text-xs font-medium text-red-700">{roleErr}</p>}
+            {roleSaved && <p className="mt-2 text-xs font-medium text-flow-700">Rôles enregistrés.</p>}
+            <div className="mt-3">
+              <Button onClick={handleRolesSave} disabled={setUserRoles.isPending}>
+                {setUserRoles.isPending ? "Enregistrement..." : "Enregistrer les rôles"}
+              </Button>
+            </div>
+          </>
+        )}
+      </section>
 
       {editProfile && (
         <form onSubmit={handleProfileSave} className="mt-3 space-y-3 rounded-2xl border border-flow-200 bg-flow-50/60 p-4">

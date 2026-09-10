@@ -122,6 +122,41 @@ export async function updateUserAdmin(id: string, patch: UserAdminPatch) {
 }
 
 /**
+ * Remplace l'ensemble des rôles d'un utilisateur (édition multi-rôle).
+ * Pour `sous_traitant`, conserve l'organisation existante si aucune n'est fournie.
+ */
+export async function setUserRoles(
+  id: string,
+  roleKeys: RoleKey[],
+  organizationId?: string | null,
+) {
+  const unique = [...new Set(roleKeys)];
+  const roles = await prisma.role.findMany({ where: { key: { in: unique } } });
+  if (roles.length !== unique.length) throw new Error("Rôle inconnu.");
+
+  const currentSubOrg = await prisma.userRole.findFirst({
+    where: { userId: id, role: { key: "sous_traitant" } },
+    select: { organizationId: true },
+  });
+  const subOrgId = organizationId ?? currentSubOrg?.organizationId ?? null;
+  if (unique.includes("sous_traitant") && !subOrgId) {
+    throw new Error("Une organisation est requise pour le rôle sous-traitant.");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.userRole.deleteMany({ where: { userId: id } });
+    await tx.userRole.createMany({
+      data: roles.map((r) => ({
+        userId: id,
+        roleId: r.id,
+        organizationId: r.key === "sous_traitant" ? subOrgId : null,
+      })),
+    });
+  });
+  return getUserById(id);
+}
+
+/**
  * Hard-delete a user. Cascades (roles, inspectors, reset tokens, point entries,
  * moments) and set-nulls (authored notes/docs, assigned/created stores & tasks,
  * feedback) are handled by the schema. TaskClaim / StoreClaim are required
