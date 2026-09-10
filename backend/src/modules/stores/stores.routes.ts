@@ -20,6 +20,7 @@ storesRouter.get("/:id", storesController.getOne);
 storesRouter.patch("/:id", storesController.update);
 storesRouter.patch("/:id/geofence", storesController.setGeofence);
 storesRouter.patch("/:id/archive", storesController.archive);
+storesRouter.patch("/:id/recurrence-pause", storesController.setRecurrencePause);
 
 storesRouter.use("/:storeId/tasks", tasksRouterForStore);
 storesRouter.use("/:storeId/contacts", storeContactsRouterForStore);

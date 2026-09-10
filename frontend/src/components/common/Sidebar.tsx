@@ -110,6 +110,7 @@ function AdminNav({
       <NavItem to="/stores" icon={<IconStore />} label="Magasins" onNavigate={onNavigate} />
       <NavItem to="/admin/task-templates" icon={<IconTasks />} label="Modèles de tâches" onNavigate={onNavigate} />
       <NavItem to="/admin/tasks" icon={<IconTasks />} label="Suivi des travaux" onNavigate={onNavigate} />
+      <NavItem to="/admin/recurrences" icon={<IconTasks />} label="Récurrences" onNavigate={onNavigate} />
       <NavItem
         to="/admin/claims"
         icon={<IconInspection />}

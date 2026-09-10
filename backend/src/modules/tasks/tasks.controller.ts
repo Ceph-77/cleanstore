@@ -1,9 +1,14 @@
 import type { Request, Response } from "express";
 import type { TaskStatus } from "@prisma/client";
 import { pageParamsSchema } from "../../utils/pagination";
-import { taskCreateSchema, taskUpdateSchema } from "./tasks.schema";
+import {
+  taskCreateSchema,
+  taskUpdateSchema,
+  recurrenceSkipSchema,
+} from "./tasks.schema";
 import * as tasksService from "./tasks.service";
 import { recordServerEvent } from "../analytics/analytics.service";
+import { logAudit } from "../audit/audit.service";
 
 export async function list(req: Request, res: Response) {
   const tasks = await tasksService.listTasksForStore(req.params.storeId);
@@ -54,4 +59,28 @@ export async function dashboard(req: Request, res: Response) {
 export async function remove(req: Request, res: Response) {
   await tasksService.deleteTask(req.params.id);
   res.status(204).send();
+}
+
+export async function listRecurrences(_req: Request, res: Response) {
+  res.json({ recurrences: await tasksService.listRecurrences() });
+}
+
+export async function skipRecurrence(req: Request, res: Response) {
+  const parsed = recurrenceSkipSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+  try {
+    const task = await tasksService.skipRecurrenceToday(req.params.id, parsed.data.skip);
+    logAudit(req.session.userId, {
+      action: "update",
+      section: "task_templates",
+      entityType: "Task",
+      entityId: task.id,
+      summary: parsed.data.skip
+        ? `Récurrence sautée aujourd'hui — ${task.description}`
+        : `Récurrence réactivée aujourd'hui — ${task.description}`,
+    });
+    res.json({ task });
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
+  }
 }

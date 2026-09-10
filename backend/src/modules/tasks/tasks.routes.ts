@@ -8,8 +8,10 @@ tasksRouterForStore.post("/", tasksController.create);
 
 export const tasksRouter = Router();
 tasksRouter.get("/dashboard", tasksController.dashboard);
+tasksRouter.get("/recurrences", tasksController.listRecurrences);
 tasksRouter.patch("/:id", tasksController.update);
 tasksRouter.patch("/:id/publish", tasksController.publish);
 tasksRouter.patch("/:id/unpublish", tasksController.unpublish);
+tasksRouter.post("/:id/skip-recurrence", tasksController.skipRecurrence);
 tasksRouter.delete("/:id", tasksController.remove);
 tasksRouter.use("/:id/inspections", taskInspectionsRouterForTask);

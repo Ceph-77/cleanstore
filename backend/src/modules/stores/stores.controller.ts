@@ -4,6 +4,8 @@ import { storeCreateSchema, storeUpdateSchema, storeGeofenceSchema } from "./sto
 import * as storesService from "./stores.service";
 import { recordServerEvent } from "../analytics/analytics.service";
 import { logAudit } from "../audit/audit.service";
+import { recurrencePauseSchema } from "../tasks/tasks.schema";
+import { setStoreRecurrencePaused } from "../tasks/tasks.service";
 
 export async function list(req: Request, res: Response) {
   const page = pageParamsSchema.safeParse(req.query);
@@ -73,6 +75,22 @@ export async function setGeofence(req: Request, res: Response) {
     return res.status(400).json({ error: parsed.error.flatten() });
   }
   const store = await storesService.setStoreGeofence(req.params.id, parsed.data);
+  res.json({ store });
+}
+
+export async function setRecurrencePause(req: Request, res: Response) {
+  const parsed = recurrencePauseSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+  const store = await setStoreRecurrencePaused(req.params.id, parsed.data.paused);
+  logAudit(req.session.userId, {
+    action: "update",
+    section: "stores",
+    entityType: "Store",
+    entityId: store.id,
+    summary: parsed.data.paused
+      ? `Récurrence du magasin mise en pause — ${store.name}`
+      : `Récurrence du magasin réactivée — ${store.name}`,
+  });
   res.json({ store });
 }
 

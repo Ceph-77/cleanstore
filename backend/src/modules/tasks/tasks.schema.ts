@@ -14,3 +14,6 @@ export const taskCreateSchema = z.object({
 });
 
 export const taskUpdateSchema = taskCreateSchema.partial();
+
+export const recurrenceSkipSchema = z.object({ skip: z.boolean() });
+export const recurrencePauseSchema = z.object({ paused: z.boolean() });

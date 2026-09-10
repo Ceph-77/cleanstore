@@ -109,12 +109,17 @@ export async function runDueRecurrences() {
     where: {
       isRecurring: true,
       OR: [{ lastRecurredOn: null }, { lastRecurredOn: { lt: today } }],
+      store: { isActive: true, recurrencePaused: false },
     },
   });
 
   let created = 0;
   let cancelled = 0;
+  let skipped = 0;
   for (const parent of parents) {
+    const skipToday =
+      parent.recurrenceSkipDate != null && parent.recurrenceSkipDate.getTime() === today.getTime();
+
     const c = await prisma.$transaction(async (tx) => {
       const cancel = await tx.task.updateMany({
         where: {
@@ -125,6 +130,16 @@ export async function runDueRecurrences() {
         },
         data: { status: "cancelled" },
       });
+
+      if (skipToday) {
+        // Jour sauté : on ne crée rien, on consomme le drapeau, on marque le jour.
+        await tx.task.update({
+          where: { id: parent.id },
+          data: { lastRecurredOn: today, recurrenceSkipDate: null },
+        });
+        return { cancelled: cancel.count, skipped: true };
+      }
+
       await tx.task.create({
         data: {
           storeId: parent.storeId,
@@ -156,11 +171,68 @@ export async function runDueRecurrences() {
         },
       });
       await tx.task.update({ where: { id: parent.id }, data: { lastRecurredOn: today } });
-      return cancel.count;
+      return { cancelled: cancel.count, skipped: false };
     });
-    cancelled += c;
-    created += 1;
+    cancelled += c.cancelled;
+    if (c.skipped) skipped += 1;
+    else created += 1;
   }
 
-  return { created, cancelled };
+  return { created, cancelled, skipped };
+}
+
+/** Tâches récurrentes (tous magasins) + instance du jour, pour la vue « Récurrences ». */
+export async function listRecurrences() {
+  const today = startOfToday();
+  const parents = await prisma.task.findMany({
+    where: { isRecurring: true },
+    orderBy: [{ storeId: "asc" }, { description: "asc" }],
+    select: {
+      id: true,
+      description: true,
+      taskType: true,
+      price: true,
+      isPublished: true,
+      recurrenceSkipDate: true,
+      lastRecurredOn: true,
+      store: { select: { id: true, name: true, city: true, recurrencePaused: true, isActive: true } },
+      recurringInstances: {
+        where: { dueDate: today },
+        select: { id: true, status: true, price: true, assignedToId: true, visibleFrom: true },
+        take: 1,
+      },
+    },
+  });
+  return parents.map((p) => {
+    const { recurringInstances, ...rest } = p;
+    return { ...rest, todayInstance: recurringInstances[0] ?? null };
+  });
+}
+
+/** Sauter la génération d'aujourd'hui pour une tâche récurrente. Annule aussi l'instance du jour si déjà créée et libre. */
+export async function skipRecurrenceToday(parentId: string, skip: boolean) {
+  const today = startOfToday();
+  const parent = await prisma.task.findUniqueOrThrow({
+    where: { id: parentId },
+    select: { isRecurring: true },
+  });
+  if (!parent.isRecurring) throw new Error("Cette tâche n'est pas récurrente.");
+
+  return prisma.$transaction(async (tx) => {
+    await tx.task.update({
+      where: { id: parentId },
+      data: { recurrenceSkipDate: skip ? today : null },
+    });
+    if (skip) {
+      await tx.task.updateMany({
+        where: { recurringParentId: parentId, dueDate: today, status: "open", assignedToId: null },
+        data: { status: "cancelled" },
+      });
+    }
+    return tx.task.findUniqueOrThrow({ where: { id: parentId } });
+  });
+}
+
+export async function setStoreRecurrencePaused(storeId: string, paused: boolean) {
+  return prisma.store.update({ where: { id: storeId }, data: { recurrencePaused: paused } });
 }

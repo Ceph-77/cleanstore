@@ -194,6 +194,7 @@ model Store {
   assignedSubcontractorId String?   @map("assigned_subcontractor_id")
   assignedWorkerId        String?   @map("assigned_worker_id")
   isActive                Boolean   @default(true) @map("is_active")
+  recurrencePaused        Boolean   @default(false) @map("recurrence_paused")
   createdById             String?   @map("created_by")
   createdAt               DateTime  @default(now()) @map("created_at")
   updatedAt               DateTime  @updatedAt @map("updated_at")
@@ -252,6 +253,7 @@ model Task {
   startGeoNote             String?    @map("start_geo_note")
   isRecurring              Boolean    @default(false) @map("is_recurring")
   lastRecurredOn           DateTime?  @map("last_recurred_on") @db.Date
+  recurrenceSkipDate       DateTime?  @map("recurrence_skip_date") @db.Date
   recurringParentId        String?    @map("recurring_parent_id")
   templateId               String?    @map("template_id")
   // Per-store performance target copied from the template, editable. When set,
