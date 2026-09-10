@@ -19,6 +19,7 @@ export const templateCreateSchema = z.object({
   hourlyCapMinutes: z.coerce.number().int().positive().nullable().optional(),
   unitPrice: z.coerce.number().positive().nullable().optional(),
   unitLabel: z.string().max(40).nullable().optional(),
+  requiresOdometer: z.boolean().optional(),
   isActive: z.boolean().optional(),
   steps: z.array(z.string().min(1)).optional(),
 });

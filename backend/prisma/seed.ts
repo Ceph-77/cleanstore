@@ -72,6 +72,7 @@ async function seedTaskTemplates() {
     metricUnit?: string;
     defaultMetricTarget?: number;
     paymentMode?: "fixed" | "hourly" | "per_unit" | "metric_prorata";
+    requiresOdometer?: boolean;
     steps: string[];
   }[] = [
     {
@@ -86,6 +87,7 @@ async function seedTaskTemplates() {
         "Passer l'autolaveuse puis la polisseuse haute vitesse sur toutes les allées de la surface de vente. Reprendre les bordures et sous les présentoirs accessibles.",
       requiredEquipment: ["Polisseuse haute vitesse", "Tampons de polissage", "Autolaveuse", "Balai à franges"],
       paymentMode: "metric_prorata",
+      requiresOdometer: true,
       metricLabel: "Distance polie",
       metricUnit: "km",
       defaultMetricTarget: 1.6,

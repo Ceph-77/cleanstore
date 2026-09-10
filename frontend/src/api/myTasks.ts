@@ -17,7 +17,8 @@ export function updateMyTaskStatus(
   note?: string,
   position?: WorkerPosition,
   reportedMetricValue?: number,
-  reportedUnits?: number
+  reportedUnits?: number,
+  odometer?: { startOdometer?: number; endOdometer?: number }
 ) {
   return apiClient.patch<{ task: Task }>(`/marketplace/my-tasks/${taskId}/status`, {
     status,
@@ -27,6 +28,8 @@ export function updateMyTaskStatus(
     accuracy: position?.accuracy,
     reportedMetricValue,
     reportedUnits,
+    startOdometer: odometer?.startOdometer,
+    endOdometer: odometer?.endOdometer,
   });
 }
 

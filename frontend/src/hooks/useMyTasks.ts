@@ -21,6 +21,8 @@ export function useUpdateMyTaskStatus() {
       position,
       reportedMetricValue,
       reportedUnits,
+      startOdometer,
+      endOdometer,
     }: {
       taskId: string;
       status: Extract<TaskStatus, "in_progress" | "completed">;
@@ -28,15 +30,13 @@ export function useUpdateMyTaskStatus() {
       position?: myTasksApi.WorkerPosition;
       reportedMetricValue?: number;
       reportedUnits?: number;
+      startOdometer?: number;
+      endOdometer?: number;
     }) =>
-      myTasksApi.updateMyTaskStatus(
-        taskId,
-        status,
-        note,
-        position,
-        reportedMetricValue,
-        reportedUnits,
-      ),
+      myTasksApi.updateMyTaskStatus(taskId, status, note, position, reportedMetricValue, reportedUnits, {
+        startOdometer,
+        endOdometer,
+      }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["marketplace", "my-tasks"] }),
   });
 }

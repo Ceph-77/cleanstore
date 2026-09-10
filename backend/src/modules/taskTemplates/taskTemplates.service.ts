@@ -91,6 +91,7 @@ export async function instantiateForStore(templateId: string, storeId: string, c
       hourlyCapMinutes: template.hourlyCapMinutes,
       unitPrice: template.unitPrice,
       unitLabel: template.unitLabel,
+      requiresOdometer: template.requiresOdometer,
       createdById,
       steps: {
         create: template.steps.map((s) => ({ order: s.order, text: s.text })),

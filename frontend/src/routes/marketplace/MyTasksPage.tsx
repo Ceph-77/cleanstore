@@ -112,8 +112,12 @@ function TaskRow({ task }: { task: Task }) {
   const [locating, setLocating] = useState(false);
   const [startError, setStartError] = useState<string | null>(null);
   const [startNote, setStartNote] = useState<string | null>(null);
+  const [showStartField, setShowStartField] = useState(false);
+  const [startOdo, setStartOdo] = useState("");
+  const [endOdo, setEndOdo] = useState("");
 
-  const needsMetric = task.metricTarget != null;
+  const needsOdometer = task.requiresOdometer;
+  const needsMetric = task.metricTarget != null && !needsOdometer;
   const needsUnits = task.paymentMode === "per_unit";
 
   async function handleComplete() {
@@ -126,6 +130,10 @@ function TaskRow({ task }: { task: Task }) {
       setCompleteError(`Saisis « ${task.unitLabel ?? "le nombre réalisé"} » avant de confirmer.`);
       return;
     }
+    if (needsOdometer && endOdo.trim() === "") {
+      setCompleteError("Relève le compteur de la machine avant de confirmer.");
+      return;
+    }
     try {
       await updateStatus.mutateAsync({
         taskId: task.id,
@@ -133,11 +141,13 @@ function TaskRow({ task }: { task: Task }) {
         note: note || undefined,
         reportedMetricValue: needsMetric ? Number(metricValue) : undefined,
         reportedUnits: needsUnits ? Number(unitValue) : undefined,
+        endOdometer: needsOdometer ? Number(endOdo) : undefined,
       });
       setShowNoteField(false);
       setNote("");
       setMetricValue("");
       setUnitValue("");
+      setEndOdo("");
     } catch (err) {
       setCompleteError(err instanceof Error ? err.message : "Impossible de marquer complétée.");
     }
@@ -146,6 +156,14 @@ function TaskRow({ task }: { task: Task }) {
   async function handleStart() {
     setStartError(null);
     setStartNote(null);
+    if (needsOdometer && !showStartField) {
+      setShowStartField(true);
+      return;
+    }
+    if (needsOdometer && startOdo.trim() === "") {
+      setStartError("Relève le compteur de la machine avant de démarrer.");
+      return;
+    }
     setLocating(true);
     // Position is best-effort: a denial or timeout must not block the start.
     let position: Awaited<ReturnType<typeof getCurrentPosition>> | undefined;
@@ -159,8 +177,10 @@ function TaskRow({ task }: { task: Task }) {
         taskId: task.id,
         status: "in_progress",
         position,
+        startOdometer: needsOdometer ? Number(startOdo) : undefined,
       });
       if (updated.startGeoNote) setStartNote(updated.startGeoNote);
+      setShowStartField(false);
     } catch (err) {
       setStartError(err instanceof Error ? err.message : "Impossible de démarrer la tâche.");
     } finally {
@@ -187,8 +207,11 @@ function TaskRow({ task }: { task: Task }) {
         <p className="font-heading font-semibold text-canvas-900">{Number(task.price).toFixed(2)} $</p>
         <div className="flex flex-wrap items-center gap-2">
           <TaskStatusBadge status={task.status} />
-          {task.status === "in_progress" && task.startedAt && task.estimatedDurationMinutes && (
-            <TaskCountdown startedAt={task.startedAt} estimatedDurationMinutes={task.estimatedDurationMinutes} />
+          {task.status === "in_progress" && task.startedAt && (
+            <TaskCountdown
+              startedAt={task.startedAt}
+              estimatedDurationMinutes={task.estimatedDurationMinutes}
+            />
           )}
         </div>
         <div className="flex shrink-0 flex-wrap gap-2">
@@ -223,6 +246,25 @@ function TaskRow({ task }: { task: Task }) {
           )}
         </div>
       </div>
+
+      {task.status === "claimed" && showStartField && needsOdometer && (
+        <div className="mt-3 rounded-xl bg-flow-50/60 p-3">
+          <label className="text-xs font-medium text-canvas-800">
+            Compteur de la machine au démarrage — obligatoire
+          </label>
+          <input
+            type="number"
+            min={0}
+            step="1"
+            value={startOdo}
+            onChange={(e) => setStartOdo(e.target.value)}
+            className="mt-1 w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
+          />
+          <p className="mt-1 text-[11px] text-canvas-600">
+            Note aussi la photo du compteur (à venir). Reclique sur « Démarrer » pour confirmer.
+          </p>
+        </div>
+      )}
 
       {task.status === "claimed" && (
         <p className="mt-2 flex items-center gap-1.5 text-xs text-canvas-500">
@@ -288,6 +330,30 @@ function TaskRow({ task }: { task: Task }) {
               />
               <p className="mt-1 text-[11px] text-canvas-600">
                 Payé à l'unité{task.unitPrice ? ` : ${Number(task.unitPrice)} $ par unité` : ""}.
+              </p>
+            </div>
+          )}
+          {needsOdometer && (
+            <div>
+              <label className="text-xs font-medium text-canvas-800">
+                Compteur de la machine à la fin — obligatoire
+                {task.startOdometer != null && (
+                  <span className="text-canvas-600"> · au départ : {Number(task.startOdometer)}</span>
+                )}
+              </label>
+              <input
+                type="number"
+                min={0}
+                step="1"
+                value={endOdo}
+                onChange={(e) => setEndOdo(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
+              />
+              <p className="mt-1 text-[11px] text-canvas-600">
+                {task.startOdometer != null && endOdo.trim() !== "" && Number(endOdo) > Number(task.startOdometer)
+                  ? `Distance : ${(Number(endOdo) - Number(task.startOdometer)).toFixed(1)}`
+                  : "L'app calcule la distance (fin − départ)."}
+                {task.paymentMode === "metric_prorata" ? " — c'est le « réalisé » du prorata." : ""}
               </p>
             </div>
           )}

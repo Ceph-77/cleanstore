@@ -20,6 +20,7 @@ export interface TemplateInput {
   hourlyCapMinutes?: number | null;
   unitPrice?: number | null;
   unitLabel?: string | null;
+  requiresOdometer?: boolean;
   isActive?: boolean;
   steps?: string[];
 }

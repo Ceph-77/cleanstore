@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { AppLayout } from "../../components/common/AppLayout";
 import { LoadMore } from "../../components/common/LoadMore";
 import { TaskStatusBadge } from "../../components/tasks/TaskStatusBadge";
+import { TaskCountdown } from "../../components/tasks/TaskCountdown";
 import { useTasksDashboard } from "../../hooks/useTasksDashboard";
 import type { TaskStatus } from "../../types";
 
@@ -83,6 +84,12 @@ export function TasksDashboardPage() {
                     <td className="py-3">
                       <div className="flex flex-wrap items-center gap-1.5">
                         <TaskStatusBadge status={task.status} />
+                        {task.status === "in_progress" && task.startedAt && (
+                          <TaskCountdown
+                            startedAt={task.startedAt}
+                            estimatedDurationMinutes={task.estimatedDurationMinutes}
+                          />
+                        )}
                         {task.status === "completed" &&
                           task.metricTarget != null &&
                           task.reportedMetricValue != null &&

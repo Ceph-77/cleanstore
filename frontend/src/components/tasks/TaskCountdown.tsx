@@ -17,7 +17,8 @@ export function TaskCountdown({
   estimatedDurationMinutes,
 }: {
   startedAt: string;
-  estimatedDurationMinutes: number;
+  /** Optionnel : quand absent, on affiche seulement le temps écoulé. */
+  estimatedDurationMinutes?: number | null;
 }) {
   const [now, setNow] = useState(Date.now());
 
@@ -30,7 +31,8 @@ export function TaskCountdown({
 
   return (
     <span className="inline-flex items-center rounded-full bg-canvas-100 px-2.5 py-0.5 text-xs font-medium text-canvas-700 ring-1 ring-inset ring-canvas-200">
-      Écoulé&nbsp;{formatMinutes(elapsed)} · estimé&nbsp;{formatMinutes(estimatedDurationMinutes * 60000)}
+      Écoulé&nbsp;{formatMinutes(elapsed)}
+      {estimatedDurationMinutes != null && ` · estimé ${formatMinutes(estimatedDurationMinutes * 60000)}`}
     </span>
   );
 }

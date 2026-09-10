@@ -100,15 +100,26 @@ export async function listMyTasksWithUrls(userId: string) {
   );
 }
 
+export interface StatusUpdateOpts {
+  note?: string;
+  position?: WorkerPosition;
+  reportedMetricValue?: number;
+  reportedUnits?: number;
+  /** Relevé du compteur au démarrage (tâches à odomètre). */
+  startOdometer?: number;
+  /** Relevé du compteur à la complétion (tâches à odomètre). */
+  endOdometer?: number;
+}
+
 export async function updateMyTaskStatus(
   taskId: string,
   userId: string,
   nextStatus: "in_progress" | "completed",
-  note: string | undefined,
-  position?: WorkerPosition,
-  reportedMetricValue?: number,
-  reportedUnits?: number
+  opts: StatusUpdateOpts = {}
 ) {
+  const { note, position, reportedUnits } = opts;
+  let { reportedMetricValue } = opts;
+
   const task = await prisma.task.findUnique({
     where: { id: taskId },
     include: {
@@ -130,16 +141,43 @@ export async function updateMyTaskStatus(
     throw new Error(`Cannot move a task from "${task.status}" to "${nextStatus}"`);
   }
 
+  const starting = nextStatus === "in_progress";
   const completing = nextStatus === "completed";
 
-  // Une tâche à cible de performance ne peut pas être complétée sans valeur.
-  const hasTarget = completing && task.metricTarget != null;
+  // --- Compteur (odomètre) au démarrage et à la complétion ---
+  let startOdometer: number | undefined;
+  let endOdometer: number | undefined;
+  if (task.requiresOdometer && starting) {
+    if (opts.startOdometer == null || !Number.isFinite(opts.startOdometer) || opts.startOdometer < 0) {
+      throw new Error("Relève le compteur de la machine avant de démarrer.");
+    }
+    startOdometer = opts.startOdometer;
+  }
+  if (task.requiresOdometer && completing) {
+    if (opts.endOdometer == null || !Number.isFinite(opts.endOdometer) || opts.endOdometer < 0) {
+      throw new Error("Relève le compteur de la machine avant de marquer cette tâche complétée.");
+    }
+    const start = task.startOdometer != null ? Number(task.startOdometer) : null;
+    if (start == null) {
+      throw new Error("Aucun relevé de compteur au démarrage : impossible de calculer la distance.");
+    }
+    if (opts.endOdometer <= start) {
+      throw new Error("Le compteur de fin doit être supérieur au compteur de départ.");
+    }
+    endOdometer = opts.endOdometer;
+    // Le « réalisé » du prorata est la distance parcourue, pas une saisie manuelle.
+    reportedMetricValue = endOdometer - start;
+  }
+
+  // Une tâche à cible de performance (sans odomètre) exige une valeur saisie.
+  const hasTarget = completing && task.metricTarget != null && !task.requiresOdometer;
   if (hasTarget && (reportedMetricValue == null || !Number.isFinite(reportedMetricValue))) {
     const unit = task.metricUnit ? ` (${task.metricUnit})` : "";
     throw new Error(
       `Saisis « ${task.metricLabel ?? "la valeur réalisée"} »${unit} avant de marquer cette tâche complétée.`
     );
   }
+  const storeMetric = completing && task.metricTarget != null && reportedMetricValue != null;
 
   // Paiement à l'unité : le nombre réalisé est obligatoire à la complétion.
   const needsUnits = completing && task.paymentMode === "per_unit";
@@ -154,16 +192,17 @@ export async function updateMyTaskStatus(
     workedMinutes = Math.max(0, Math.round((Date.now() - task.startedAt.getTime()) / 60000));
   }
 
-  const startGeoNote =
-    nextStatus === "in_progress" ? evaluateStartLocation(task.store, position) : undefined;
+  const startGeoNote = starting ? evaluateStartLocation(task.store, position) : undefined;
 
   const updated = await prisma.task.update({
     where: { id: taskId },
     data: {
       status: nextStatus,
-      ...(nextStatus === "in_progress" ? { startedAt: new Date(), startGeoNote } : {}),
+      ...(starting ? { startedAt: new Date(), startGeoNote } : {}),
       ...(note !== undefined ? { workerNote: note } : {}),
-      ...(hasTarget ? { reportedMetricValue, metricValueSource: "worker" } : {}),
+      ...(startOdometer !== undefined ? { startOdometer } : {}),
+      ...(endOdometer !== undefined ? { endOdometer } : {}),
+      ...(storeMetric ? { reportedMetricValue, metricValueSource: "worker" } : {}),
       ...(needsUnits ? { reportedUnits } : {}),
       ...(workedMinutes !== undefined ? { workedMinutes } : {}),
     },

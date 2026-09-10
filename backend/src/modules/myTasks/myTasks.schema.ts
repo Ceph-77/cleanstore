@@ -10,6 +10,9 @@ export const myTaskStatusUpdateSchema = z.object({
   reportedMetricValue: z.coerce.number().nonnegative().optional(),
   // Required on completion when the task is paid per unit.
   reportedUnits: z.coerce.number().nonnegative().optional(),
+  // Odometer reading — required on start / completion when the task uses one.
+  startOdometer: z.coerce.number().nonnegative().optional(),
+  endOdometer: z.coerce.number().nonnegative().optional(),
 });
 
 export const myTaskStepToggleSchema = z.object({

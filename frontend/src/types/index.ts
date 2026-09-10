@@ -187,6 +187,7 @@ export interface TaskTemplate {
   hourlyCapMinutes: number | null;
   unitPrice: string | null;
   unitLabel: string | null;
+  requiresOdometer: boolean;
   isActive: boolean;
   steps: TaskTemplateStep[];
 }
@@ -223,6 +224,9 @@ export interface Task {
   unitLabel: string | null;
   reportedUnits: string | null;
   workedMinutes: number | null;
+  requiresOdometer: boolean;
+  startOdometer: string | null;
+  endOdometer: string | null;
   store?: { id: string; name: string; city: string | null; address: string | null };
   inspection?: { id: string; score: number } | null;
   assignedTo?: { id: string; fullName: string | null; email: string } | null;

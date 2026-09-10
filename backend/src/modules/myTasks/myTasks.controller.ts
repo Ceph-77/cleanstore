@@ -19,10 +19,14 @@ export async function updateStatus(req: Request, res: Response) {
       req.params.id,
       req.session.userId!,
       parsed.data.status,
-      parsed.data.note,
-      { lat: parsed.data.lat, lng: parsed.data.lng, accuracy: parsed.data.accuracy },
-      parsed.data.reportedMetricValue,
-      parsed.data.reportedUnits
+      {
+        note: parsed.data.note,
+        position: { lat: parsed.data.lat, lng: parsed.data.lng, accuracy: parsed.data.accuracy },
+        reportedMetricValue: parsed.data.reportedMetricValue,
+        reportedUnits: parsed.data.reportedUnits,
+        startOdometer: parsed.data.startOdometer,
+        endOdometer: parsed.data.endOdometer,
+      }
     );
     void recordServerEvent(parsed.data.status === "completed" ? "task_completed" : "task_started", {
       userId: req.session.userId,

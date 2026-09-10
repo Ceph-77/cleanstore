@@ -33,6 +33,7 @@ type FormState = {
   hourlyCapMinutes: string;
   unitPrice: string;
   unitLabel: string;
+  requiresOdometer: boolean;
   steps: string[];
 };
 
@@ -56,6 +57,7 @@ const EMPTY: FormState = {
   hourlyCapMinutes: "",
   unitPrice: "",
   unitLabel: "",
+  requiresOdometer: false,
   steps: [],
 };
 
@@ -87,6 +89,7 @@ function toForm(t: TaskTemplate): FormState {
     hourlyCapMinutes: t.hourlyCapMinutes?.toString() ?? "",
     unitPrice: t.unitPrice ?? "",
     unitLabel: t.unitLabel ?? "",
+    requiresOdometer: t.requiresOdometer,
     steps: t.steps.map((s) => s.text),
   };
 }
@@ -116,6 +119,7 @@ function toPayload(f: FormState): TemplateInput {
     hourlyCapMinutes: f.paymentMode === "hourly" ? num(f.hourlyCapMinutes) : null,
     unitPrice: f.paymentMode === "per_unit" ? num(f.unitPrice) : null,
     unitLabel: f.paymentMode === "per_unit" ? f.unitLabel.trim() || null : null,
+    requiresOdometer: f.requiresOdometer,
     steps: f.steps.map((s) => s.trim()).filter(Boolean),
   };
 }
@@ -197,7 +201,23 @@ function TemplateForm({
           <input type="checkbox" checked={f.isActive} onChange={(e) => set("isActive", e.target.checked)} />
           Actif
         </label>
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={f.requiresOdometer}
+            onChange={(e) => set("requiresOdometer", e.target.checked)}
+          />
+          Relevé de compteur au début et à la fin
+        </label>
       </div>
+      {f.requiresOdometer && (
+        <p className="-mt-2 text-xs text-canvas-600">
+          Le travailleur saisit le compteur de la machine au démarrage et à la complétion.
+          {f.paymentMode === "metric_prorata"
+            ? " La distance (fin − début) devient automatiquement le « réalisé » du prorata."
+            : ""}
+        </p>
+      )}
 
       <Field label="Résultat attendu">
         <textarea
