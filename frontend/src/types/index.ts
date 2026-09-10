@@ -199,6 +199,9 @@ export interface TaskTemplate {
   requiresStartPhoto: boolean;
   requiresEndPhoto: boolean;
   recurrence: Recurrence | null;
+  consumables: { name: string; qty: number }[] | null;
+  reservableBy: "solo" | "clan" | "both";
+  minClanSize: number | null;
   isActive: boolean;
   steps: TaskTemplateStep[];
   variants: TaskTemplateVariant[];

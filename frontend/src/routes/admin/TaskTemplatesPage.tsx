@@ -44,6 +44,9 @@ type FormState = {
   recurrenceWeekdays: number[];
   recurrenceMonthdays: string;
   variants: { name: string; price: string; metricTarget: string; durationMinutes: string }[];
+  consumables: { name: string; qty: string }[];
+  reservableBy: "solo" | "clan" | "both";
+  minClanSize: string;
   steps: string[];
 };
 
@@ -77,6 +80,9 @@ const EMPTY: FormState = {
   recurrenceWeekdays: [],
   recurrenceMonthdays: "",
   variants: [],
+  consumables: [],
+  reservableBy: "solo",
+  minClanSize: "",
   steps: [],
 };
 
@@ -125,6 +131,9 @@ function toForm(t: TaskTemplate): FormState {
       metricTarget: v.metricTarget ?? "",
       durationMinutes: v.durationMinutes?.toString() ?? "",
     })),
+    consumables: (t.consumables ?? []).map((c) => ({ name: c.name, qty: String(c.qty) })),
+    reservableBy: t.reservableBy ?? "solo",
+    minClanSize: t.minClanSize?.toString() ?? "",
     steps: t.steps.map((s) => s.text),
   };
 }
@@ -181,6 +190,11 @@ function toPayload(f: FormState): TemplateInput {
         metricTarget: num(v.metricTarget),
         durationMinutes: num(v.durationMinutes),
       })),
+    consumables: f.consumables
+      .filter((c) => c.name.trim() && Number(c.qty) > 0)
+      .map((c) => ({ name: c.name.trim(), qty: Number(c.qty) })),
+    reservableBy: f.reservableBy,
+    minClanSize: f.reservableBy === "solo" ? null : num(f.minClanSize),
     steps: f.steps.map((s) => s.trim()).filter(Boolean),
   };
 }
@@ -587,6 +601,86 @@ function TemplateForm({
         >
           + Ajouter une variante
         </Button>
+      </fieldset>
+
+      <fieldset className="rounded-xl border border-canvas-200 bg-white p-3">
+        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-canvas-600">
+          Matériel consommé &amp; réservation
+        </legend>
+        <p className="mb-2 text-xs text-canvas-600">
+          Le matériel décrémentera le stock du magasin à la complétion (branché avec le module de
+          stock). « Réservable par » sera appliqué avec les clans.
+        </p>
+        <div className="space-y-2">
+          {f.consumables.map((c, i) => (
+            <div key={i} className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr,7rem,auto]">
+              <Input
+                placeholder="Article (ex. pads de polissage)"
+                value={c.name}
+                onChange={(e) =>
+                  set(
+                    "consumables",
+                    f.consumables.map((x, j) => (j === i ? { ...x, name: e.target.value } : x)),
+                  )
+                }
+              />
+              <Input
+                type="number"
+                min={0}
+                step="1"
+                placeholder="Qté"
+                value={c.qty}
+                onChange={(e) =>
+                  set(
+                    "consumables",
+                    f.consumables.map((x, j) => (j === i ? { ...x, qty: e.target.value } : x)),
+                  )
+                }
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => set("consumables", f.consumables.filter((_, j) => j !== i))}
+              >
+                ✕
+              </Button>
+            </div>
+          ))}
+        </div>
+        <Button
+          type="button"
+          variant="secondary"
+          className="mt-2"
+          onClick={() => set("consumables", [...f.consumables, { name: "", qty: "" }])}
+        >
+          + Ajouter un article
+        </Button>
+
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Field label="Réservable par">
+            <select
+              className={inputCls}
+              value={f.reservableBy}
+              onChange={(e) => set("reservableBy", e.target.value as FormState["reservableBy"])}
+            >
+              <option value="solo">Solo uniquement</option>
+              <option value="clan">Clan uniquement</option>
+              <option value="both">Solo ou clan</option>
+            </select>
+          </Field>
+          {f.reservableBy !== "solo" && (
+            <Field label="Taille de clan minimale">
+              <Input
+                type="number"
+                min={2}
+                step="1"
+                placeholder="ex. 3"
+                value={f.minClanSize}
+                onChange={(e) => set("minClanSize", e.target.value)}
+              />
+            </Field>
+          )}
+        </div>
       </fieldset>
 
       <div>

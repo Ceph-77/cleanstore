@@ -33,6 +33,12 @@ export const templateCreateSchema = z.object({
     ])
     .nullable()
     .optional(),
+  consumables: z
+    .array(z.object({ name: z.string().min(1).max(80), qty: z.coerce.number().positive() }))
+    .nullable()
+    .optional(),
+  reservableBy: z.enum(["solo", "clan", "both"]).optional(),
+  minClanSize: z.coerce.number().int().min(2).max(20).nullable().optional(),
   isActive: z.boolean().optional(),
   steps: z.array(z.string().min(1)).optional(),
   variants: z

@@ -180,6 +180,12 @@ export async function runDueRecurrences() {
           requiresEndPhoto: parent.requiresEndPhoto,
           recurrence:
             parent.recurrence == null ? undefined : (parent.recurrence as Prisma.InputJsonValue),
+          consumables:
+            parent.consumables == null
+              ? undefined
+              : (parent.consumables as Prisma.InputJsonValue),
+          reservableBy: parent.reservableBy,
+          minClanSize: parent.minClanSize,
           isRecurring: false,
           createdById: parent.createdById,
         },

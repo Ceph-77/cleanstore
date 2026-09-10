@@ -46,20 +46,21 @@ function jsonField(v: unknown): Prisma.InputJsonValue | typeof Prisma.JsonNull |
   return v as Prisma.InputJsonValue;
 }
 
-/** Sépare `steps`, `recurrence`, `variants` (traités à part) du reste des scalaires. */
-function scalarData<T extends { steps?: unknown; recurrence?: unknown; variants?: unknown }>(
-  input: T,
-) {
-  const { steps: _steps, variants: _variants, recurrence, ...rest } = input;
-  return { rest, recurrence };
+/** Sépare `steps`, `recurrence`, `consumables`, `variants` du reste des scalaires. */
+function scalarData<
+  T extends { steps?: unknown; recurrence?: unknown; consumables?: unknown; variants?: unknown },
+>(input: T) {
+  const { steps: _steps, variants: _variants, recurrence, consumables, ...rest } = input;
+  return { rest, recurrence, consumables };
 }
 
 export async function createTemplate(input: TemplateCreateInput) {
-  const { rest, recurrence } = scalarData(input);
+  const { rest, recurrence, consumables } = scalarData(input);
   return prisma.taskTemplate.create({
     data: {
       ...rest,
       ...(recurrence !== undefined ? { recurrence: jsonField(recurrence) } : {}),
+      ...(consumables !== undefined ? { consumables: jsonField(consumables) } : {}),
       steps: input.steps
         ? { create: input.steps.map((text, i) => ({ order: i, text })) }
         : undefined,
@@ -70,11 +71,15 @@ export async function createTemplate(input: TemplateCreateInput) {
 }
 
 export async function updateTemplate(id: string, input: TemplateUpdateInput) {
-  const { rest, recurrence } = scalarData(input);
+  const { rest, recurrence, consumables } = scalarData(input);
   return prisma.$transaction(async (tx) => {
     await tx.taskTemplate.update({
       where: { id },
-      data: { ...rest, ...(recurrence !== undefined ? { recurrence: jsonField(recurrence) } : {}) },
+      data: {
+        ...rest,
+        ...(recurrence !== undefined ? { recurrence: jsonField(recurrence) } : {}),
+        ...(consumables !== undefined ? { consumables: jsonField(consumables) } : {}),
+      },
     });
     if (input.steps !== undefined) {
       await tx.taskTemplateStep.deleteMany({ where: { templateId: id } });
@@ -112,6 +117,7 @@ export async function duplicateTemplate(id: string) {
     variants,
     name,
     recurrence,
+    consumables,
     ...scalars
   } = src;
 
@@ -126,6 +132,7 @@ export async function duplicateTemplate(id: string) {
       name: candidate,
       isActive: false,
       recurrence: jsonField(recurrence),
+      consumables: jsonField(consumables),
       steps: { create: steps.map((s) => ({ order: s.order, text: s.text })) },
       variants: {
         create: variants.map((v) => ({
@@ -189,6 +196,9 @@ export async function instantiateForStore(
       requiresStartPhoto: template.requiresStartPhoto,
       requiresEndPhoto: template.requiresEndPhoto,
       recurrence: jsonField(template.recurrence),
+      consumables: jsonField(template.consumables),
+      reservableBy: template.reservableBy,
+      minClanSize: template.minClanSize,
       createdById,
       steps: {
         create: template.steps.map((s) => ({ order: s.order, text: s.text })),
