@@ -20,15 +20,25 @@ export function getTemplate(id: string) {
   return prisma.taskTemplate.findUnique({ where: { id }, include: withSteps });
 }
 
-function scalarData<T extends { steps?: unknown }>(input: T): Omit<T, "steps"> {
-  const { steps: _steps, ...rest } = input;
-  return rest;
+/** Prisma exige `Prisma.JsonNull` (jamais `null`) pour vider un champ Json?. */
+function jsonField(v: unknown): Prisma.InputJsonValue | typeof Prisma.JsonNull | undefined {
+  if (v === undefined) return undefined;
+  if (v === null) return Prisma.JsonNull;
+  return v as Prisma.InputJsonValue;
+}
+
+/** Sépare `steps` et `recurrence` (traités à part) du reste des scalaires. */
+function scalarData<T extends { steps?: unknown; recurrence?: unknown }>(input: T) {
+  const { steps: _steps, recurrence, ...rest } = input;
+  return { rest, recurrence };
 }
 
 export async function createTemplate(input: TemplateCreateInput) {
+  const { rest, recurrence } = scalarData(input);
   return prisma.taskTemplate.create({
     data: {
-      ...scalarData(input),
+      ...rest,
+      ...(recurrence !== undefined ? { recurrence: jsonField(recurrence) } : {}),
       steps: input.steps
         ? { create: input.steps.map((text, i) => ({ order: i, text })) }
         : undefined,
@@ -38,8 +48,12 @@ export async function createTemplate(input: TemplateCreateInput) {
 }
 
 export async function updateTemplate(id: string, input: TemplateUpdateInput) {
+  const { rest, recurrence } = scalarData(input);
   return prisma.$transaction(async (tx) => {
-    await tx.taskTemplate.update({ where: { id }, data: scalarData(input) });
+    await tx.taskTemplate.update({
+      where: { id },
+      data: { ...rest, ...(recurrence !== undefined ? { recurrence: jsonField(recurrence) } : {}) },
+    });
     if (input.steps !== undefined) {
       await tx.taskTemplateStep.deleteMany({ where: { templateId: id } });
       if (input.steps.length > 0) {
@@ -60,7 +74,7 @@ export function deactivateTemplate(id: string) {
 /** Copie un modèle (nom suffixé « (copie) », inactif — l'admin l'active après relecture). */
 export async function duplicateTemplate(id: string) {
   const src = await prisma.taskTemplate.findUniqueOrThrow({ where: { id }, include: withSteps });
-  const { id: _id, createdAt: _c, updatedAt: _u, steps, name, ...scalars } = src;
+  const { id: _id, createdAt: _c, updatedAt: _u, steps, name, recurrence, ...scalars } = src;
 
   let candidate = `${name} (copie)`;
   for (let i = 2; await prisma.taskTemplate.findUnique({ where: { name: candidate } }); i++) {
@@ -72,6 +86,7 @@ export async function duplicateTemplate(id: string) {
       ...scalars,
       name: candidate,
       isActive: false,
+      recurrence: jsonField(recurrence),
       steps: { create: steps.map((s) => ({ order: s.order, text: s.text })) },
     },
     include: withSteps,
@@ -118,6 +133,7 @@ export async function instantiateForStore(templateId: string, storeId: string, c
       timeWindowEnd: template.timeWindowEnd,
       requiresStartPhoto: template.requiresStartPhoto,
       requiresEndPhoto: template.requiresEndPhoto,
+      recurrence: jsonField(template.recurrence),
       createdById,
       steps: {
         create: template.steps.map((s) => ({ order: s.order, text: s.text })),

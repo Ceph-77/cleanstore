@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import type { PaymentMode, Task, TaskTemplate } from "../types";
+import type { PaymentMode, Recurrence, Task, TaskTemplate } from "../types";
 
 export interface TemplateInput {
   name: string;
@@ -26,6 +26,7 @@ export interface TemplateInput {
   timeWindowEnd?: string | null;
   requiresStartPhoto?: boolean;
   requiresEndPhoto?: boolean;
+  recurrence?: Recurrence | null;
   isActive?: boolean;
   steps?: string[];
 }

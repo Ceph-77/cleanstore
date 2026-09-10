@@ -25,6 +25,14 @@ export const templateCreateSchema = z.object({
   timeWindowEnd: z.string().max(10).nullable().optional(),
   requiresStartPhoto: z.boolean().optional(),
   requiresEndPhoto: z.boolean().optional(),
+  recurrence: z
+    .discriminatedUnion("type", [
+      z.object({ type: z.literal("daily") }),
+      z.object({ type: z.literal("weekly"), days: z.array(z.number().int().min(0).max(6)).min(1) }),
+      z.object({ type: z.literal("monthly"), days: z.array(z.number().int().min(1).max(31)).min(1) }),
+    ])
+    .nullable()
+    .optional(),
   isActive: z.boolean().optional(),
   steps: z.array(z.string().min(1)).optional(),
 });

@@ -167,6 +167,11 @@ export interface TaskTemplateStep {
 
 export type PaymentMode = "fixed" | "hourly" | "per_unit" | "metric_prorata";
 
+export type Recurrence =
+  | { type: "daily" }
+  | { type: "weekly"; days: number[] } // 0 = dimanche … 6 = samedi
+  | { type: "monthly"; days: number[] }; // 1 … 31
+
 export interface TaskTemplate {
   id: string;
   name: string;
@@ -193,6 +198,7 @@ export interface TaskTemplate {
   timeWindowEnd: string | null;
   requiresStartPhoto: boolean;
   requiresEndPhoto: boolean;
+  recurrence: Recurrence | null;
   isActive: boolean;
   steps: TaskTemplateStep[];
 }

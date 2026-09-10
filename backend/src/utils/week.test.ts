@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  recurrenceRunsOn,
   localDayKey,
   startOfCurrentDay,
   startOfCurrentMonth,
@@ -93,3 +94,31 @@ describe("startOfCurrentDay", () => {
     );
   });
 });
+
+describe("recurrenceRunsOn", () => {
+  // 2026-06-10 is a Wednesday (weekday 3), day-of-month 10.
+  const wed = new Date("2026-06-10T16:00:00Z");
+
+  it("runs every day when null or daily", () => {
+    expect(recurrenceRunsOn(null, wed)).toBe(true);
+    expect(recurrenceRunsOn({ type: "daily" }, wed)).toBe(true);
+  });
+
+  it("weekly: only on listed weekdays (0=Sun..6=Sat)", () => {
+    expect(recurrenceRunsOn({ type: "weekly", days: [3] }, wed)).toBe(true);
+    expect(recurrenceRunsOn({ type: "weekly", days: [1, 5] }, wed)).toBe(false);
+  });
+
+  it("monthly: only on listed days of the month", () => {
+    expect(recurrenceRunsOn({ type: "monthly", days: [10] }, wed)).toBe(true);
+    expect(recurrenceRunsOn({ type: "monthly", days: [1, 15] }, wed)).toBe(false);
+  });
+
+  it("uses the LOCAL day (Toronto), not UTC", () => {
+    // 2026-06-11T02:00Z is still Wed June 10, 22:00 in Toronto.
+    const lateNight = new Date("2026-06-11T02:00:00Z");
+    expect(recurrenceRunsOn({ type: "monthly", days: [10] }, lateNight)).toBe(true);
+    expect(recurrenceRunsOn({ type: "weekly", days: [3] }, lateNight)).toBe(true);
+  });
+});
+

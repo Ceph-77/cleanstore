@@ -97,6 +97,37 @@ export function todayAtHour(hour: number, now: Date = new Date(), tz: string = D
   return new Date(midnight.getTime() + hour * 3_600_000);
 }
 
+export type Recurrence =
+  | { type: "daily" }
+  | { type: "weekly"; days: number[] } // 0 = dimanche … 6 = samedi
+  | { type: "monthly"; days: number[] } // 1 … 31
+  | null
+  | undefined;
+
+const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/**
+ * La récurrence doit-elle générer une instance aujourd'hui (dans `tz`) ?
+ * `null` / `daily` -> toujours. `weekly` -> si le jour de semaine local est
+ * dans `days`. `monthly` -> si le jour du mois local est dans `days`.
+ */
+export function recurrenceRunsOn(
+  recurrence: Recurrence,
+  now: Date = new Date(),
+  tz: string = DEFAULT_TZ,
+): boolean {
+  if (!recurrence || recurrence.type === "daily") return true;
+  if (recurrence.type === "weekly") {
+    const name = new Intl.DateTimeFormat("en-US", { timeZone: tz, weekday: "long" }).format(now);
+    return recurrence.days.includes(WEEKDAYS.indexOf(name));
+  }
+  if (recurrence.type === "monthly") {
+    const dom = Number(new Intl.DateTimeFormat("en-CA", { timeZone: tz, day: "numeric" }).format(now));
+    return recurrence.days.includes(dom);
+  }
+  return true;
+}
+
 /** Local calendar day (YYYY-MM-DD in `tz`) for a given instant. */
 export function localDayKey(date: Date, tz: string = DEFAULT_TZ): string {
   const parts = new Intl.DateTimeFormat("en-CA", {

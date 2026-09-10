@@ -40,6 +40,9 @@ type FormState = {
   timeWindowEnd: string;
   requiresStartPhoto: boolean;
   requiresEndPhoto: boolean;
+  recurrenceType: "daily" | "weekly" | "monthly";
+  recurrenceWeekdays: number[];
+  recurrenceMonthdays: string;
   steps: string[];
 };
 
@@ -69,6 +72,9 @@ const EMPTY: FormState = {
   timeWindowEnd: "",
   requiresStartPhoto: false,
   requiresEndPhoto: false,
+  recurrenceType: "daily",
+  recurrenceWeekdays: [],
+  recurrenceMonthdays: "",
   steps: [],
 };
 
@@ -108,6 +114,9 @@ function toForm(t: TaskTemplate): FormState {
     timeWindowEnd: t.timeWindowEnd ?? "",
     requiresStartPhoto: t.requiresStartPhoto,
     requiresEndPhoto: t.requiresEndPhoto,
+    recurrenceType: t.recurrence?.type ?? "daily",
+    recurrenceWeekdays: t.recurrence?.type === "weekly" ? t.recurrence.days : [],
+    recurrenceMonthdays: t.recurrence?.type === "monthly" ? t.recurrence.days.join(", ") : "",
     steps: t.steps.map((s) => s.text),
   };
 }
@@ -143,6 +152,19 @@ function toPayload(f: FormState): TemplateInput {
     timeWindowEnd: f.timeWindowEnd.trim() || null,
     requiresStartPhoto: f.requiresStartPhoto,
     requiresEndPhoto: f.requiresEndPhoto,
+    recurrence: !f.isRecurringDefault
+      ? null
+      : f.recurrenceType === "weekly"
+        ? { type: "weekly", days: f.recurrenceWeekdays }
+        : f.recurrenceType === "monthly"
+          ? {
+              type: "monthly",
+              days: f.recurrenceMonthdays
+                .split(",")
+                .map((x) => Number(x.trim()))
+                .filter((n) => Number.isInteger(n) && n >= 1 && n <= 31),
+            }
+          : { type: "daily" },
     steps: f.steps.map((s) => s.trim()).filter(Boolean),
   };
 }
@@ -240,6 +262,67 @@ function TemplateForm({
             ? " La distance (fin − début) devient automatiquement le « réalisé » du prorata."
             : ""}
         </p>
+      )}
+
+      {f.isRecurringDefault && (
+        <fieldset className="rounded-xl border border-canvas-200 bg-white p-3">
+          <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-canvas-600">
+            Motif de récurrence
+          </legend>
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              className={inputCls + " max-w-xs"}
+              value={f.recurrenceType}
+              onChange={(e) => set("recurrenceType", e.target.value as FormState["recurrenceType"])}
+            >
+              <option value="daily">Tous les jours</option>
+              <option value="weekly">Certains jours de la semaine</option>
+              <option value="monthly">Certains jours du mois</option>
+            </select>
+            {f.recurrenceType === "weekly" && (
+              <div className="flex gap-1">
+                {[
+                  { i: 1, l: "L" },
+                  { i: 2, l: "M" },
+                  { i: 3, l: "M" },
+                  { i: 4, l: "J" },
+                  { i: 5, l: "V" },
+                  { i: 6, l: "S" },
+                  { i: 0, l: "D" },
+                ].map(({ i, l }) => {
+                  const on = f.recurrenceWeekdays.includes(i);
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() =>
+                        set(
+                          "recurrenceWeekdays",
+                          on
+                            ? f.recurrenceWeekdays.filter((d) => d !== i)
+                            : [...f.recurrenceWeekdays, i],
+                        )
+                      }
+                      className={`h-8 w-8 rounded-full text-xs font-semibold ${
+                        on ? "bg-flow-600 text-white" : "bg-canvas-100 text-canvas-700"
+                      }`}
+                    >
+                      {l}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            {f.recurrenceType === "monthly" && (
+              <Input
+                className="max-w-[10rem]"
+                placeholder="ex. 1, 15"
+                value={f.recurrenceMonthdays}
+                onChange={(e) => set("recurrenceMonthdays", e.target.value)}
+              />
+            )}
+          </div>
+        </fieldset>
       )}
 
       <Field label="Résultat attendu">

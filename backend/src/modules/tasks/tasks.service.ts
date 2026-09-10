@@ -1,9 +1,9 @@
 import { prisma } from "../../db/prisma";
 import type { z } from "zod";
-import type { TaskStatus } from "@prisma/client";
+import { Prisma, type TaskStatus } from "@prisma/client";
 import type { taskCreateSchema, taskUpdateSchema } from "./tasks.schema";
 import { pageArgs, toPage, type PageParams } from "../../utils/pagination";
-import { todayAtHour } from "../../utils/week";
+import { todayAtHour, recurrenceRunsOn, type Recurrence } from "../../utils/week";
 
 /** Heure (locale Montréal) avant laquelle les tâches du jour ne sont pas visibles. */
 const VISIBILITY_HOUR = 15;
@@ -117,8 +117,13 @@ export async function runDueRecurrences() {
   let cancelled = 0;
   let skipped = 0;
   for (const parent of parents) {
-    const skipToday =
-      parent.recurrenceSkipDate != null && parent.recurrenceSkipDate.getTime() === today.getTime();
+    const explicitSkip =
+      parent.recurrenceSkipDate != null &&
+      parent.recurrenceSkipDate.getTime() === today.getTime();
+    // Motif de récurrence : jour non concerné -> on ne crée rien et on ne marque
+    // pas lastRecurredOn (on re-vérifiera au prochain passage du cron).
+    const patternSkip = !recurrenceRunsOn(parent.recurrence as Recurrence);
+    const skipToday = explicitSkip || patternSkip;
 
     const c = await prisma.$transaction(async (tx) => {
       const cancel = await tx.task.updateMany({
@@ -132,11 +137,13 @@ export async function runDueRecurrences() {
       });
 
       if (skipToday) {
-        // Jour sauté : on ne crée rien, on consomme le drapeau, on marque le jour.
-        await tx.task.update({
-          where: { id: parent.id },
-          data: { lastRecurredOn: today, recurrenceSkipDate: null },
-        });
+        if (explicitSkip) {
+          // Jour explicitement sauté par l'admin : consomme le drapeau + marque le jour.
+          await tx.task.update({
+            where: { id: parent.id },
+            data: { lastRecurredOn: today, recurrenceSkipDate: null },
+          });
+        }
         return { cancelled: cancel.count, skipped: true };
       }
 
@@ -166,6 +173,13 @@ export async function runDueRecurrences() {
           unitPrice: parent.unitPrice,
           unitLabel: parent.unitLabel,
           requiresOdometer: parent.requiresOdometer,
+          category: parent.category,
+          timeWindowStart: parent.timeWindowStart,
+          timeWindowEnd: parent.timeWindowEnd,
+          requiresStartPhoto: parent.requiresStartPhoto,
+          requiresEndPhoto: parent.requiresEndPhoto,
+          recurrence:
+            parent.recurrence == null ? undefined : (parent.recurrence as Prisma.InputJsonValue),
           isRecurring: false,
           createdById: parent.createdById,
         },
