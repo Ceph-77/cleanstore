@@ -33,6 +33,14 @@ export function useDeactivateTaskTemplate() {
   });
 }
 
+export function useDuplicateTaskTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.duplicateTaskTemplate(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin", "task-templates"] }),
+  });
+}
+
 export function useInstantiateTemplates(storeId: string) {
   const qc = useQueryClient();
   return useMutation({

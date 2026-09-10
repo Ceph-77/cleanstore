@@ -21,6 +21,11 @@ export interface TemplateInput {
   unitPrice?: number | null;
   unitLabel?: string | null;
   requiresOdometer?: boolean;
+  category?: string | null;
+  timeWindowStart?: string | null;
+  timeWindowEnd?: string | null;
+  requiresStartPhoto?: boolean;
+  requiresEndPhoto?: boolean;
   isActive?: boolean;
   steps?: string[];
 }
@@ -41,6 +46,10 @@ export function updateTaskTemplate(id: string, data: Partial<TemplateInput>) {
 
 export function deactivateTaskTemplate(id: string) {
   return apiClient.delete<void>(`/task-templates/${id}`);
+}
+
+export function duplicateTaskTemplate(id: string) {
+  return apiClient.post<{ template: TaskTemplate }>(`/task-templates/${id}/duplicate`);
 }
 
 export function instantiateTemplates(storeId: string, templateIds: string[]) {

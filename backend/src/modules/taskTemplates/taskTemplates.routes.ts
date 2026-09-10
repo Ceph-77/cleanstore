@@ -10,4 +10,5 @@ taskTemplatesRouter.post("/", controller.create);
 taskTemplatesRouter.post("/instantiate", controller.instantiate);
 taskTemplatesRouter.get("/:id", controller.getOne);
 taskTemplatesRouter.patch("/:id", controller.update);
+taskTemplatesRouter.post("/:id/duplicate", controller.duplicate);
 taskTemplatesRouter.delete("/:id", controller.remove);

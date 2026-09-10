@@ -188,6 +188,11 @@ export interface TaskTemplate {
   unitPrice: string | null;
   unitLabel: string | null;
   requiresOdometer: boolean;
+  category: string | null;
+  timeWindowStart: string | null;
+  timeWindowEnd: string | null;
+  requiresStartPhoto: boolean;
+  requiresEndPhoto: boolean;
   isActive: boolean;
   steps: TaskTemplateStep[];
 }

@@ -276,6 +276,11 @@ model Task {
   endOdometer              Decimal?   @map("end_odometer")
   startPhotoKey            String?    @map("start_photo_key")
   endPhotoKey              String?    @map("end_photo_key")
+  category                 String?
+  timeWindowStart          String?    @map("time_window_start")
+  timeWindowEnd            String?    @map("time_window_end")
+  requiresStartPhoto       Boolean    @default(false) @map("requires_start_photo")
+  requiresEndPhoto         Boolean    @default(false) @map("requires_end_photo")
   createdById              String?    @map("created_by")
   createdAt                DateTime   @default(now()) @map("created_at")
   updatedAt                DateTime   @updatedAt @map("updated_at")
@@ -327,6 +332,11 @@ model TaskTemplate {
   unitPrice                Decimal? @map("unit_price")
   unitLabel                String?  @map("unit_label")
   requiresOdometer         Boolean  @default(false) @map("requires_odometer")
+  category                 String?
+  timeWindowStart          String?  @map("time_window_start")
+  timeWindowEnd            String?  @map("time_window_end")
+  requiresStartPhoto       Boolean  @default(false) @map("requires_start_photo")
+  requiresEndPhoto         Boolean  @default(false) @map("requires_end_photo")
   isActive                 Boolean  @default(true) @map("is_active")
   createdAt                DateTime @default(now()) @map("created_at")
   updatedAt                DateTime @updatedAt @map("updated_at")

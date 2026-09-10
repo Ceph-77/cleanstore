@@ -57,6 +57,27 @@ export function deactivateTemplate(id: string) {
   return prisma.taskTemplate.update({ where: { id }, data: { isActive: false } });
 }
 
+/** Copie un modèle (nom suffixé « (copie) », inactif — l'admin l'active après relecture). */
+export async function duplicateTemplate(id: string) {
+  const src = await prisma.taskTemplate.findUniqueOrThrow({ where: { id }, include: withSteps });
+  const { id: _id, createdAt: _c, updatedAt: _u, steps, name, ...scalars } = src;
+
+  let candidate = `${name} (copie)`;
+  for (let i = 2; await prisma.taskTemplate.findUnique({ where: { name: candidate } }); i++) {
+    candidate = `${name} (copie ${i})`;
+  }
+
+  return prisma.taskTemplate.create({
+    data: {
+      ...scalars,
+      name: candidate,
+      isActive: false,
+      steps: { create: steps.map((s) => ({ order: s.order, text: s.text })) },
+    },
+    include: withSteps,
+  });
+}
+
 /**
  * One-time copy of a template into a fresh Task on `storeId`. The task is
  * unpublished and `open` — the admin reviews price / metric target / any
@@ -92,6 +113,11 @@ export async function instantiateForStore(templateId: string, storeId: string, c
       unitPrice: template.unitPrice,
       unitLabel: template.unitLabel,
       requiresOdometer: template.requiresOdometer,
+      category: template.category,
+      timeWindowStart: template.timeWindowStart,
+      timeWindowEnd: template.timeWindowEnd,
+      requiresStartPhoto: template.requiresStartPhoto,
+      requiresEndPhoto: template.requiresEndPhoto,
       createdById,
       steps: {
         create: template.steps.map((s) => ({ order: s.order, text: s.text })),

@@ -67,6 +67,22 @@ export async function remove(req: Request, res: Response) {
   res.status(204).send();
 }
 
+export async function duplicate(req: Request, res: Response) {
+  try {
+    const template = await service.duplicateTemplate(req.params.id);
+    logAudit(req.session.userId, {
+      action: "create",
+      section: "task_templates",
+      entityType: "TaskTemplate",
+      entityId: template.id,
+      summary: `Modèle dupliqué — ${template.name}`,
+    });
+    res.status(201).json({ template });
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
+  }
+}
+
 export async function instantiate(req: Request, res: Response) {
   const parsed = instantiateSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });

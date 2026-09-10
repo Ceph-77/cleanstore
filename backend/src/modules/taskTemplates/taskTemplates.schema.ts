@@ -20,6 +20,11 @@ export const templateCreateSchema = z.object({
   unitPrice: z.coerce.number().positive().nullable().optional(),
   unitLabel: z.string().max(40).nullable().optional(),
   requiresOdometer: z.boolean().optional(),
+  category: z.string().max(40).nullable().optional(),
+  timeWindowStart: z.string().max(10).nullable().optional(),
+  timeWindowEnd: z.string().max(10).nullable().optional(),
+  requiresStartPhoto: z.boolean().optional(),
+  requiresEndPhoto: z.boolean().optional(),
   isActive: z.boolean().optional(),
   steps: z.array(z.string().min(1)).optional(),
 });

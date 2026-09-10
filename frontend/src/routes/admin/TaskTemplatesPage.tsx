@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { AppLayout } from "../../components/common/AppLayout";
 import { Button } from "../../components/common/Button";
 import { Field } from "../../components/common/Field";
@@ -9,6 +9,7 @@ import {
   useCreateTaskTemplate,
   useUpdateTaskTemplate,
   useDeactivateTaskTemplate,
+  useDuplicateTaskTemplate,
 } from "../../hooks/useTaskTemplates";
 import type { PaymentMode, TaskTemplate } from "../../types";
 import type { TemplateInput } from "../../api/taskTemplates";
@@ -34,6 +35,11 @@ type FormState = {
   unitPrice: string;
   unitLabel: string;
   requiresOdometer: boolean;
+  category: string;
+  timeWindowStart: string;
+  timeWindowEnd: string;
+  requiresStartPhoto: boolean;
+  requiresEndPhoto: boolean;
   steps: string[];
 };
 
@@ -58,8 +64,15 @@ const EMPTY: FormState = {
   unitPrice: "",
   unitLabel: "",
   requiresOdometer: false,
+  category: "",
+  timeWindowStart: "",
+  timeWindowEnd: "",
+  requiresStartPhoto: false,
+  requiresEndPhoto: false,
   steps: [],
 };
+
+const CATEGORIES = ["Plancher", "Vitres", "Sanitaires", "Extérieur", "Autre"];
 
 const PAYMENT_MODE_LABELS: Record<PaymentMode, string> = {
   fixed: "Prix fixe (forfait)",
@@ -90,6 +103,11 @@ function toForm(t: TaskTemplate): FormState {
     unitPrice: t.unitPrice ?? "",
     unitLabel: t.unitLabel ?? "",
     requiresOdometer: t.requiresOdometer,
+    category: t.category ?? "",
+    timeWindowStart: t.timeWindowStart ?? "",
+    timeWindowEnd: t.timeWindowEnd ?? "",
+    requiresStartPhoto: t.requiresStartPhoto,
+    requiresEndPhoto: t.requiresEndPhoto,
     steps: t.steps.map((s) => s.text),
   };
 }
@@ -120,6 +138,11 @@ function toPayload(f: FormState): TemplateInput {
     unitPrice: f.paymentMode === "per_unit" ? num(f.unitPrice) : null,
     unitLabel: f.paymentMode === "per_unit" ? f.unitLabel.trim() || null : null,
     requiresOdometer: f.requiresOdometer,
+    category: f.category.trim() || null,
+    timeWindowStart: f.timeWindowStart.trim() || null,
+    timeWindowEnd: f.timeWindowEnd.trim() || null,
+    requiresStartPhoto: f.requiresStartPhoto,
+    requiresEndPhoto: f.requiresEndPhoto,
     steps: f.steps.map((s) => s.trim()).filter(Boolean),
   };
 }
@@ -241,6 +264,56 @@ function TemplateForm({
           onChange={(e) => set("requiredEquipment", e.target.value)}
         />
       </Field>
+
+      <fieldset className="rounded-xl border border-canvas-200 bg-white p-3">
+        <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-canvas-600">
+          Catégorie &amp; organisation
+        </legend>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <Field label="Catégorie">
+            <select
+              className={inputCls}
+              value={f.category}
+              onChange={(e) => set("category", e.target.value)}
+            >
+              <option value="">—</option>
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Fenêtre horaire indicative — début">
+            <Input type="time" value={f.timeWindowStart} onChange={(e) => set("timeWindowStart", e.target.value)} />
+          </Field>
+          <Field label="Fenêtre horaire indicative — fin">
+            <Input type="time" value={f.timeWindowEnd} onChange={(e) => set("timeWindowEnd", e.target.value)} />
+          </Field>
+        </div>
+        <div className="mt-2 flex flex-wrap gap-4 text-sm text-canvas-800">
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={f.requiresStartPhoto}
+              onChange={(e) => set("requiresStartPhoto", e.target.checked)}
+            />
+            Photo obligatoire au début
+          </label>
+          <label className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={f.requiresEndPhoto}
+              onChange={(e) => set("requiresEndPhoto", e.target.checked)}
+            />
+            Photo obligatoire à la fin
+          </label>
+        </div>
+        <p className="mt-1 text-[11px] text-canvas-600">
+          La fenêtre horaire est indicative (n'empêche pas de démarrer). La capture photo réelle
+          arrive avec le stockage de fichiers.
+        </p>
+      </fieldset>
 
       <fieldset className="rounded-xl border border-canvas-200 bg-white p-3">
         <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-canvas-600">
@@ -401,6 +474,16 @@ export function TaskTemplatesPage() {
   const createT = useCreateTaskTemplate();
   const updateT = useUpdateTaskTemplate();
   const deactivateT = useDeactivateTaskTemplate();
+  const duplicateT = useDuplicateTaskTemplate();
+
+  const grouped = useMemo(() => {
+    const map = new Map<string, TaskTemplate[]>();
+    for (const t of templates ?? []) {
+      const key = t.category ?? "Sans catégorie";
+      map.set(key, [...(map.get(key) ?? []), t]);
+    }
+    return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  }, [templates]);
 
   const [mode, setMode] = useState<{ kind: "none" } | { kind: "new" } | { kind: "edit"; id: string }>({
     kind: "none",
@@ -470,8 +553,14 @@ export function TaskTemplatesPage() {
 
       {isLoading && <p className="mt-8 text-sm text-canvas-600">Chargement...</p>}
 
-      <div className="mt-6 space-y-3">
-        {templates?.map((t) => (
+      <div className="mt-6 space-y-6">
+        {grouped.map(([category, list]) => (
+          <div key={category}>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-500">
+              {category}
+            </p>
+            <div className="space-y-3">
+              {list.map((t) => (
           <div
             key={t.id}
             className={`rounded-2xl border border-canvas-200 bg-white p-4 shadow-sm shadow-canvas-900/5 ${
@@ -512,6 +601,13 @@ export function TaskTemplatesPage() {
                 <Button variant="secondary" onClick={() => setMode({ kind: "edit", id: t.id })}>
                   Éditer
                 </Button>
+                <Button
+                  variant="ghost"
+                  disabled={duplicateT.isPending}
+                  onClick={() => duplicateT.mutate(t.id)}
+                >
+                  Dupliquer
+                </Button>
                 {t.isActive && (
                   <Button
                     variant="danger"
@@ -522,6 +618,9 @@ export function TaskTemplatesPage() {
                   </Button>
                 )}
               </div>
+            </div>
+          </div>
+              ))}
             </div>
           </div>
         ))}
