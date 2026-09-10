@@ -19,7 +19,12 @@ export async function create(req: Request, res: Response) {
     return res.status(400).json({ error: parsed.error.flatten() });
   }
   try {
-    const claim = await taskClaimsService.createClaim(req.params.taskId, req.session.userId!, parsed.data.note);
+    const claim = await taskClaimsService.createClaim(
+      req.params.taskId,
+      req.session.userId!,
+      parsed.data.note,
+      parsed.data.clanId
+    );
     void recordServerEvent("task_claim_submitted", {
       userId: req.session.userId,
       role: req.session.roleKey ?? null,

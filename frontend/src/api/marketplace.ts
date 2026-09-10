@@ -31,8 +31,8 @@ export async function listMarketplaceTasks(cursor?: string | null): Promise<Page
   return { items: r.tasks, nextCursor: r.nextCursor };
 }
 
-export function claimTask(taskId: string, note?: string) {
-  return apiClient.post<{ claim: TaskClaim }>(`/marketplace/tasks/${taskId}/claims`, { note });
+export function claimTask(taskId: string, note?: string, clanId?: string) {
+  return apiClient.post<{ claim: TaskClaim }>(`/marketplace/tasks/${taskId}/claims`, { note, clanId });
 }
 
 export function listMyTaskClaims() {

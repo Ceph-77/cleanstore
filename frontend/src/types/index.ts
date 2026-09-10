@@ -254,6 +254,9 @@ export interface Task {
   requiresOdometer: boolean;
   startOdometer: string | null;
   endOdometer: string | null;
+  reservableBy: "solo" | "clan" | "both";
+  minClanSize: number | null;
+  reservedByClanId?: string | null;
   store?: { id: string; name: string; city: string | null; address: string | null };
   inspection?: { id: string; score: number } | null;
   assignedTo?: { id: string; fullName: string | null; email: string } | null;

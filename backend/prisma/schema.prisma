@@ -288,6 +288,7 @@ model Task {
   consumables              Json?
   reservableBy             String     @default("solo") @map("reservable_by")
   minClanSize              Int?       @map("min_clan_size")
+  reservedByClanId         String?    @map("reserved_by_clan_id")
   createdById              String?    @map("created_by")
   createdAt                DateTime   @default(now()) @map("created_at")
   updatedAt                DateTime   @updatedAt @map("updated_at")
@@ -298,6 +299,7 @@ model Task {
   template       TaskTemplate?       @relation(fields: [templateId], references: [id])
   recurringParent    Task?  @relation("TaskRecurrence", fields: [recurringParentId], references: [id], onDelete: SetNull)
   recurringInstances Task[] @relation("TaskRecurrence")
+  reservedByClan     Clan?  @relation("ClanReservedTasks", fields: [reservedByClanId], references: [id], onDelete: SetNull)
   claims         TaskClaim[]
   inspection     TaskInspection?
   expectedPhotos TaskExpectedPhoto[]
@@ -510,14 +512,17 @@ model TaskClaim {
   note              String?
   decisionReason    String?     @map("decision_reason")
   seenByRequesterAt DateTime?   @map("seen_by_requester_at")
+  clanId            String?     @map("clan_id")
   createdAt         DateTime    @default(now()) @map("created_at")
   decidedAt         DateTime?   @map("decided_at")
 
-  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  worker User @relation(fields: [workerId], references: [id])
+  task   Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  worker User  @relation(fields: [workerId], references: [id])
+  clan   Clan? @relation(fields: [clanId], references: [id], onDelete: SetNull)
 
   @@index([taskId])
   @@index([status])
+  @@index([clanId])
   // "My claims", the claim-decision notification poll, and the per-store weekly
   // claim-count all filter on workerId; createdAt second serves the time range.
   @@index([workerId, createdAt])
@@ -749,9 +754,11 @@ model Clan {
   inviteCode String   @unique @map("invite_code")
   createdAt  DateTime @default(now()) @map("created_at")
 
-  founder User         @relation("ClanFounder", fields: [founderId], references: [id])
-  members ClanMember[]
-  invites ClanInvite[]
+  founder       User         @relation("ClanFounder", fields: [founderId], references: [id])
+  members       ClanMember[]
+  invites       ClanInvite[]
+  taskClaims    TaskClaim[]
+  reservedTasks Task[]       @relation("ClanReservedTasks")
 
   @@index([founderId])
   @@map("clans")

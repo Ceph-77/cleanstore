@@ -40,6 +40,8 @@ export async function listMarketplaceTasks(page: PageParams) {
       metricLabel: true,
       metricUnit: true,
       metricTarget: true,
+      reservableBy: true,
+      minClanSize: true,
       store: { select: { id: true, name: true, city: true, address: true } },
       expectedPhotos: true,
     },
@@ -63,7 +65,12 @@ export async function listMarketplaceTasksWithUrls(page: PageParams) {
   return { items: withUrls, nextCursor };
 }
 
-export async function createClaim(taskId: string, workerId: string, note?: string) {
+export async function createClaim(
+  taskId: string,
+  workerId: string,
+  note?: string,
+  clanId?: string,
+) {
   const task = await prisma.task.findUnique({
     where: { id: taskId },
     include: { store: { select: { isActive: true, assignedSubcontractorId: true } } },
@@ -77,6 +84,24 @@ export async function createClaim(taskId: string, workerId: string, note?: strin
     !task.store.assignedSubcontractorId
   ) {
     throw new Error("This task is not available for claiming");
+  }
+
+  // Réservable par solo / clan / les deux.
+  if (clanId) {
+    if (task.reservableBy === "solo") {
+      throw new Error("Cette tâche se réserve en solo uniquement.");
+    }
+    const member = await prisma.clanMember.findUnique({
+      where: { clanId_userId: { clanId, userId: workerId } },
+    });
+    if (!member) throw new Error("Vous n'êtes pas membre de ce clan.");
+    const memberCount = await prisma.clanMember.count({ where: { clanId } });
+    const min = task.minClanSize ?? 2;
+    if (memberCount < min) {
+      throw new Error(`Ce clan doit compter au moins ${min} membres pour cette tâche.`);
+    }
+  } else if (task.reservableBy === "clan") {
+    throw new Error("Cette tâche se réserve au nom d'un clan.");
   }
 
   const claimsThisWeek = await prisma.taskClaim.count({
@@ -93,7 +118,7 @@ export async function createClaim(taskId: string, workerId: string, note?: strin
     );
   }
 
-  return prisma.taskClaim.create({ data: { taskId, workerId, note } });
+  return prisma.taskClaim.create({ data: { taskId, workerId, note, clanId: clanId ?? null } });
 }
 
 /** Active workers a subcontractor can assign a task to. */
@@ -204,7 +229,11 @@ export async function decideClaim(id: string, status: "approved" | "rejected", r
     await prisma.$transaction([
       prisma.task.update({
         where: { id: claim.taskId },
-        data: { assignedToId: claim.workerId, status: "claimed" },
+        data: {
+          assignedToId: claim.workerId,
+          status: "claimed",
+          reservedByClanId: claim.clanId ?? null,
+        },
       }),
       prisma.taskClaim.update({
         where: { id },

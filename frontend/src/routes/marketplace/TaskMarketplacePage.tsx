@@ -5,6 +5,7 @@ import { LoadMore } from "../../components/common/LoadMore";
 import { track } from "../../analytics";
 import { IconTasks, IconMapPin, IconSearch, IconFile } from "../../components/common/icons";
 import { useMarketplaceTasks, useMyTaskClaims, useClaimTask } from "../../hooks/useMarketplace";
+import { useMyClans } from "../../hooks/useClans";
 import type { Task } from "../../types";
 
 type SortKey = "recent" | "price_desc" | "price_asc" | "store_asc" | "due_date";
@@ -54,6 +55,7 @@ export function TaskMarketplacePage() {
   const { data, isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useMarketplaceTasks();
   const tasks = useMemo(() => data?.pages.flatMap((p) => p.items) ?? [], [data]);
   const { data: myClaims } = useMyTaskClaims();
+  const { data: myClans } = useMyClans();
   const claimTask = useClaimTask();
 
   const [search, setSearch] = useState("");
@@ -61,6 +63,7 @@ export function TaskMarketplacePage() {
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [claimingTaskId, setClaimingTaskId] = useState<string | null>(null);
   const [note, setNote] = useState("");
+  const [claimClanId, setClaimClanId] = useState("");
   const [claimError, setClaimError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -74,10 +77,15 @@ export function TaskMarketplacePage() {
   async function handleConfirmClaim(taskId: string) {
     setClaimError(null);
     try {
-      await claimTask.mutateAsync({ taskId, note: note.trim() || undefined });
+      await claimTask.mutateAsync({
+        taskId,
+        note: note.trim() || undefined,
+        clanId: claimClanId || undefined,
+      });
       track("task_claim_submitted", { taskId });
       setClaimingTaskId(null);
       setNote("");
+      setClaimClanId("");
     } catch (err) {
       setClaimError(err instanceof Error ? err.message : "Impossible d'envoyer la candidature.");
     }
@@ -240,6 +248,35 @@ export function TaskMarketplacePage() {
                 </div>
                 {claimingTaskId === task.id && (
                   <div className="mt-2 space-y-2 rounded-xl bg-flow-50/60 p-3">
+                    {task.reservableBy !== "solo" && (
+                      <div>
+                        <label className="text-xs font-medium text-canvas-800">
+                          Réserver{task.reservableBy === "clan" ? " (clan obligatoire)" : ""}
+                        </label>
+                        <select
+                          value={claimClanId}
+                          onChange={(e) => setClaimClanId(e.target.value)}
+                          className="mt-1 w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm"
+                        >
+                          {task.reservableBy === "both" && <option value="">En solo</option>}
+                          {task.reservableBy === "clan" && <option value="">— choisir un clan —</option>}
+                          {(myClans ?? []).map((c) => {
+                            const tooSmall = c.members.length < (task.minClanSize ?? 2);
+                            return (
+                              <option key={c.id} value={c.id} disabled={tooSmall}>
+                                {c.name}
+                                {tooSmall ? ` (min. ${task.minClanSize ?? 2} membres)` : ""}
+                              </option>
+                            );
+                          })}
+                        </select>
+                        {task.reservableBy === "clan" && !myClans?.length && (
+                          <p className="mt-1 text-[11px] text-red-700">
+                            Tu dois faire partie d'un clan pour réserver cette tâche.
+                          </p>
+                        )}
+                      </div>
+                    )}
                     <textarea
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
@@ -263,7 +300,14 @@ export function TaskMarketplacePage() {
                       >
                         Annuler
                       </Button>
-                      <Button variant="accent" disabled={claimTask.isPending} onClick={() => handleConfirmClaim(task.id)}>
+                      <Button
+                        variant="accent"
+                        disabled={
+                          claimTask.isPending ||
+                          (task.reservableBy === "clan" && !claimClanId)
+                        }
+                        onClick={() => handleConfirmClaim(task.id)}
+                      >
                         {claimTask.isPending ? "Envoi..." : "Confirmer"}
                       </Button>
                     </div>

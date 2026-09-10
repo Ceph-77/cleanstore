@@ -2,6 +2,8 @@ import { z } from "zod";
 
 export const createClaimSchema = z.object({
   note: z.string().optional(),
+  /** Réserver au nom d'un clan (sinon solo). */
+  clanId: z.string().uuid().optional(),
 });
 
 export const directAssignSchema = z.object({

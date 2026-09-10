@@ -51,8 +51,8 @@ export function useMyTaskClaims() {
 export function useClaimTask() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ taskId, note }: { taskId: string; note?: string }) =>
-      marketplaceApi.claimTask(taskId, note),
+    mutationFn: ({ taskId, note, clanId }: { taskId: string; note?: string; clanId?: string }) =>
+      marketplaceApi.claimTask(taskId, note, clanId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["marketplace", "tasks"] });
       queryClient.invalidateQueries({ queryKey: ["marketplace", "my-task-claims"] });
