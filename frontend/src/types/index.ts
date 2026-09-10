@@ -165,6 +165,8 @@ export interface TaskTemplateStep {
   text: string;
 }
 
+export type PaymentMode = "fixed" | "hourly" | "per_unit" | "metric_prorata";
+
 export interface TaskTemplate {
   id: string;
   name: string;
@@ -180,6 +182,11 @@ export interface TaskTemplate {
   metricLabel: string | null;
   metricUnit: string | null;
   defaultMetricTarget: string | null;
+  paymentMode: PaymentMode;
+  hourlyRate: string | null;
+  hourlyCapMinutes: number | null;
+  unitPrice: string | null;
+  unitLabel: string | null;
   isActive: boolean;
   steps: TaskTemplateStep[];
 }
@@ -209,6 +216,13 @@ export interface Task {
   metricTarget: string | null;
   reportedMetricValue: string | null;
   metricValueSource: "worker" | "inspector" | null;
+  paymentMode: PaymentMode;
+  hourlyRate: string | null;
+  hourlyCapMinutes: number | null;
+  unitPrice: string | null;
+  unitLabel: string | null;
+  reportedUnits: string | null;
+  workedMinutes: number | null;
   store?: { id: string; name: string; city: string | null; address: string | null };
   inspection?: { id: string; score: number } | null;
   assignedTo?: { id: string; fullName: string | null; email: string } | null;

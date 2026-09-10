@@ -26,6 +26,52 @@ export function scaleEarning(price: number, ratio: number): number {
   return Math.round(price * ratio * 100) / 100;
 }
 
+const round2 = (n: number): number => Math.round(n * 100) / 100;
+
+export type PaymentModeKey = "fixed" | "hourly" | "per_unit" | "metric_prorata";
+
+export interface GrossInput {
+  paymentMode: PaymentModeKey;
+  /** Montant forfaitaire / base du prorata. */
+  price: number;
+  metricTarget?: number | null;
+  reportedMetricValue?: number | null;
+  hourlyRate?: number | null;
+  hourlyCapMinutes?: number | null;
+  /** Minutes travaillées confirmées à la complétion (mode hourly). */
+  workedMinutes?: number | null;
+  unitPrice?: number | null;
+  reportedUnits?: number | null;
+}
+
+/**
+ * Montant BRUT dû au travailleur pour une tâche complétée, selon son mode de
+ * paiement. `fixed` et `metric_prorata` = comportement historique inchangé.
+ */
+export function computeGrossAmount(i: GrossInput): number {
+  switch (i.paymentMode) {
+    case "hourly": {
+      if (i.hourlyRate == null || !(i.hourlyRate > 0)) return round2(i.price); // sécurité : jamais 0
+      let mins = i.workedMinutes ?? 0;
+      if (!(mins > 0)) return 0;
+      if (i.hourlyCapMinutes != null && i.hourlyCapMinutes > 0) {
+        mins = Math.min(mins, i.hourlyCapMinutes);
+      }
+      return round2((i.hourlyRate * mins) / 60);
+    }
+    case "per_unit": {
+      const up = i.unitPrice ?? 0;
+      const n = i.reportedUnits ?? 0;
+      return up > 0 && n > 0 ? round2(up * n) : 0;
+    }
+    case "metric_prorata":
+      return scaleEarning(i.price, metricPayoutRatio(i.metricTarget, i.reportedMetricValue));
+    case "fixed":
+    default:
+      return round2(i.price);
+  }
+}
+
 function num(d: { toNumber: () => number } | number | null | undefined): number | null {
   if (d == null) return null;
   return typeof d === "number" ? d : d.toNumber();
@@ -215,8 +261,17 @@ export async function createEarningForCompletedTask(taskId: string) {
     return existing;
   }
 
-  const ratio = metricPayoutRatio(num(task.metricTarget), num(task.reportedMetricValue));
-  const grossAmount = scaleEarning(Number(task.price), ratio);
+  const grossAmount = computeGrossAmount({
+    paymentMode: task.paymentMode as PaymentModeKey,
+    price: Number(task.price),
+    metricTarget: num(task.metricTarget),
+    reportedMetricValue: num(task.reportedMetricValue),
+    hourlyRate: num(task.hourlyRate),
+    hourlyCapMinutes: task.hourlyCapMinutes,
+    workedMinutes: task.workedMinutes,
+    unitPrice: num(task.unitPrice),
+    reportedUnits: num(task.reportedUnits),
+  });
 
   return prisma.workerEarning.create({
     data: {
@@ -237,12 +292,33 @@ export async function createEarningForCompletedTask(taskId: string) {
 export async function reevaluateEarningForMetric(taskId: string, reportedValue: number | null) {
   const [earning, task] = await Promise.all([
     prisma.workerEarning.findUnique({ where: { taskId } }),
-    prisma.task.findUnique({ where: { id: taskId }, select: { price: true, metricTarget: true } }),
+    prisma.task.findUnique({
+      where: { id: taskId },
+      select: {
+        price: true,
+        paymentMode: true,
+        metricTarget: true,
+        hourlyRate: true,
+        hourlyCapMinutes: true,
+        workedMinutes: true,
+        unitPrice: true,
+        reportedUnits: true,
+      },
+    }),
   ]);
   if (!earning || earning.status === "withdrawn" || !task) return;
 
-  const ratio = metricPayoutRatio(num(task.metricTarget), reportedValue);
-  const grossAmount = scaleEarning(Number(task.price), ratio);
+  const grossAmount = computeGrossAmount({
+    paymentMode: task.paymentMode as PaymentModeKey,
+    price: Number(task.price),
+    metricTarget: num(task.metricTarget),
+    reportedMetricValue: reportedValue,
+    hourlyRate: num(task.hourlyRate),
+    hourlyCapMinutes: task.hourlyCapMinutes,
+    workedMinutes: task.workedMinutes,
+    unitPrice: num(task.unitPrice),
+    reportedUnits: num(task.reportedUnits),
+  });
   await prisma.workerEarning.update({ where: { id: earning.id }, data: { grossAmount } });
 }
 

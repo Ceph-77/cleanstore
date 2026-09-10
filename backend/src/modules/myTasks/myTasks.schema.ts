@@ -8,6 +8,8 @@ export const myTaskStatusUpdateSchema = z.object({
   accuracy: z.number().nonnegative().optional(),
   // Required on completion when the task carries a performance target.
   reportedMetricValue: z.coerce.number().nonnegative().optional(),
+  // Required on completion when the task is paid per unit.
+  reportedUnits: z.coerce.number().nonnegative().optional(),
 });
 
 export const myTaskStepToggleSchema = z.object({

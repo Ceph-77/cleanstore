@@ -10,7 +10,7 @@ import {
   useUpdateTaskTemplate,
   useDeactivateTaskTemplate,
 } from "../../hooks/useTaskTemplates";
-import type { TaskTemplate } from "../../types";
+import type { PaymentMode, TaskTemplate } from "../../types";
 import type { TemplateInput } from "../../api/taskTemplates";
 
 type FormState = {
@@ -28,6 +28,11 @@ type FormState = {
   metricLabel: string;
   metricUnit: string;
   defaultMetricTarget: string;
+  paymentMode: PaymentMode;
+  hourlyRate: string;
+  hourlyCapMinutes: string;
+  unitPrice: string;
+  unitLabel: string;
   steps: string[];
 };
 
@@ -46,7 +51,19 @@ const EMPTY: FormState = {
   metricLabel: "",
   metricUnit: "",
   defaultMetricTarget: "",
+  paymentMode: "fixed",
+  hourlyRate: "",
+  hourlyCapMinutes: "",
+  unitPrice: "",
+  unitLabel: "",
   steps: [],
+};
+
+const PAYMENT_MODE_LABELS: Record<PaymentMode, string> = {
+  fixed: "Prix fixe (forfait)",
+  hourly: "À l'heure (taux × temps réel)",
+  per_unit: "À l'unité (prix unitaire × nombre réalisé)",
+  metric_prorata: "Au prorata d'une métrique (prix × réalisé ÷ cible)",
 };
 
 function toForm(t: TaskTemplate): FormState {
@@ -65,6 +82,11 @@ function toForm(t: TaskTemplate): FormState {
     metricLabel: t.metricLabel ?? "",
     metricUnit: t.metricUnit ?? "",
     defaultMetricTarget: t.defaultMetricTarget ?? "",
+    paymentMode: t.paymentMode ?? "fixed",
+    hourlyRate: t.hourlyRate ?? "",
+    hourlyCapMinutes: t.hourlyCapMinutes?.toString() ?? "",
+    unitPrice: t.unitPrice ?? "",
+    unitLabel: t.unitLabel ?? "",
     steps: t.steps.map((s) => s.text),
   };
 }
@@ -86,9 +108,14 @@ function toPayload(f: FormState): TemplateInput {
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean),
-    metricLabel: f.metricLabel.trim() || null,
-    metricUnit: f.metricUnit.trim() || null,
-    defaultMetricTarget: num(f.defaultMetricTarget),
+    metricLabel: f.paymentMode === "metric_prorata" ? f.metricLabel.trim() || null : null,
+    metricUnit: f.paymentMode === "metric_prorata" ? f.metricUnit.trim() || null : null,
+    defaultMetricTarget: f.paymentMode === "metric_prorata" ? num(f.defaultMetricTarget) : null,
+    paymentMode: f.paymentMode,
+    hourlyRate: f.paymentMode === "hourly" ? num(f.hourlyRate) : null,
+    hourlyCapMinutes: f.paymentMode === "hourly" ? num(f.hourlyCapMinutes) : null,
+    unitPrice: f.paymentMode === "per_unit" ? num(f.unitPrice) : null,
+    unitLabel: f.paymentMode === "per_unit" ? f.unitLabel.trim() || null : null,
     steps: f.steps.map((s) => s.trim()).filter(Boolean),
   };
 }
@@ -197,34 +224,107 @@ function TemplateForm({
 
       <fieldset className="rounded-xl border border-canvas-200 bg-white p-3">
         <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-canvas-600">
-          Métrique de rendement (optionnel)
+          Mode de paiement
         </legend>
-        <p className="mb-2 text-xs text-canvas-600">
-          Si renseignée, le travailleur doit saisir sa valeur en complétant, et le paiement est au
-          prorata : prix × min(1, réalisé ÷ cible).
-        </p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <Field label="Libellé">
-            <Input
-              placeholder="Distance polie"
-              value={f.metricLabel}
-              onChange={(e) => set("metricLabel", e.target.value)}
-            />
-          </Field>
-          <Field label="Unité">
-            <Input placeholder="km" value={f.metricUnit} onChange={(e) => set("metricUnit", e.target.value)} />
-          </Field>
-          <Field label="Cible par défaut">
-            <Input
-              type="number"
-              min={0}
-              step="0.1"
-              placeholder="1.6"
-              value={f.defaultMetricTarget}
-              onChange={(e) => set("defaultMetricTarget", e.target.value)}
-            />
-          </Field>
-        </div>
+        <Field label="Comment cette tâche est payée">
+          <select
+            className={inputCls}
+            value={f.paymentMode}
+            onChange={(e) => set("paymentMode", e.target.value as PaymentMode)}
+          >
+            {(Object.keys(PAYMENT_MODE_LABELS) as PaymentMode[]).map((m) => (
+              <option key={m} value={m}>
+                {PAYMENT_MODE_LABELS[m]}
+              </option>
+            ))}
+          </select>
+        </Field>
+
+        {f.paymentMode === "fixed" && (
+          <p className="mt-2 text-xs text-canvas-600">
+            Le montant payé est le « Prix indicatif » ci-dessus.
+          </p>
+        )}
+
+        {f.paymentMode === "hourly" && (
+          <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label="Taux horaire ($/h)">
+              <Input
+                type="number"
+                min={0}
+                step="0.01"
+                value={f.hourlyRate}
+                onChange={(e) => set("hourlyRate", e.target.value)}
+              />
+            </Field>
+            <Field label="Plafond d'heures (minutes) — optionnel">
+              <Input
+                type="number"
+                min={0}
+                step="1"
+                placeholder="ex. 120"
+                value={f.hourlyCapMinutes}
+                onChange={(e) => set("hourlyCapMinutes", e.target.value)}
+              />
+            </Field>
+          </div>
+        )}
+
+        {f.paymentMode === "per_unit" && (
+          <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label="Prix unitaire ($)">
+              <Input
+                type="number"
+                min={0}
+                step="0.01"
+                value={f.unitPrice}
+                onChange={(e) => set("unitPrice", e.target.value)}
+              />
+            </Field>
+            <Field label="Libellé de l'unité">
+              <Input
+                placeholder="ex. vitres, m²"
+                value={f.unitLabel}
+                onChange={(e) => set("unitLabel", e.target.value)}
+              />
+            </Field>
+          </div>
+        )}
+
+        {f.paymentMode === "metric_prorata" && (
+          <>
+            <p className="mb-2 mt-2 text-xs text-canvas-600">
+              Le travailleur saisit sa valeur en complétant ; le paiement est prix × min(1, réalisé ÷
+              cible).
+            </p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <Field label="Libellé">
+                <Input
+                  placeholder="Distance polie"
+                  value={f.metricLabel}
+                  onChange={(e) => set("metricLabel", e.target.value)}
+                />
+              </Field>
+              <Field label="Unité">
+                <Input
+                  placeholder="km"
+                  value={f.metricUnit}
+                  onChange={(e) => set("metricUnit", e.target.value)}
+                />
+              </Field>
+              <Field label="Cible par défaut">
+                <Input
+                  type="number"
+                  min={0}
+                  step="0.1"
+                  placeholder="1.6"
+                  value={f.defaultMetricTarget}
+                  onChange={(e) => set("defaultMetricTarget", e.target.value)}
+                />
+              </Field>
+            </div>
+          </>
+        )}
       </fieldset>
 
       <div>

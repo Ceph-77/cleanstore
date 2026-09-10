@@ -14,6 +14,11 @@ export const templateCreateSchema = z.object({
   metricLabel: z.string().max(80).nullable().optional(),
   metricUnit: z.string().max(24).nullable().optional(),
   defaultMetricTarget: z.coerce.number().positive().nullable().optional(),
+  paymentMode: z.enum(["fixed", "hourly", "per_unit", "metric_prorata"]).optional(),
+  hourlyRate: z.coerce.number().positive().nullable().optional(),
+  hourlyCapMinutes: z.coerce.number().int().positive().nullable().optional(),
+  unitPrice: z.coerce.number().positive().nullable().optional(),
+  unitLabel: z.string().max(40).nullable().optional(),
   isActive: z.boolean().optional(),
   steps: z.array(z.string().min(1)).optional(),
 });

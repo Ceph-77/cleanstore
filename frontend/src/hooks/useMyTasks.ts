@@ -20,13 +20,23 @@ export function useUpdateMyTaskStatus() {
       note,
       position,
       reportedMetricValue,
+      reportedUnits,
     }: {
       taskId: string;
       status: Extract<TaskStatus, "in_progress" | "completed">;
       note?: string;
       position?: myTasksApi.WorkerPosition;
       reportedMetricValue?: number;
-    }) => myTasksApi.updateMyTaskStatus(taskId, status, note, position, reportedMetricValue),
+      reportedUnits?: number;
+    }) =>
+      myTasksApi.updateMyTaskStatus(
+        taskId,
+        status,
+        note,
+        position,
+        reportedMetricValue,
+        reportedUnits,
+      ),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["marketplace", "my-tasks"] }),
   });
 }

@@ -16,7 +16,8 @@ export function updateMyTaskStatus(
   status: Extract<TaskStatus, "in_progress" | "completed">,
   note?: string,
   position?: WorkerPosition,
-  reportedMetricValue?: number
+  reportedMetricValue?: number,
+  reportedUnits?: number
 ) {
   return apiClient.patch<{ task: Task }>(`/marketplace/my-tasks/${taskId}/status`, {
     status,
@@ -25,6 +26,7 @@ export function updateMyTaskStatus(
     lng: position?.lng,
     accuracy: position?.accuracy,
     reportedMetricValue,
+    reportedUnits,
   });
 }
 

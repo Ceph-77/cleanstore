@@ -106,7 +106,8 @@ export async function updateMyTaskStatus(
   nextStatus: "in_progress" | "completed",
   note: string | undefined,
   position?: WorkerPosition,
-  reportedMetricValue?: number
+  reportedMetricValue?: number,
+  reportedUnits?: number
 ) {
   const task = await prisma.task.findUnique({
     where: { id: taskId },
@@ -129,13 +130,28 @@ export async function updateMyTaskStatus(
     throw new Error(`Cannot move a task from "${task.status}" to "${nextStatus}"`);
   }
 
-  // A task with a performance target can't be completed without reporting a value.
-  const hasTarget = nextStatus === "completed" && task.metricTarget != null;
+  const completing = nextStatus === "completed";
+
+  // Une tâche à cible de performance ne peut pas être complétée sans valeur.
+  const hasTarget = completing && task.metricTarget != null;
   if (hasTarget && (reportedMetricValue == null || !Number.isFinite(reportedMetricValue))) {
     const unit = task.metricUnit ? ` (${task.metricUnit})` : "";
     throw new Error(
       `Saisis « ${task.metricLabel ?? "la valeur réalisée"} »${unit} avant de marquer cette tâche complétée.`
     );
+  }
+
+  // Paiement à l'unité : le nombre réalisé est obligatoire à la complétion.
+  const needsUnits = completing && task.paymentMode === "per_unit";
+  if (needsUnits && (reportedUnits == null || !Number.isFinite(reportedUnits) || reportedUnits < 0)) {
+    const label = task.unitLabel ?? "le nombre réalisé";
+    throw new Error(`Saisis « ${label} » avant de marquer cette tâche complétée.`);
+  }
+
+  // Paiement à l'heure : on fige les minutes travaillées (Démarrer -> Complétée).
+  let workedMinutes: number | undefined;
+  if (completing && task.paymentMode === "hourly" && task.startedAt) {
+    workedMinutes = Math.max(0, Math.round((Date.now() - task.startedAt.getTime()) / 60000));
   }
 
   const startGeoNote =
@@ -148,6 +164,8 @@ export async function updateMyTaskStatus(
       ...(nextStatus === "in_progress" ? { startedAt: new Date(), startGeoNote } : {}),
       ...(note !== undefined ? { workerNote: note } : {}),
       ...(hasTarget ? { reportedMetricValue, metricValueSource: "worker" } : {}),
+      ...(needsUnits ? { reportedUnits } : {}),
+      ...(workedMinutes !== undefined ? { workedMinutes } : {}),
     },
   });
 

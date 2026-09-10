@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import type { Task, TaskTemplate } from "../types";
+import type { PaymentMode, Task, TaskTemplate } from "../types";
 
 export interface TemplateInput {
   name: string;
@@ -15,6 +15,11 @@ export interface TemplateInput {
   metricLabel?: string | null;
   metricUnit?: string | null;
   defaultMetricTarget?: number | null;
+  paymentMode?: PaymentMode;
+  hourlyRate?: number | null;
+  hourlyCapMinutes?: number | null;
+  unitPrice?: number | null;
+  unitLabel?: string | null;
   isActive?: boolean;
   steps?: string[];
 }

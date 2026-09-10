@@ -105,6 +105,7 @@ function TaskRow({ task }: { task: Task }) {
   const [showNoteField, setShowNoteField] = useState(false);
   const [note, setNote] = useState("");
   const [metricValue, setMetricValue] = useState("");
+  const [unitValue, setUnitValue] = useState("");
   const [completeError, setCompleteError] = useState<string | null>(null);
   const [showInspection, setShowInspection] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
@@ -113,11 +114,16 @@ function TaskRow({ task }: { task: Task }) {
   const [startNote, setStartNote] = useState<string | null>(null);
 
   const needsMetric = task.metricTarget != null;
+  const needsUnits = task.paymentMode === "per_unit";
 
   async function handleComplete() {
     setCompleteError(null);
     if (needsMetric && metricValue.trim() === "") {
       setCompleteError(`Saisis « ${task.metricLabel ?? "la valeur réalisée"} » avant de confirmer.`);
+      return;
+    }
+    if (needsUnits && unitValue.trim() === "") {
+      setCompleteError(`Saisis « ${task.unitLabel ?? "le nombre réalisé"} » avant de confirmer.`);
       return;
     }
     try {
@@ -126,10 +132,12 @@ function TaskRow({ task }: { task: Task }) {
         status: "completed",
         note: note || undefined,
         reportedMetricValue: needsMetric ? Number(metricValue) : undefined,
+        reportedUnits: needsUnits ? Number(unitValue) : undefined,
       });
       setShowNoteField(false);
       setNote("");
       setMetricValue("");
+      setUnitValue("");
     } catch (err) {
       setCompleteError(err instanceof Error ? err.message : "Impossible de marquer complétée.");
     }
@@ -262,6 +270,24 @@ function TaskRow({ task }: { task: Task }) {
               />
               <p className="mt-1 text-[11px] text-canvas-600">
                 Le paiement est au prorata : sous la cible, tu es payé proportionnellement.
+              </p>
+            </div>
+          )}
+          {needsUnits && (
+            <div>
+              <label className="text-xs font-medium text-canvas-800">
+                {task.unitLabel ?? "Nombre réalisé"} — obligatoire
+              </label>
+              <input
+                type="number"
+                min={0}
+                step="1"
+                value={unitValue}
+                onChange={(e) => setUnitValue(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
+              />
+              <p className="mt-1 text-[11px] text-canvas-600">
+                Payé à l'unité{task.unitPrice ? ` : ${Number(task.unitPrice)} $ par unité` : ""}.
               </p>
             </div>
           )}
