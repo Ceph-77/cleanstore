@@ -79,11 +79,29 @@ export function TasksDashboardPage() {
                     <td className="py-3 pr-3 text-canvas-700">
                       {task.assignedTo?.fullName ?? task.assignedTo?.email ?? "—"}
                     </td>
-                    <td className="py-3 pr-3 font-medium text-canvas-900">{Number(task.price).toFixed(2)} $</td>
+                    <td className="py-3 pr-3 font-medium text-canvas-900">
+                      {Number(task.price).toFixed(2)} $
+                      {task.latePremiumApplied && (
+                        <span className="ml-1.5 rounded-full bg-linen-100 px-1.5 py-0.5 text-[10px] font-semibold text-linen-800">
+                          +25 % urgence
+                        </span>
+                      )}
+                    </td>
                     <td className="py-3 pr-3 text-canvas-700">{task.dueDate ? task.dueDate.slice(0, 10) : "—"}</td>
                     <td className="py-3">
                       <div className="flex flex-wrap items-center gap-1.5">
                         <TaskStatusBadge status={task.status} />
+                        {task.isPublished &&
+                          task.status === "open" &&
+                          task.visibleFrom &&
+                          new Date(task.visibleFrom) > new Date() && (
+                            <span className="rounded-full bg-canvas-100 px-2 py-0.5 text-[11px] font-medium text-canvas-700">
+                              visible dès {new Date(task.visibleFrom).toLocaleTimeString("fr-CA", {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </span>
+                          )}
                         {task.status === "in_progress" && task.startedAt && (
                           <TaskCountdown
                             startedAt={task.startedAt}

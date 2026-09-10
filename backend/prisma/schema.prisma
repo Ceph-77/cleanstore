@@ -238,6 +238,8 @@ model Task {
   price                    Decimal
   isNegotiable             Boolean    @default(false) @map("is_negotiable")
   isPublished              Boolean    @default(false) @map("is_published")
+  visibleFrom              DateTime?  @map("visible_from")
+  latePremiumApplied       Boolean    @default(false) @map("late_premium_applied")
   dueDate                  DateTime?  @map("due_date") @db.Date
   status                   TaskStatus @default(open)
   assignedToId             String?    @map("assigned_to")
@@ -250,6 +252,7 @@ model Task {
   startGeoNote             String?    @map("start_geo_note")
   isRecurring              Boolean    @default(false) @map("is_recurring")
   lastRecurredOn           DateTime?  @map("last_recurred_on") @db.Date
+  recurringParentId        String?    @map("recurring_parent_id")
   templateId               String?    @map("template_id")
   // Per-store performance target copied from the template, editable. When set,
   // the worker must report a value on completion and the earning is scaled
@@ -279,6 +282,8 @@ model Task {
   assignedTo     User?               @relation("TaskAssignedTo", fields: [assignedToId], references: [id])
   createdBy      User?               @relation("TaskCreatedBy", fields: [createdById], references: [id])
   template       TaskTemplate?       @relation(fields: [templateId], references: [id])
+  recurringParent    Task?  @relation("TaskRecurrence", fields: [recurringParentId], references: [id], onDelete: SetNull)
+  recurringInstances Task[] @relation("TaskRecurrence")
   claims         TaskClaim[]
   inspection     TaskInspection?
   expectedPhotos TaskExpectedPhoto[]
@@ -293,6 +298,7 @@ model Task {
   @@index([status, isPublished])
   // Worker's own task list, plus inspection/leaderboard joins, filter on assignedTo.
   @@index([assignedToId])
+  @@index([recurringParentId])
   @@map("tasks")
 }
 

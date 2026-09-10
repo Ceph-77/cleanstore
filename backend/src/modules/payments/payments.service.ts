@@ -42,13 +42,14 @@ export interface GrossInput {
   workedMinutes?: number | null;
   unitPrice?: number | null;
   reportedUnits?: number | null;
+  /** Tâche publiée en urgence après 15 h : +25 % sur le brut. */
+  latePremiumApplied?: boolean | null;
 }
 
-/**
- * Montant BRUT dû au travailleur pour une tâche complétée, selon son mode de
- * paiement. `fixed` et `metric_prorata` = comportement historique inchangé.
- */
-export function computeGrossAmount(i: GrossInput): number {
+/** +25 % pour une tâche d'urgence (publiée après 15 h). */
+export const LATE_PREMIUM_RATE = 0.25;
+
+function baseGross(i: GrossInput): number {
   switch (i.paymentMode) {
     case "hourly": {
       if (i.hourlyRate == null || !(i.hourlyRate > 0)) return round2(i.price); // sécurité : jamais 0
@@ -70,6 +71,16 @@ export function computeGrossAmount(i: GrossInput): number {
     default:
       return round2(i.price);
   }
+}
+
+/**
+ * Montant BRUT dû au travailleur pour une tâche complétée, selon son mode de
+ * paiement, + prime d'urgence éventuelle. `fixed` et `metric_prorata` sans
+ * urgence = comportement historique inchangé.
+ */
+export function computeGrossAmount(i: GrossInput): number {
+  const base = baseGross(i);
+  return i.latePremiumApplied ? round2(base * (1 + LATE_PREMIUM_RATE)) : base;
 }
 
 function num(d: { toNumber: () => number } | number | null | undefined): number | null {
@@ -271,6 +282,7 @@ export async function createEarningForCompletedTask(taskId: string) {
     workedMinutes: task.workedMinutes,
     unitPrice: num(task.unitPrice),
     reportedUnits: num(task.reportedUnits),
+    latePremiumApplied: task.latePremiumApplied,
   });
 
   return prisma.workerEarning.create({
@@ -303,6 +315,7 @@ export async function reevaluateEarningForMetric(taskId: string, reportedValue: 
         workedMinutes: true,
         unitPrice: true,
         reportedUnits: true,
+        latePremiumApplied: true,
       },
     }),
   ]);
@@ -318,6 +331,7 @@ export async function reevaluateEarningForMetric(taskId: string, reportedValue: 
     workedMinutes: task.workedMinutes,
     unitPrice: num(task.unitPrice),
     reportedUnits: num(task.reportedUnits),
+    latePremiumApplied: task.latePremiumApplied,
   });
   await prisma.workerEarning.update({ where: { id: earning.id }, data: { grossAmount } });
 }

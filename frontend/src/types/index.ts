@@ -200,6 +200,8 @@ export interface Task {
   price: string;
   isNegotiable: boolean;
   isPublished: boolean;
+  visibleFrom: string | null;
+  latePremiumApplied: boolean;
   dueDate: string | null;
   status: TaskStatus;
   assignedToId: string | null;

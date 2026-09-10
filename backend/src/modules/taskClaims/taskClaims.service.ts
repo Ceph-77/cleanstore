@@ -14,6 +14,9 @@ export async function listMarketplaceTasks(page: PageParams) {
     where: {
       status: "open",
       isPublished: true,
+      // Fenêtre de 15 h : une tâche n'apparaît qu'à partir de son heure de visibilité
+      // (NULL = pas de fenêtre, tâche héritée d'avant la mise en place -> visible).
+      OR: [{ visibleFrom: null }, { visibleFrom: { lte: new Date() } }],
       store: { assignedSubcontractorId: { not: null }, isActive: true },
     },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],

@@ -88,6 +88,15 @@ export function startOfLocalDay(dayKey: string, tz: string = DEFAULT_TZ): Date {
   return zonedStartOfDay(y, m, d, tz);
 }
 
+/**
+ * Aujourd'hui à `hour`:00 locale dans `tz`, en Date UTC.
+ * (Approx ±1 h les ~2 jours/an de bascule DST — sans impact pour la fenêtre 15 h.)
+ */
+export function todayAtHour(hour: number, now: Date = new Date(), tz: string = DEFAULT_TZ): Date {
+  const midnight = startOfCurrentDay(now, tz);
+  return new Date(midnight.getTime() + hour * 3_600_000);
+}
+
 /** Local calendar day (YYYY-MM-DD in `tz`) for a given instant. */
 export function localDayKey(date: Date, tz: string = DEFAULT_TZ): string {
   const parts = new Intl.DateTimeFormat("en-CA", {

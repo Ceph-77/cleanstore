@@ -79,4 +79,18 @@ describe("computeGrossAmount", () => {
     expect(computeGrossAmount({ paymentMode: "per_unit", price: 0, unitPrice: 2.5, reportedUnits: 12 })).toBe(30);
     expect(computeGrossAmount({ paymentMode: "per_unit", price: 0, unitPrice: 2.5, reportedUnits: null })).toBe(0);
   });
+
+  it("urgence : +25 % sur le brut, quel que soit le mode", () => {
+    expect(computeGrossAmount({ paymentMode: "fixed", price: 52, latePremiumApplied: true })).toBe(65);
+    expect(
+      computeGrossAmount({
+        paymentMode: "metric_prorata",
+        price: 40,
+        metricTarget: 2,
+        reportedMetricValue: 1,
+        latePremiumApplied: true,
+      }),
+    ).toBe(25); // 40×0.5 = 20 → ×1.25
+    expect(computeGrossAmount({ paymentMode: "fixed", price: 52, latePremiumApplied: false })).toBe(52);
+  });
 });

@@ -19,8 +19,8 @@ function checkSecret(req: Request, res: Response): boolean {
 
 export async function triggerRecurrence(req: Request, res: Response) {
   if (!checkSecret(req, res)) return;
-  const created = await tasksService.runDueRecurrences();
-  res.json({ created });
+  const result = await tasksService.runDueRecurrences();
+  res.json(result);
 }
 
 export async function triggerPayoutSweep(req: Request, res: Response) {
