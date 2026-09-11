@@ -119,6 +119,7 @@ function AdminNav({
         badge={pendingClaims}
       />
       <NavItem to="/admin/users" icon={<IconUser />} label="Utilisateurs & équipes" onNavigate={onNavigate} />
+      <NavItem to="/admin/ledger" icon={<IconWallet />} label="Grand livre" onNavigate={onNavigate} />
       <NavItem to="/admin/feedback" icon={<IconFeedback />} label="Feedback" onNavigate={onNavigate} />
       <NavItem to="/leaderboard" icon={<IconTrophy />} label="Classement" onNavigate={onNavigate} />
       <NavItem to="/admin/journal" icon={<IconNote />} label="Journal d'audit" onNavigate={onNavigate} />
@@ -143,6 +144,9 @@ function ConsoleNav({ sections, onNavigate }: { sections: string[]; onNavigate?:
       </p>
       {sections.includes("audit") && (
         <NavItem to="/admin/journal" icon={<IconNote />} label="Journal d'audit" onNavigate={onNavigate} />
+      )}
+      {sections.includes("finance") && (
+        <NavItem to="/admin/ledger" icon={<IconWallet />} label="Grand livre" onNavigate={onNavigate} />
       )}
     </>
   );

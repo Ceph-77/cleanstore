@@ -74,6 +74,21 @@ enum WithdrawalStatus {
   failed
 }
 
+/// Type d'écriture du grand livre (append-only, jamais modifié ni supprimé).
+enum LedgerEntryType {
+  gain_cree
+  gain_dispo
+  commission
+  penalite
+  prime
+  transfert_clan
+  retrait
+  retrait_echoue
+  abonnement
+  charge_sous_traitant
+  ajustement_inspecteur
+}
+
 /// Comment une tâche est payée. `fixed` = comportement historique (montant = price).
 /// `metric_prorata` = price × min(1, réalisé/cible). `hourly` = taux × temps réel.
 /// `per_unit` = prix unitaire × nombre réalisé.
@@ -300,6 +315,7 @@ model Task {
   recurringParent    Task?  @relation("TaskRecurrence", fields: [recurringParentId], references: [id], onDelete: SetNull)
   recurringInstances Task[] @relation("TaskRecurrence")
   reservedByClan     Clan?  @relation("ClanReservedTasks", fields: [reservedByClanId], references: [id], onDelete: SetNull)
+  ledgerEntries      LedgerEntry[]
   claims         TaskClaim[]
   inspection     TaskInspection?
   expectedPhotos TaskExpectedPhoto[]
@@ -791,4 +807,30 @@ model ClanInvite {
   @@index([email])
   @@index([clanId])
   @@map("clan_invites")
+}
+
+/// Grand livre — append-only, jamais modifié ni supprimé (contrainte dure du
+/// Lot 5 : l'argent et les dates ne se perdent jamais). partyA/partyB référencent
+/// librement un User ou une Organization (partyXType le précise) : pas de FK,
+/// pour ne jamais bloquer une écriture d'audit sur une contrainte référentielle.
+model LedgerEntry {
+  id         String          @id @default(uuid())
+  type       LedgerEntryType
+  amount     Decimal
+  currency   String          @default("CAD")
+  partyAId   String?         @map("party_a_id")
+  partyAType String?         @map("party_a_type") // "user" | "organization"
+  partyBId   String?         @map("party_b_id")
+  partyBType String?         @map("party_b_type")
+  taskId     String?         @map("task_id")
+  reason     String?
+  status     String          @default("posted")
+  createdAt  DateTime        @default(now()) @map("created_at")
+
+  task Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([type, createdAt])
+  @@index([partyAId, createdAt])
+  @@index([taskId])
+  @@map("ledger_entries")
 }

@@ -2,6 +2,7 @@ import { prisma } from "../../db/prisma";
 import { getStripeClient } from "../../utils/stripe";
 import { env } from "../../config/env";
 import { recordServerEvent } from "../analytics/analytics.service";
+import { recordLedgerEntry } from "../ledger/ledger.service";
 
 const EARNING_HOLD_MS = 24 * 60 * 60 * 1000;
 const PASSING_SCORE = 50;
@@ -246,12 +247,34 @@ export async function requestWithdrawal(userId: string) {
         currency: "cad",
         destination: user.stripeAccountId!,
       });
-      return tx.withdrawal.update({
+      const paid = await tx.withdrawal.update({
         where: { id: withdrawal.id },
         data: { status: "paid", stripeTransferId: transfer.id },
       });
+      recordLedgerEntry({
+        type: "commission",
+        amount: commissionAmount,
+        partyAId: userId,
+        partyAType: "user",
+        reason: `${commissionRatePercent}% au retrait`,
+      });
+      recordLedgerEntry({
+        type: "retrait",
+        amount: netAmount,
+        partyAId: userId,
+        partyAType: "user",
+        reason: `Stripe ${transfer.id}`,
+      });
+      return paid;
     } catch (err) {
       await tx.withdrawal.update({ where: { id: withdrawal.id }, data: { status: "failed" } });
+      recordLedgerEntry({
+        type: "retrait_echoue",
+        amount: netAmount,
+        partyAId: userId,
+        partyAType: "user",
+        reason: (err as Error).message,
+      });
       throw err;
     }
   });
@@ -285,7 +308,7 @@ export async function createEarningForCompletedTask(taskId: string) {
     latePremiumApplied: task.latePremiumApplied,
   });
 
-  return prisma.workerEarning.create({
+  const earning = await prisma.workerEarning.create({
     data: {
       taskId,
       workerId: task.assignedToId,
@@ -295,6 +318,17 @@ export async function createEarningForCompletedTask(taskId: string) {
       availableAt: new Date(Date.now() + EARNING_HOLD_MS),
     },
   });
+
+  recordLedgerEntry({
+    type: "gain_cree",
+    amount: grossAmount,
+    partyAId: task.assignedToId,
+    partyAType: "user",
+    taskId,
+    reason: "Tâche complétée",
+  });
+
+  return earning;
 }
 
 /**
@@ -341,10 +375,21 @@ export async function resolveEarningOnInspection(taskId: string, score: number) 
   if (!earning || earning.status !== "pending") {
     return;
   }
+  const passed = score >= PASSING_SCORE;
   await prisma.workerEarning.update({
     where: { id: earning.id },
-    data: { status: score >= PASSING_SCORE ? "available" : "disputed" },
+    data: { status: passed ? "available" : "disputed" },
   });
+  if (passed) {
+    recordLedgerEntry({
+      type: "gain_dispo",
+      amount: Number(earning.grossAmount),
+      partyAId: earning.workerId,
+      partyAType: "user",
+      taskId,
+      reason: `Libéré par inspection — score ${score}`,
+    });
+  }
 }
 
 /** Re-evaluate an earning when an inspection score is edited (unless already paid out). */
@@ -394,6 +439,24 @@ export async function runDuePayouts() {
       role: "travailleur",
       props: { taskId: earning.taskId },
     }).catch(() => {});
+    recordLedgerEntry({
+      type: "gain_dispo",
+      amount: Number(earning.grossAmount),
+      partyAId: earning.workerId,
+      partyAType: "user",
+      taskId: earning.taskId,
+      reason: "Balayage 24 h",
+    });
+    if (chargeId) {
+      recordLedgerEntry({
+        type: "charge_sous_traitant",
+        amount: Number(earning.grossAmount),
+        partyAId: earning.organizationId,
+        partyAType: "organization",
+        taskId: earning.taskId,
+        reason: `Stripe ${chargeId}`,
+      });
+    }
     processed += 1;
   }
 
