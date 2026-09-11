@@ -85,7 +85,47 @@ export async function listAllTasksForDashboard(page: PageParams, status?: TaskSt
   return toPage(rows, page.limit);
 }
 
-export function deleteTask(id: string) {
+/**
+ * Refuse la suppression d'une tâche qui porte un historique réel — la paie
+ * (`WorkerEarning`, de toute façon bloquée en base par ON DELETE RESTRICT,
+ * vérifié ici pour un message clair plutôt qu'une erreur SQL brute),
+ * l'inspection, les candidatures, une négociation de prix ou une conversation
+ * avec des messages. Ces 5 tables sont en CASCADE sur `task_id` (sauf
+ * WorkerEarning en RESTRICT) — sans ce garde-fou, `prisma.task.delete()` les
+ * effacerait silencieusement, ce qui casserait la règle « argent, dates et
+ * qui-a-fait-quoi ne se perdent jamais ». Les points/moments/incidents/écritures
+ * du grand livre liés à la tâche sont en SET NULL (conçus pour survivre à une
+ * tâche supprimée) et ne bloquent donc jamais ici — les flammes de série ne
+ * lisent que `PointEntry.createdAt`, jamais la tâche elle-même.
+ */
+export async function deleteTask(id: string) {
+  const [earnings, inspection, claims, negotiations, thread] = await Promise.all([
+    prisma.workerEarning.count({ where: { taskId: id } }),
+    prisma.taskInspection.findUnique({ where: { taskId: id }, select: { id: true } }),
+    prisma.taskClaim.count({ where: { taskId: id } }),
+    prisma.taskNegotiation.count({ where: { taskId: id } }),
+    prisma.messageThread.findUnique({
+      where: { taskId: id },
+      select: { _count: { select: { messages: true } } },
+    }),
+  ]);
+
+  if (earnings > 0) {
+    throw new Error("Cette tâche a un gain associé (paie) — impossible de la supprimer.");
+  }
+  if (inspection) {
+    throw new Error("Cette tâche a déjà été inspectée — impossible de la supprimer (historique d'inspection).");
+  }
+  if (claims > 0) {
+    throw new Error("Cette tâche a des candidatures associées — impossible de la supprimer.");
+  }
+  if (negotiations > 0) {
+    throw new Error("Cette tâche a un historique de négociation de prix — impossible de la supprimer.");
+  }
+  if (thread && thread._count.messages > 0) {
+    throw new Error("Cette tâche a une conversation associée — impossible de la supprimer.");
+  }
+
   return prisma.task.delete({ where: { id } });
 }
 

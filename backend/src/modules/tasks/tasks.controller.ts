@@ -57,8 +57,12 @@ export async function dashboard(req: Request, res: Response) {
 }
 
 export async function remove(req: Request, res: Response) {
-  await tasksService.deleteTask(req.params.id);
-  res.status(204).send();
+  try {
+    await tasksService.deleteTask(req.params.id);
+    res.status(204).send();
+  } catch (err) {
+    res.status(409).json({ error: (err as Error).message });
+  }
 }
 
 export async function listRecurrences(_req: Request, res: Response) {

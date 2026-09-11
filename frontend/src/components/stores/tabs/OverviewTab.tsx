@@ -21,6 +21,7 @@ import {
 } from "../../../hooks/useTaskInspections";
 import { StoreGeofenceCard } from "../StoreGeofenceCard";
 import { useTaskTemplates, useInstantiateTemplates } from "../../../hooks/useTaskTemplates";
+import { ApiError } from "../../../api/client";
 import type { Store, Task } from "../../../types";
 
 function InfoItem({ label, value }: { label: string; value: string }) {
@@ -53,6 +54,7 @@ export function OverviewTab({ store }: { store: Store }) {
   const [inspectingTask, setInspectingTask] = useState<Task | null>(null);
   const { data: existingInspection } = useTaskInspection(inspectingTask?.id ?? "");
   const [instructionsTaskId, setInstructionsTaskId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   async function handleTaskSubmit(values: TaskFormValues) {
     const payload = {
@@ -74,8 +76,12 @@ export function OverviewTab({ store }: { store: Store }) {
   }
 
   async function handleDelete(task: Task) {
-    if (confirm(`Supprimer la tâche "${task.description}" ?`)) {
+    if (!confirm(`Supprimer la tâche "${task.description}" ?`)) return;
+    setDeleteError(null);
+    try {
       await deleteTask.mutateAsync(task.id);
+    } catch (err) {
+      setDeleteError(err instanceof ApiError ? err.message : "Suppression impossible.");
     }
   }
 
@@ -253,6 +259,10 @@ export function OverviewTab({ store }: { store: Store }) {
         <div className="mt-4">
           <TaskInstructionsForm taskId={instructionsTaskId} onClose={() => setInstructionsTaskId(null)} />
         </div>
+      )}
+
+      {deleteError && (
+        <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 ring-1 ring-red-200">{deleteError}</p>
       )}
 
       <div className="mt-4 rounded-2xl border border-canvas-200 bg-white shadow-sm shadow-canvas-900/5">
