@@ -49,6 +49,7 @@ const LedgerPage = lazy(() => import("./routes/admin/LedgerPage").then(named("Le
 const InventoryAlertsPage = lazy(() =>
   import("./routes/admin/InventoryAlertsPage").then(named("InventoryAlertsPage")),
 );
+const NegotiationsPage = lazy(() => import("./routes/admin/NegotiationsPage").then(named("NegotiationsPage")));
 
 function RouteTracker() {
   const { pathname } = useLocation();
@@ -172,6 +173,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute roles={["admin"]}>
               <ClaimsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/negotiations"
+          element={
+            <ProtectedRoute roles={["admin", "inspecteur"]}>
+              <NegotiationsPage />
             </ProtectedRoute>
           }
         />

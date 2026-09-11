@@ -553,3 +553,29 @@ export interface InventoryAlertItems {
   lowStock: InventoryAlertItem[];
   expiringSoon: InventoryAlertItem[];
 }
+
+export type NegotiationStatus = "open" | "accepted" | "rejected" | "cancelled";
+
+export interface TaskNegotiationOffer {
+  id: string;
+  negotiationId: string;
+  authorRole: "worker" | "admin";
+  authorId: string | null;
+  amount: string;
+  note: string | null;
+  createdAt: string;
+}
+
+export interface TaskNegotiation {
+  id: string;
+  taskId: string;
+  workerId: string;
+  clanId: string | null;
+  status: NegotiationStatus;
+  createdAt: string;
+  updatedAt: string;
+  offers: TaskNegotiationOffer[];
+  task: { id: string; description: string; price: string; status: TaskStatus; storeId: string };
+  worker: { id: string; fullName: string | null; email: string };
+  clan: { id: string; name: string } | null;
+}

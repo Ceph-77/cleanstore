@@ -6,6 +6,7 @@ import { track } from "../../analytics";
 import { IconTasks, IconMapPin, IconSearch, IconFile } from "../../components/common/icons";
 import { useMarketplaceTasks, useMyTaskClaims, useClaimTask } from "../../hooks/useMarketplace";
 import { useMyClans } from "../../hooks/useClans";
+import { useMyNegotiations, useOpenNegotiation, useAddWorkerOffer } from "../../hooks/useNegotiations";
 import type { Task } from "../../types";
 
 type SortKey = "recent" | "price_desc" | "price_asc" | "store_asc" | "due_date";
@@ -57,6 +58,9 @@ export function TaskMarketplacePage() {
   const { data: myClaims } = useMyTaskClaims();
   const { data: myClans } = useMyClans();
   const claimTask = useClaimTask();
+  const { data: myNegotiations } = useMyNegotiations();
+  const openNegotiation = useOpenNegotiation();
+  const addWorkerOffer = useAddWorkerOffer();
 
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<SortKey>("recent");
@@ -65,6 +69,10 @@ export function TaskMarketplacePage() {
   const [note, setNote] = useState("");
   const [claimClanId, setClaimClanId] = useState("");
   const [claimError, setClaimError] = useState<string | null>(null);
+  const [negotiatingTaskId, setNegotiatingTaskId] = useState<string | null>(null);
+  const [negAmount, setNegAmount] = useState("");
+  const [negNote, setNegNote] = useState("");
+  const [negError, setNegError] = useState<string | null>(null);
 
   useEffect(() => {
     track("task_marketplace_viewed");
@@ -93,6 +101,44 @@ export function TaskMarketplacePage() {
 
   function claimStatusFor(taskId: string) {
     return myClaims?.find((c) => c.taskId === taskId)?.status;
+  }
+
+  function negotiationFor(taskId: string) {
+    const forTask = myNegotiations?.filter((n) => n.taskId === taskId) ?? [];
+    return forTask.find((n) => n.status === "open") ?? forTask[0];
+  }
+
+  async function handleOpenNegotiation(taskId: string) {
+    setNegError(null);
+    const amount = Number(negAmount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setNegError("Indique un montant valide.");
+      return;
+    }
+    try {
+      await openNegotiation.mutateAsync({ taskId, amount, note: negNote.trim() || undefined });
+      setNegotiatingTaskId(null);
+      setNegAmount("");
+      setNegNote("");
+    } catch (err) {
+      setNegError(err instanceof Error ? err.message : "Impossible d'ouvrir la négociation.");
+    }
+  }
+
+  async function handleWorkerCounter(negotiationId: string) {
+    setNegError(null);
+    const amount = Number(negAmount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setNegError("Indique un montant valide.");
+      return;
+    }
+    try {
+      await addWorkerOffer.mutateAsync({ id: negotiationId, amount, note: negNote.trim() || undefined });
+      setNegAmount("");
+      setNegNote("");
+    } catch (err) {
+      setNegError(err instanceof Error ? err.message : "Impossible d'envoyer la contre-offre.");
+    }
   }
 
   const filteredTasks = useMemo(() => {
@@ -175,6 +221,7 @@ export function TaskMarketplacePage() {
           {filteredTasks.map((task) => {
             const status = claimStatusFor(task.id);
             const claim = claimFor(task.id);
+            const negotiation = task.isNegotiable ? negotiationFor(task.id) : undefined;
             const hasPreview =
               Boolean(task.expectedResultText) ||
               (task.expectedPhotos?.length ?? 0) > 0 ||
@@ -244,6 +291,22 @@ export function TaskMarketplacePage() {
                         Je suis intéressé
                       </Button>
                     )}
+                    {!status &&
+                      task.isNegotiable &&
+                      negotiatingTaskId !== task.id &&
+                      (!negotiation || negotiation.status !== "open") && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNegError(null);
+                            setNegAmount(task.price);
+                            setNegotiatingTaskId(task.id);
+                          }}
+                          className="text-xs font-medium text-flow-700 hover:text-flow-900"
+                        >
+                          Négocier le prix
+                        </button>
+                      )}
                   </div>
                 </div>
                 {claimingTaskId === task.id && (
@@ -311,6 +374,104 @@ export function TaskMarketplacePage() {
                         {claimTask.isPending ? "Envoi..." : "Confirmer"}
                       </Button>
                     </div>
+                  </div>
+                )}
+                {negotiatingTaskId === task.id && !negotiation && (
+                  <div className="mt-2 space-y-2 rounded-xl bg-linen-100/60 p-3">
+                    <label className="text-xs font-medium text-canvas-800">Ton prix proposé ($)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={negAmount}
+                      onChange={(e) => setNegAmount(e.target.value)}
+                      className="w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
+                    />
+                    <textarea
+                      value={negNote}
+                      onChange={(e) => setNegNote(e.target.value)}
+                      rows={2}
+                      placeholder="Pourquoi ce prix (optionnel)"
+                      className="w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
+                    />
+                    {negError && (
+                      <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700 ring-1 ring-red-200">
+                        {negError}
+                      </p>
+                    )}
+                    <div className="flex justify-end gap-2">
+                      <Button variant="secondary" onClick={() => setNegotiatingTaskId(null)}>
+                        Annuler
+                      </Button>
+                      <Button
+                        variant="accent"
+                        disabled={openNegotiation.isPending}
+                        onClick={() => handleOpenNegotiation(task.id)}
+                      >
+                        {openNegotiation.isPending ? "Envoi..." : "Envoyer l'offre"}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+                {negotiation && (
+                  <div className="mt-2 space-y-2 rounded-xl bg-linen-100/60 p-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-canvas-600">
+                        Négociation
+                      </p>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                          negotiation.status === "open"
+                            ? "bg-flow-100 text-flow-700"
+                            : negotiation.status === "accepted"
+                              ? "bg-green-50 text-green-700"
+                              : "bg-red-50 text-red-700"
+                        }`}
+                      >
+                        {negotiation.status === "open"
+                          ? "En cours"
+                          : negotiation.status === "accepted"
+                            ? "Acceptée"
+                            : negotiation.status === "rejected"
+                              ? "Refusée"
+                              : "Annulée"}
+                      </span>
+                    </div>
+                    <ul className="space-y-1 text-xs text-canvas-700">
+                      {negotiation.offers.map((o) => (
+                        <li key={o.id}>
+                          <span className="font-medium text-canvas-900">
+                            {o.authorRole === "worker" ? "Toi" : "Admin"} — {Number(o.amount).toFixed(2)} $
+                          </span>
+                          {o.note && <span className="text-canvas-600"> · {o.note}</span>}
+                        </li>
+                      ))}
+                    </ul>
+                    {negotiation.status === "open" && (
+                      <div className="space-y-2 border-t border-canvas-200 pt-2">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={negAmount}
+                          onChange={(e) => setNegAmount(e.target.value)}
+                          placeholder="Ta contre-offre ($)"
+                          className="w-full rounded-lg border border-canvas-300 bg-white px-3 py-2 text-sm focus:border-flow-400 focus:outline-none focus:ring-2 focus:ring-flow-200"
+                        />
+                        {negError && (
+                          <p className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-700 ring-1 ring-red-200">
+                            {negError}
+                          </p>
+                        )}
+                        <div className="flex justify-end">
+                          <Button
+                            variant="accent"
+                            disabled={addWorkerOffer.isPending}
+                            onClick={() => handleWorkerCounter(negotiation.id)}
+                          >
+                            {addWorkerOffer.isPending ? "Envoi..." : "Contre-offrir"}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
                 {isExpanded && <ExpectedResultPreview task={task} />}

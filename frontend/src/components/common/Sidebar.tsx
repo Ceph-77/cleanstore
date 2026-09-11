@@ -120,6 +120,7 @@ function AdminNav({
         onNavigate={onNavigate}
         badge={pendingClaims}
       />
+      <NavItem to="/admin/negotiations" icon={<IconWallet />} label="Négociations" onNavigate={onNavigate} />
       <NavItem to="/admin/users" icon={<IconUser />} label="Utilisateurs & équipes" onNavigate={onNavigate} />
       <NavItem to="/admin/ledger" icon={<IconWallet />} label="Grand livre" onNavigate={onNavigate} />
       <NavItem to="/admin/feedback" icon={<IconFeedback />} label="Feedback" onNavigate={onNavigate} />
@@ -163,6 +164,9 @@ function ConsoleNav({
       )}
       {sections.includes("finance") && (
         <NavItem to="/admin/ledger" icon={<IconWallet />} label="Grand livre" onNavigate={onNavigate} />
+      )}
+      {sections.includes("markettask") && (
+        <NavItem to="/admin/negotiations" icon={<IconWallet />} label="Négociations" onNavigate={onNavigate} />
       )}
       {sections.includes("inventory") && (
         <NavItem

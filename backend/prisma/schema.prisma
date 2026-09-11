@@ -106,6 +106,16 @@ enum PaymentMode {
   metric_prorata
 }
 
+/// État d'un fil de négociation de prix (Lot 4). `open` = en discussion,
+/// `accepted` fige le prix du Task et l'assigne au travailleur, `rejected`/
+/// `cancelled` ferment le fil sans effet sur la tâche.
+enum NegotiationStatus {
+  open
+  accepted
+  rejected
+  cancelled
+}
+
 model Role {
   id        Int        @id @default(autoincrement())
   key       RoleKey    @unique
@@ -141,6 +151,7 @@ model User {
   uploadedDocuments    StoreDocument[]
   storeClaimsRequested StoreClaim[]
   taskClaims           TaskClaim[]
+  taskNegotiations     TaskNegotiation[]
   passwordResetTokens  PasswordResetToken[]
   workerEarnings       WorkerEarning[]
   withdrawals          Withdrawal[]
@@ -325,6 +336,7 @@ model Task {
   reservedByClan     Clan?  @relation("ClanReservedTasks", fields: [reservedByClanId], references: [id], onDelete: SetNull)
   ledgerEntries      LedgerEntry[]
   inventoryMovements InventoryMovement[]
+  negotiations       TaskNegotiation[]
   claims         TaskClaim[]
   inspection     TaskInspection?
   expectedPhotos TaskExpectedPhoto[]
@@ -783,6 +795,7 @@ model Clan {
   members       ClanMember[]
   invites       ClanInvite[]
   taskClaims    TaskClaim[]
+  negotiations  TaskNegotiation[]
   reservedTasks Task[]       @relation("ClanReservedTasks")
 
   @@index([founderId])
@@ -889,4 +902,45 @@ model InventoryMovement {
   @@index([itemId, createdAt])
   @@index([taskId])
   @@map("inventory_movements")
+}
+
+/// Fil de négociation de prix (Lot 4) — seulement sur les tâches marquées
+/// `isNegotiable`. Un travailleur (ou clan) ouvre le fil avec une contre-offre,
+/// l'admin/inspecteur répond ; l'historique des offres reste (append-only,
+/// jamais réécrit). `accepted` fige le prix + assigne la tâche (voir
+/// negotiations.service).
+model TaskNegotiation {
+  id        String            @id @default(uuid())
+  taskId    String            @map("task_id")
+  workerId  String            @map("worker_id")
+  clanId    String?           @map("clan_id")
+  status    NegotiationStatus @default(open)
+  createdAt DateTime          @default(now()) @map("created_at")
+  updatedAt DateTime          @updatedAt @map("updated_at")
+
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  worker User   @relation(fields: [workerId], references: [id])
+  clan   Clan?  @relation(fields: [clanId], references: [id], onDelete: SetNull)
+  offers TaskNegotiationOffer[]
+
+  @@index([taskId])
+  @@index([workerId])
+  @@map("task_negotiations")
+}
+
+/// Une offre ou contre-offre dans un fil — jamais modifiée ni supprimée après
+/// coup, seule la table `offers` grandit (comme AuditLog/LedgerEntry).
+model TaskNegotiationOffer {
+  id            String   @id @default(uuid())
+  negotiationId String   @map("negotiation_id")
+  authorRole    String   @map("author_role") // "worker" | "admin"
+  authorId      String?  @map("author_id")
+  amount        Decimal
+  note          String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  negotiation TaskNegotiation @relation(fields: [negotiationId], references: [id], onDelete: Cascade)
+
+  @@index([negotiationId])
+  @@map("task_negotiation_offers")
 }

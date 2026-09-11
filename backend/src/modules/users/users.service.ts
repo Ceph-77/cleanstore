@@ -159,9 +159,9 @@ export async function setUserRoles(
 /**
  * Hard-delete a user. Cascades (roles, inspectors, reset tokens, point entries,
  * moments) and set-nulls (authored notes/docs, assigned/created stores & tasks,
- * feedback) are handled by the schema. TaskClaim / StoreClaim are required
- * relations with no cascade, so remove them explicitly. Refuses if the user has
- * any financial history — deactivate those instead.
+ * feedback) are handled by the schema. TaskClaim / StoreClaim / TaskNegotiation
+ * are required relations with no cascade, so remove them explicitly. Refuses if
+ * the user has any financial history — deactivate those instead.
  */
 export async function deleteUser(id: string) {
   const user = await prisma.user.findUnique({ where: { id }, select: { id: true, email: true } });
@@ -180,6 +180,7 @@ export async function deleteUser(id: string) {
   return prisma.$transaction(async (tx) => {
     await tx.taskClaim.deleteMany({ where: { workerId: id } });
     await tx.storeClaim.deleteMany({ where: { requestedById: id } });
+    await tx.taskNegotiation.deleteMany({ where: { workerId: id } });
     return tx.user.delete({ where: { id }, select: { id: true, email: true } });
   });
 }
