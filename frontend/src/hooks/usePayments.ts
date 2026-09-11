@@ -55,3 +55,11 @@ export function useUpdateCommissionRate() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["payments", "commission-rate"] }),
   });
 }
+
+export function useStripeOverview() {
+  return useQuery({
+    queryKey: ["payments", "stripe-overview"],
+    queryFn: () => paymentsApi.getStripeOverview(),
+    refetchInterval: POLL_MS,
+  });
+}

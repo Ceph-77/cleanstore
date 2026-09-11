@@ -1,7 +1,7 @@
 import { Router } from "express";
 import type { NextFunction, Request, Response } from "express";
 import express from "express";
-import { requireRole, sessionRoles } from "../auth/auth.middleware";
+import { requireCan, requireRole, sessionRoles } from "../auth/auth.middleware";
 import { can } from "../auth/permissions";
 import * as paymentsController from "./payments.controller";
 
@@ -26,6 +26,7 @@ paymentsRouter.post("/withdraw", requireRole("travailleur"), paymentsController.
 paymentsRouter.get("/settings", requireRole("admin"), paymentsController.getSettings);
 paymentsRouter.patch("/settings", requireRole("admin"), paymentsController.updateSettings);
 paymentsRouter.post("/adjustments", requireFinanceOrMarkettaskManage, paymentsController.applyAdjustment);
+paymentsRouter.get("/stripe-overview", requireCan("finance", "view"), paymentsController.stripeOverview);
 
 export const paymentsWebhookRouter = Router();
 paymentsWebhookRouter.post(

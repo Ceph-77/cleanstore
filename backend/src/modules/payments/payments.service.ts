@@ -1,5 +1,5 @@
 import { prisma } from "../../db/prisma";
-import { getStripeClient } from "../../utils/stripe";
+import { getStripeClient, isStripeConfigured } from "../../utils/stripe";
 import { env } from "../../config/env";
 import { recordServerEvent } from "../analytics/analytics.service";
 import { recordLedgerEntry } from "../ledger/ledger.service";
@@ -658,4 +658,58 @@ export async function handleAccountUpdated(stripeAccountId: string, onboardingDo
     where: { stripeAccountId },
     data: { stripeOnboardingDone: onboardingDone },
   });
+}
+
+/**
+ * Panneau Stripe en LECTURE SEULE (Q63) : solde plateforme, virements aux
+ * travailleurs, charges aux sous-traitants, litiges — aide la
+ * réconciliation, ne déclenche jamais rien côté Stripe. `configured: false`
+ * si aucune clé n'est posée (même philosophie no-op que le reste de l'app).
+ */
+export async function getStripeOverview() {
+  if (!isStripeConfigured()) {
+    return { configured: false as const };
+  }
+  const stripe = getStripeClient();
+  const [balance, transfers, paymentIntents, disputes] = await Promise.all([
+    stripe.balance.retrieve(),
+    stripe.transfers.list({ limit: 15 }),
+    stripe.paymentIntents.list({ limit: 15 }),
+    stripe.disputes.list({ limit: 15 }),
+  ]);
+
+  return {
+    configured: true as const,
+    balance: {
+      available: balance.available.map((b) => ({ amount: b.amount / 100, currency: b.currency })),
+      pending: balance.pending.map((b) => ({ amount: b.amount / 100, currency: b.currency })),
+    },
+    // virements vers les travailleurs (voir requestWithdrawal)
+    transfers: transfers.data.map((t) => ({
+      id: t.id,
+      amount: t.amount / 100,
+      currency: t.currency,
+      destination: typeof t.destination === "string" ? t.destination : (t.destination?.id ?? null),
+      reversed: t.reversed,
+      created: t.created,
+    })),
+    // charges aux sous-traitants (voir attemptSubcontractorCharge — via PaymentIntent, pas charges.create)
+    charges: paymentIntents.data.map((p) => ({
+      id: p.id,
+      amount: p.amount / 100,
+      currency: p.currency,
+      status: p.status,
+      customer: typeof p.customer === "string" ? p.customer : (p.customer?.id ?? null),
+      created: p.created,
+    })),
+    disputes: disputes.data.map((d) => ({
+      id: d.id,
+      amount: d.amount / 100,
+      currency: d.currency,
+      status: d.status,
+      reason: d.reason,
+      charge: typeof d.charge === "string" ? d.charge : (d.charge?.id ?? null),
+      created: d.created,
+    })),
+  };
 }

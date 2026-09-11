@@ -367,6 +367,49 @@ export interface WalletBalance {
   available: string;
 }
 
+export interface StripeMoney {
+  amount: number;
+  currency: string;
+}
+
+export interface StripeTransferRow {
+  id: string;
+  amount: number;
+  currency: string;
+  destination: string | null;
+  reversed: boolean;
+  created: number;
+}
+
+export interface StripeChargeRow {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  customer: string | null;
+  created: number;
+}
+
+export interface StripeDisputeRow {
+  id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  reason: string;
+  charge: string | null;
+  created: number;
+}
+
+export type StripeOverview =
+  | { configured: false }
+  | {
+      configured: true;
+      balance: { available: StripeMoney[]; pending: StripeMoney[] };
+      transfers: StripeTransferRow[];
+      charges: StripeChargeRow[];
+      disputes: StripeDisputeRow[];
+    };
+
 export interface WorkerEarning {
   id: string;
   taskId: string;

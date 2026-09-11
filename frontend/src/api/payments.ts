@@ -1,5 +1,5 @@
 import { apiClient } from "./client";
-import type { WalletBalance, WorkerEarning, Withdrawal } from "../types";
+import type { StripeOverview, WalletBalance, WorkerEarning, Withdrawal } from "../types";
 
 export function saveFundingMethod(paymentMethodId: string) {
   return apiClient.post<void>("/payments/funding-method", { paymentMethodId });
@@ -27,4 +27,8 @@ export function getCommissionRate() {
 
 export function updateCommissionRate(commissionRatePercent: number) {
   return apiClient.patch<{ commissionRatePercent: string }>("/payments/settings", { commissionRatePercent });
+}
+
+export function getStripeOverview() {
+  return apiClient.get<StripeOverview>("/payments/stripe-overview");
 }

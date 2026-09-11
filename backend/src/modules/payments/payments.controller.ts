@@ -85,6 +85,15 @@ export async function applyAdjustment(req: Request, res: Response) {
   }
 }
 
+export async function stripeOverview(_req: Request, res: Response) {
+  try {
+    const overview = await paymentsService.getStripeOverview();
+    res.json(overview);
+  } catch (err) {
+    res.status(502).json({ error: (err as Error).message });
+  }
+}
+
 export async function webhook(req: Request, res: Response) {
   if (!isStripeConfigured() || !env.STRIPE_WEBHOOK_SECRET) {
     return res.status(503).send();

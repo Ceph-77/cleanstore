@@ -2,6 +2,7 @@ import { useState } from "react";
 import { AppLayout } from "../../components/common/AppLayout";
 import { Button } from "../../components/common/Button";
 import { LoadMore } from "../../components/common/LoadMore";
+import { StripeOverviewPanel } from "../../components/finance/StripeOverviewPanel";
 import { useLedger, useLedgerSummary } from "../../hooks/useLedger";
 import { downloadLedgerCsv } from "../../api/ledger";
 
@@ -10,18 +11,28 @@ const TYPE_FILTERS: { key: string | "all"; label: string }[] = [
   { key: "gain_cree", label: "Gain créé" },
   { key: "gain_dispo", label: "Gain disponible" },
   { key: "commission", label: "Commission" },
+  { key: "penalite", label: "Pénalité" },
+  { key: "prime", label: "Prime" },
+  { key: "transfert_clan", label: "Transfert de clan" },
   { key: "retrait", label: "Retrait" },
   { key: "retrait_echoue", label: "Retrait échoué" },
+  { key: "abonnement", label: "Abonnement" },
   { key: "charge_sous_traitant", label: "Charge sous-traitant" },
+  { key: "ajustement_inspecteur", label: "Ajustement inspecteur" },
 ];
 
 const TYPE_STYLES: Record<string, string> = {
   gain_cree: "bg-flow-100 text-flow-700",
   gain_dispo: "bg-flow-100 text-flow-700",
   commission: "bg-linen-100 text-linen-700",
+  penalite: "bg-red-50 text-red-700",
+  prime: "bg-green-50 text-green-700",
+  transfert_clan: "bg-flow-100 text-flow-700",
   retrait: "bg-canvas-100 text-canvas-700",
   retrait_echoue: "bg-red-50 text-red-700",
+  abonnement: "bg-linen-100 text-linen-700",
   charge_sous_traitant: "bg-linen-100 text-linen-700",
+  ajustement_inspecteur: "bg-flow-100 text-flow-700",
 };
 
 function money(n: number): string {
@@ -43,7 +54,7 @@ export function LedgerPage() {
       </h1>
       <p className="mt-1 text-sm text-canvas-600">
         Toutes les écritures d'argent, append-only — rien ne s'efface. Vue simplifiée en attendant
-        le reste du tableau de bord financier (pénalités, primes, abonnements, panneau Stripe).
+        le reste du tableau de bord financier (abonnements).
       </p>
 
       <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -64,6 +75,8 @@ export function LedgerPage() {
           </p>
         </div>
       </div>
+
+      <StripeOverviewPanel />
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         {TYPE_FILTERS.map((f) => (
