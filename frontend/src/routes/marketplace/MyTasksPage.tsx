@@ -14,6 +14,7 @@ import {
 import { useMyTaskClaims } from "../../hooks/useMarketplace";
 import { useMarkDecisionsSeen } from "../../hooks/useNotifications";
 import { StreakBadge } from "../../components/engagement/StreakBadge";
+import { ClanShareIncoming } from "../../components/tasks/ClanShareIncoming";
 import { getCurrentPosition } from "../../utils/geo";
 import type { Task } from "../../types";
 
@@ -392,6 +393,10 @@ function TaskRow({ task }: { task: Task }) {
       )}
 
       {showInspection && <InspectionDetails taskId={task.id} />}
+
+      {task.reservedByClanId && (task.status === "completed" || task.status === "inspected") && (
+        <ClanShareIncoming taskId={task.id} />
+      )}
     </div>
   );
 }

@@ -633,6 +633,25 @@ export interface InventoryAlertItems {
   expiringSoon: InventoryAlertItem[];
 }
 
+export type ClanShareStatus = "pending" | "accepted" | "refused" | "inspector_awarded";
+
+export interface ClanShareClaim {
+  id: string;
+  taskId: string;
+  claimantId: string;
+  percent: number;
+  note: string | null;
+  completedStepIds: string[];
+  status: ClanShareStatus;
+  decidedById: string | null;
+  decisionNote: string | null;
+  createdAt: string;
+  decidedAt: string | null;
+  claimant: { id: string; fullName: string | null; email: string };
+  decidedBy: { id: string; fullName: string | null; email: string } | null;
+  task: { id: string; description: string; assignedToId: string | null; reservedByClanId: string | null; status: TaskStatus };
+}
+
 export type NegotiationStatus = "open" | "accepted" | "rejected" | "cancelled";
 
 export interface TaskNegotiationOffer {

@@ -1,8 +1,9 @@
 import type { Request, Response } from "express";
-import { savePaymentMethodSchema, commissionRateUpdateSchema } from "./payments.schema";
+import { savePaymentMethodSchema, commissionRateUpdateSchema, earningAdjustmentSchema } from "./payments.schema";
 import * as paymentsService from "./payments.service";
 import { env } from "../../config/env";
 import { getStripeClient, isStripeConfigured } from "../../utils/stripe";
+import { logAudit } from "../audit/audit.service";
 
 export async function saveFundingMethod(req: Request, res: Response) {
   const parsed = savePaymentMethodSchema.safeParse(req.body);
@@ -64,6 +65,24 @@ export async function updateSettings(req: Request, res: Response) {
   }
   const settings = await paymentsService.updateCommissionRate(parsed.data.commissionRatePercent);
   res.json({ commissionRatePercent: settings.commissionRatePercent });
+}
+
+export async function applyAdjustment(req: Request, res: Response) {
+  const parsed = earningAdjustmentSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
+  try {
+    const earning = await paymentsService.applyEarningAdjustment(parsed.data);
+    logAudit(req.session.userId, {
+      action: "update",
+      section: "finance",
+      entityType: "WorkerEarning",
+      entityId: earning.id,
+      summary: `${parsed.data.kind === "penalite" ? "Pénalité" : "Prime"} — ${parsed.data.reason}`,
+    });
+    res.json({ earning });
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
+  }
 }
 
 export async function webhook(req: Request, res: Response) {

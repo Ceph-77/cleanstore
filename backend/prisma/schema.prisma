@@ -174,6 +174,8 @@ model User {
   assignedIncidents    Incident[]     @relation("IncidentAssignedTo")
   incidentNotes        IncidentNote[]
   contributions        Contribution[]
+  clanShareClaims      ClanShareClaim[] @relation("ClanShareClaimant")
+  decidedClanShares    ClanShareClaim[] @relation("ClanShareDecider")
   passwordResetTokens  PasswordResetToken[]
   workerEarnings       WorkerEarning[]
   withdrawals          Withdrawal[]
@@ -362,11 +364,12 @@ model Task {
   negotiations       TaskNegotiation[]
   messageThread      MessageThread?
   incidents          Incident[]
+  clanShareClaims    ClanShareClaim[]
   claims         TaskClaim[]
   inspection     TaskInspection?
   expectedPhotos TaskExpectedPhoto[]
   steps          TaskStep[]
-  earning        WorkerEarning?
+  earnings       WorkerEarning[]
   pointEntries   PointEntry[]
   workerMoments  WorkerMoment[]
 
@@ -763,9 +766,14 @@ model PlatformSettings {
   @@map("platform_settings")
 }
 
+/// Un gain par (tâche, travailleur) — PAS un gain par tâche : un partage de
+/// clan accepté (Lot 3c) crée sa PROPRE ligne pour le coéquipier, distincte
+/// de celle du réservateur. Tout le code écrit avant le Lot 3c qui veut "LE"
+/// gain d'une tâche doit cibler explicitement `(taskId, Task.assignedToId)`
+/// via `@@unique([taskId, workerId])` — voir payments.service getPrimaryEarning.
 model WorkerEarning {
   id             String        @id @default(uuid())
-  taskId         String        @unique @map("task_id")
+  taskId         String        @map("task_id")
   workerId       String        @map("worker_id")
   organizationId String        @map("organization_id")
   grossAmount    Decimal       @map("gross_amount")
@@ -773,14 +781,22 @@ model WorkerEarning {
   availableAt    DateTime      @map("available_at")
   chargeId       String?       @map("stripe_charge_id")
   withdrawalId   String?       @map("withdrawal_id")
+  /// Non nul = suspendu à cause d'un incident (distinct d'un statut "disputed"
+  /// dû à un mauvais score d'inspection) — permet de résoudre l'incident sans
+  /// jamais libérer par erreur un gain suspendu pour une AUTRE raison. Voir
+  /// payments.service holdEarningForIncident/releaseIncidentHold.
+  heldForIncidentId String?    @map("held_for_incident")
   createdAt      DateTime      @default(now()) @map("created_at")
 
-  task         Task         @relation(fields: [taskId], references: [id])
-  worker       User         @relation(fields: [workerId], references: [id])
-  organization Organization @relation(fields: [organizationId], references: [id])
-  withdrawal   Withdrawal?  @relation(fields: [withdrawalId], references: [id])
+  task            Task         @relation(fields: [taskId], references: [id])
+  worker          User         @relation(fields: [workerId], references: [id])
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  withdrawal      Withdrawal?  @relation(fields: [withdrawalId], references: [id])
+  heldForIncident Incident?    @relation(fields: [heldForIncidentId], references: [id], onDelete: SetNull)
 
+  @@unique([taskId, workerId])
   @@index([workerId, status])
+  @@index([heldForIncidentId])
   @@map("worker_earnings")
 }
 
@@ -1096,6 +1112,7 @@ model Incident {
   assignedTo     User?          @relation("IncidentAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
   notes          IncidentNote[]
   sourceFeedback Feedback?
+  heldEarnings   WorkerEarning[]
 
   @@index([status])
   @@index([severity])
@@ -1148,4 +1165,44 @@ model Contribution {
 
   @@index([status])
   @@map("contributions")
+}
+
+/// `accepted` = le réservateur a accepté ; `inspector_awarded` = SEUL cas où
+/// un refus/silence se transforme quand même en paiement, décidé par
+/// l'inspecteur (Q18) — les deux créent une ligne WorkerEarning pour le
+/// coéquipier et réduisent celle du réservateur d'autant (voir
+/// clanShares.service). Le cumul accepted+inspector_awarded d'une tâche ne
+/// dépasse jamais 85 % (le réservateur garde toujours ≥ 15 %).
+enum ClanShareStatus {
+  pending
+  accepted
+  refused
+  inspector_awarded
+}
+
+/// Réclamation de part par un coéquipier de clan (Lot 3c, Q8-18) — le
+/// réservateur garde 100 % du brut par défaut ; un coéquipier qui a dû
+/// rattraper du travail réclame un cran (25/50/75/85 %), photos hors scope
+/// pour cette tranche (voir clanShares.service). Fenêtre : de la complétion
+/// jusqu'au retrait du gain.
+model ClanShareClaim {
+  id               String          @id @default(uuid())
+  taskId           String          @map("task_id")
+  claimantId       String          @map("claimant_id")
+  percent          Int
+  note             String?
+  completedStepIds String[]        @map("completed_step_ids")
+  status           ClanShareStatus @default(pending)
+  decidedById      String?         @map("decided_by")
+  decisionNote     String?         @map("decision_note")
+  createdAt        DateTime        @default(now()) @map("created_at")
+  decidedAt        DateTime?       @map("decided_at")
+
+  task      Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  claimant  User  @relation("ClanShareClaimant", fields: [claimantId], references: [id])
+  decidedBy User? @relation("ClanShareDecider", fields: [decidedById], references: [id], onDelete: SetNull)
+
+  @@index([taskId])
+  @@index([claimantId])
+  @@map("clan_share_claims")
 }

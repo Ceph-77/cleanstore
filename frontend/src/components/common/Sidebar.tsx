@@ -122,6 +122,7 @@ function AdminNav({
         badge={pendingClaims}
       />
       <NavItem to="/admin/negotiations" icon={<IconWallet />} label="Négociations" onNavigate={onNavigate} />
+      <NavItem to="/admin/clan-shares" icon={<IconUser />} label="Parts de clan" onNavigate={onNavigate} />
       <NavItem to="/admin/messages" icon={<IconChat />} label="Messagerie (modération)" onNavigate={onNavigate} />
       <NavItem to="/admin/users" icon={<IconUser />} label="Utilisateurs & équipes" onNavigate={onNavigate} />
       <NavItem to="/admin/ledger" icon={<IconWallet />} label="Grand livre" onNavigate={onNavigate} />
@@ -170,7 +171,10 @@ function ConsoleNav({
         <NavItem to="/admin/ledger" icon={<IconWallet />} label="Grand livre" onNavigate={onNavigate} />
       )}
       {sections.includes("markettask") && (
-        <NavItem to="/admin/negotiations" icon={<IconWallet />} label="Négociations" onNavigate={onNavigate} />
+        <>
+          <NavItem to="/admin/negotiations" icon={<IconWallet />} label="Négociations" onNavigate={onNavigate} />
+          <NavItem to="/admin/clan-shares" icon={<IconUser />} label="Parts de clan" onNavigate={onNavigate} />
+        </>
       )}
       {sections.includes("feedback") && (
         <>

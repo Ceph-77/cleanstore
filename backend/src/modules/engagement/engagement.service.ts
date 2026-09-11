@@ -473,7 +473,7 @@ async function assertOwnedEditableTask(workerId: string, taskId: string) {
   });
   if (!task || task.assignedToId !== workerId) throw new Error("Tâche introuvable pour ce travailleur.");
   const earning = await prisma.workerEarning.findUnique({
-    where: { taskId },
+    where: { taskId_workerId: { taskId, workerId } },
     select: { status: true },
   });
   if (earning && earning.status === "withdrawn") {
@@ -555,16 +555,16 @@ export async function updatePastTask(workerId: string, taskId: string, patch: Pa
     }
 
     // Keep the earning in sync with price / score
-    const earning = await tx.workerEarning.findUnique({ where: { taskId } });
+    const earning = await tx.workerEarning.findUnique({ where: { taskId_workerId: { taskId, workerId } } });
     if (earning) {
       const data: Record<string, unknown> = {};
       if (patch.price !== undefined) data.grossAmount = patch.price;
       if (patch.completedAt !== undefined) data.availableAt = patch.completedAt;
-      if (patch.inspectionScore !== undefined && earning.status !== "withdrawn") {
+      if (patch.inspectionScore !== undefined && earning.status !== "withdrawn" && !earning.heldForIncidentId) {
         data.status = patch.inspectionScore !== null && patch.inspectionScore < 50 ? "disputed" : "available";
       }
       if (Object.keys(data).length > 0) {
-        await tx.workerEarning.update({ where: { taskId }, data });
+        await tx.workerEarning.update({ where: { id: earning.id }, data });
       }
     }
   });

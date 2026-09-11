@@ -6,6 +6,27 @@ import { recordLedgerEntry } from "../ledger/ledger.service";
 
 const EARNING_HOLD_MS = 24 * 60 * 60 * 1000;
 const PASSING_SCORE = 50;
+/** Même seuil que le bonus de points (POINTS.QUALITY_MIN_SCORE) — un score
+ * d'inspection exceptionnel ajoute aussi un petit bonus $ automatique. */
+const QUALITY_BONUS_SCORE = 90;
+const QUALITY_BONUS_PCT = 5;
+
+/**
+ * "Le" gain d'une tâche, au sens où l'entend tout le code écrit avant le
+ * partage de clan (Lot 3c) : celui du réservateur (`Task.assignedToId`), PAS
+ * un éventuel gain transféré à un coéquipier (voir `clanShares.service` —
+ * chaque transfert accepté crée sa PROPRE ligne `WorkerEarning`, réglée une
+ * fois pour toutes, jamais réévaluée par l'inspection/un incident/un
+ * ajustement). `WorkerEarning.taskId` n'est donc plus unique à lui seul —
+ * `@@unique([taskId, workerId])` retrouve précisément CETTE ligne.
+ */
+async function getPrimaryEarning(taskId: string) {
+  const task = await prisma.task.findUnique({ where: { id: taskId }, select: { assignedToId: true } });
+  if (!task?.assignedToId) return null;
+  return prisma.workerEarning.findUnique({
+    where: { taskId_workerId: { taskId, workerId: task.assignedToId } },
+  });
+}
 
 /**
  * Fraction of the task price to pay based on a reported performance metric.
@@ -290,7 +311,9 @@ export async function createEarningForCompletedTask(taskId: string) {
     return null;
   }
 
-  const existing = await prisma.workerEarning.findUnique({ where: { taskId } });
+  const existing = await prisma.workerEarning.findUnique({
+    where: { taskId_workerId: { taskId, workerId: task.assignedToId } },
+  });
   if (existing) {
     return existing;
   }
@@ -328,7 +351,141 @@ export async function createEarningForCompletedTask(taskId: string) {
     reason: "Tâche complétée",
   });
 
+  // Un incident majeur/urgence a déjà été signalé sur cette tâche avant même
+  // sa complétion (rare mais possible) — le gain naît directement suspendu.
+  const openIncident = await prisma.incident.findFirst({
+    where: {
+      taskId,
+      severity: { in: ["majeur", "urgence"] },
+      status: { in: ["ouverte", "en_traitement"] },
+    },
+  });
+  if (openIncident) {
+    await holdEarningForIncident(taskId, openIncident.id);
+  }
+
   return earning;
+}
+
+/**
+ * Suspend le gain d'une tâche parce qu'un incident majeur/urgence la
+ * concerne (Q41-43 : "gain suspendu jusqu'à revue"). Distinct du statut
+ * "disputed" posé par un mauvais score d'inspection — `heldForIncidentId`
+ * trace la raison précise pour que résoudre l'incident ne libère jamais par
+ * erreur un gain suspendu pour une AUTRE raison. No-op si le gain n'existe
+ * pas encore (tâche pas complétée) ou est déjà retiré.
+ */
+export async function holdEarningForIncident(taskId: string, incidentId: string) {
+  const earning = await getPrimaryEarning(taskId);
+  if (!earning || earning.status === "withdrawn") return;
+  await prisma.workerEarning.update({
+    where: { id: earning.id },
+    data: { status: "disputed", heldForIncidentId: incidentId },
+  });
+}
+
+/**
+ * Un incident résolu libère les gains qu'il tenait suspendus — mais recalcule
+ * l'état "naturel" plutôt que de forcer "available" : si l'inspection n'a
+ * pas encore eu lieu, retour à "pending" (le balayage normal ou une future
+ * inspection décidera) ; si elle a eu lieu, le score décide.
+ */
+export async function releaseIncidentHold(incidentId: string) {
+  const earnings = await prisma.workerEarning.findMany({ where: { heldForIncidentId: incidentId } });
+  for (const earning of earnings) {
+    const inspection = await prisma.taskInspection.findUnique({
+      where: { taskId: earning.taskId },
+      select: { score: true },
+    });
+    const status =
+      inspection == null ? "pending" : inspection.score < PASSING_SCORE ? "disputed" : "available";
+    await prisma.workerEarning.update({
+      where: { id: earning.id },
+      data: { status, heldForIncidentId: null },
+    });
+  }
+}
+
+/**
+ * Ajustement manuel du gain d'une tâche — pénalité (no-show/retard/négligence
+ * décidés par un humain, un score bas passe déjà par `resolveEarningOnInspection`)
+ * ou prime manuelle libre (Q48-52). Volontairement PAS automatique pour le
+ * no-show/retard : détecter ça tout seul demanderait un seuil (après combien
+ * de temps c'est un abandon ?) qu'on n'a pas encore fixé — inventer un
+ * chiffre qui retire de l'argent à un travailleur sans que Céphas l'ait
+ * validé serait le genre d'erreur qu'on ne peut pas se permettre.
+ * Bloqué une fois le gain retiré (Stripe déjà payé, plus rien à corriger ici).
+ */
+export async function applyEarningAdjustment(input: {
+  taskId: string;
+  kind: "penalite" | "prime";
+  percent?: number;
+  amount?: number;
+  reason: string;
+  /** Par défaut le réservateur (Task.assignedToId) — passer explicitement pour
+   * ajuster le gain d'un coéquipier ayant reçu une part transférée (Lot 3c). */
+  workerId?: string;
+}) {
+  let workerId = input.workerId;
+  if (!workerId) {
+    const task = await prisma.task.findUnique({ where: { id: input.taskId }, select: { assignedToId: true } });
+    if (!task?.assignedToId) throw new Error("Cette tâche n'a pas de travailleur assigné.");
+    workerId = task.assignedToId;
+  }
+  const earning = await prisma.workerEarning.findUnique({
+    where: { taskId_workerId: { taskId: input.taskId, workerId } },
+  });
+  if (!earning) throw new Error("Aucun gain pour cette tâche.");
+  if (earning.status === "withdrawn") {
+    throw new Error("Ce gain a déjà été retiré — impossible de l'ajuster ici.");
+  }
+  const current = Number(earning.grossAmount);
+  const magnitude = input.amount != null ? input.amount : round2(current * ((input.percent ?? 0) / 100));
+  const signed = input.kind === "penalite" ? -magnitude : magnitude;
+  const next = Math.max(0, round2(current + signed));
+
+  await prisma.workerEarning.update({ where: { id: earning.id }, data: { grossAmount: next } });
+  recordLedgerEntry({
+    type: input.kind,
+    amount: magnitude,
+    partyAId: earning.workerId,
+    partyAType: "user",
+    taskId: input.taskId,
+    reason: input.reason,
+  });
+  return { ...earning, grossAmount: next };
+}
+
+/**
+ * Tente de facturer le sous-traitant au moment où un gain se libère — même
+ * logique que le balayage 24h, factorisée pour être aussi utilisée par une
+ * libération anticipée par inspection (voir resolveEarningOnInspection).
+ * `failed: true` = carte refusée/Stripe en erreur → laisser "pending" pour
+ * réessayer plus tard, ne JAMAIS libérer un gain jamais facturé.
+ * `chargeId: null, failed: false` = Stripe non configuré pour cette
+ * organisation (même philosophie no-op que le reste de l'app).
+ */
+async function attemptSubcontractorCharge(
+  organization: { stripeCustomerId: string | null; stripePaymentMethodId: string | null },
+  grossAmount: number,
+): Promise<{ chargeId: string | null; failed: boolean }> {
+  const stripe = env.STRIPE_SECRET_KEY ? getStripeClient() : null;
+  if (!stripe || !organization.stripeCustomerId || !organization.stripePaymentMethodId) {
+    return { chargeId: null, failed: false };
+  }
+  try {
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(grossAmount * 100),
+      currency: "cad",
+      customer: organization.stripeCustomerId,
+      payment_method: organization.stripePaymentMethodId,
+      off_session: true,
+      confirm: true,
+    });
+    return { chargeId: paymentIntent.id, failed: false };
+  } catch {
+    return { chargeId: null, failed: true };
+  }
 }
 
 /**
@@ -336,24 +493,26 @@ export async function createEarningForCompletedTask(taskId: string) {
  * (by an inspector). No-op once the earning has been withdrawn.
  */
 export async function reevaluateEarningForMetric(taskId: string, reportedValue: number | null) {
-  const [earning, task] = await Promise.all([
-    prisma.workerEarning.findUnique({ where: { taskId } }),
-    prisma.task.findUnique({
-      where: { id: taskId },
-      select: {
-        price: true,
-        paymentMode: true,
-        metricTarget: true,
-        hourlyRate: true,
-        hourlyCapMinutes: true,
-        workedMinutes: true,
-        unitPrice: true,
-        reportedUnits: true,
-        latePremiumApplied: true,
-      },
-    }),
-  ]);
-  if (!earning || earning.status === "withdrawn" || !task) return;
+  const task = await prisma.task.findUnique({
+    where: { id: taskId },
+    select: {
+      assignedToId: true,
+      price: true,
+      paymentMode: true,
+      metricTarget: true,
+      hourlyRate: true,
+      hourlyCapMinutes: true,
+      workedMinutes: true,
+      unitPrice: true,
+      reportedUnits: true,
+      latePremiumApplied: true,
+    },
+  });
+  if (!task?.assignedToId) return;
+  const earning = await prisma.workerEarning.findUnique({
+    where: { taskId_workerId: { taskId, workerId: task.assignedToId } },
+  });
+  if (!earning || earning.status === "withdrawn") return;
 
   const grossAmount = computeGrossAmount({
     paymentMode: task.paymentMode as PaymentModeKey,
@@ -370,32 +529,81 @@ export async function reevaluateEarningForMetric(taskId: string, reportedValue: 
   await prisma.workerEarning.update({ where: { id: earning.id }, data: { grossAmount } });
 }
 
+/**
+ * Un score d'inspection ≥ seuil libère le gain immédiatement (sans attendre
+ * les 24h) — la libération anticipée facture AUSSI le sous-traitant tout de
+ * suite (bug corrigé : avant, ce chemin ne facturait jamais, seul le
+ * balayage 24h le faisait ; une tâche libérée tôt échappait donc à la
+ * charge). Un échec de carte laisse le gain "pending" pour le balayage
+ * normal, exactement comme runDuePayouts.
+ */
 export async function resolveEarningOnInspection(taskId: string, score: number) {
-  const earning = await prisma.workerEarning.findUnique({ where: { taskId } });
+  const task = await prisma.task.findUnique({ where: { id: taskId }, select: { assignedToId: true } });
+  if (!task?.assignedToId) return;
+  const earning = await prisma.workerEarning.findUnique({
+    where: { taskId_workerId: { taskId, workerId: task.assignedToId } },
+    include: { organization: true },
+  });
   if (!earning || earning.status !== "pending") {
     return;
   }
-  const passed = score >= PASSING_SCORE;
-  await prisma.workerEarning.update({
-    where: { id: earning.id },
-    data: { status: passed ? "available" : "disputed" },
-  });
-  if (passed) {
+  if (score < PASSING_SCORE) {
+    await prisma.workerEarning.update({ where: { id: earning.id }, data: { status: "disputed" } });
+    return;
+  }
+
+  // Bonus qualité automatique (Q48-52) — même seuil que le bonus de points
+  // déjà en place, un petit % en plus sur le gain, pas juste des points.
+  let grossAmount = Number(earning.grossAmount);
+  if (score >= QUALITY_BONUS_SCORE) {
+    const bonus = round2(grossAmount * (QUALITY_BONUS_PCT / 100));
+    grossAmount = round2(grossAmount + bonus);
     recordLedgerEntry({
-      type: "gain_dispo",
-      amount: Number(earning.grossAmount),
+      type: "prime",
+      amount: bonus,
       partyAId: earning.workerId,
       partyAType: "user",
       taskId,
-      reason: `Libéré par inspection — score ${score}`,
+      reason: `Bonus qualité automatique — score ${score}`,
+    });
+  }
+
+  const { chargeId, failed } = await attemptSubcontractorCharge(earning.organization, grossAmount);
+  if (failed) return; // reste "pending" — le balayage réessaiera
+
+  await prisma.workerEarning.update({
+    where: { id: earning.id },
+    data: { status: "available", chargeId, grossAmount },
+  });
+  recordLedgerEntry({
+    type: "gain_dispo",
+    amount: grossAmount,
+    partyAId: earning.workerId,
+    partyAType: "user",
+    taskId,
+    reason: `Libéré par inspection — score ${score}`,
+  });
+  if (chargeId) {
+    recordLedgerEntry({
+      type: "charge_sous_traitant",
+      amount: grossAmount,
+      partyAId: earning.organizationId,
+      partyAType: "organization",
+      taskId,
+      reason: `Stripe ${chargeId}`,
     });
   }
 }
 
-/** Re-evaluate an earning when an inspection score is edited (unless already paid out). */
+/**
+ * Re-evaluate an earning when an inspection score is edited (unless already
+ * paid out). Un gain suspendu pour incident (`heldForIncidentId`) reste
+ * suspendu quel que soit le score — seul `releaseIncidentHold` le libère.
+ */
 export async function reevaluateEarningForScore(taskId: string, score: number | null) {
-  const earning = await prisma.workerEarning.findUnique({ where: { taskId } });
+  const earning = await getPrimaryEarning(taskId);
   if (!earning || earning.status === "withdrawn") return;
+  if (earning.heldForIncidentId) return;
   const status = score !== null && score < PASSING_SCORE ? "disputed" : "available";
   await prisma.workerEarning.update({ where: { id: earning.id }, data: { status } });
 }
@@ -406,29 +614,11 @@ export async function runDuePayouts() {
     include: { organization: true },
   });
 
-  const stripe = env.STRIPE_SECRET_KEY ? getStripeClient() : null;
   let processed = 0;
 
   for (const earning of due) {
-    let chargeId: string | null = null;
-
-    if (stripe && earning.organization.stripeCustomerId && earning.organization.stripePaymentMethodId) {
-      try {
-        const paymentIntent = await stripe.paymentIntents.create({
-          amount: Math.round(Number(earning.grossAmount) * 100),
-          currency: "cad",
-          customer: earning.organization.stripeCustomerId,
-          payment_method: earning.organization.stripePaymentMethodId,
-          off_session: true,
-          confirm: true,
-        });
-        chargeId = paymentIntent.id;
-      } catch {
-        // Charge failed (e.g. card declined) — leave the earning pending for manual follow-up
-        // rather than marking it available with no funds actually collected.
-        continue;
-      }
-    }
+    const { chargeId, failed } = await attemptSubcontractorCharge(earning.organization, Number(earning.grossAmount));
+    if (failed) continue; // leave pending for manual follow-up
 
     await prisma.workerEarning.update({
       where: { id: earning.id },

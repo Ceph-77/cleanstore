@@ -181,6 +181,11 @@ export async function deleteUser(id: string) {
     await tx.taskClaim.deleteMany({ where: { workerId: id } });
     await tx.storeClaim.deleteMany({ where: { requestedById: id } });
     await tx.taskNegotiation.deleteMany({ where: { workerId: id } });
+    // Une réclamation de part ACCEPTÉE a déjà créé un WorkerEarning pour ce
+    // travailleur — le refus plus haut (historique financier) l'aurait déjà
+    // bloqué. Seules des réclamations pending/refused (aucun argent bougé)
+    // peuvent encore exister ici, donc les supprimer est sûr.
+    await tx.clanShareClaim.deleteMany({ where: { claimantId: id } });
     return tx.user.delete({ where: { id }, select: { id: true, email: true } });
   });
 }
