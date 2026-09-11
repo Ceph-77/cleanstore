@@ -237,6 +237,7 @@ export interface Task {
   startedAt: string | null;
   startGeoNote: string | null;
   isRecurring: boolean;
+  recurringParentId: string | null;
   templateId: string | null;
   metricLabel: string | null;
   metricUnit: string | null;
@@ -257,6 +258,7 @@ export interface Task {
   reservableBy: "solo" | "clan" | "both";
   minClanSize: number | null;
   reservedByClanId?: string | null;
+  createdAt: string;
   store?: { id: string; name: string; city: string | null; address: string | null };
   inspection?: { id: string; score: number } | null;
   assignedTo?: { id: string; fullName: string | null; email: string } | null;
