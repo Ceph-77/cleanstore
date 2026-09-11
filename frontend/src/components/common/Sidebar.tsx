@@ -5,6 +5,7 @@ import { useAuth } from "../../context/AuthContext";
 import { Logo } from "./Logo";
 import {
   IconStore,
+  IconSimulation,
   IconTasks,
   IconInspection,
   IconInventory,
@@ -110,6 +111,7 @@ function AdminNav({
           </span>
         )}
       </p>
+      <NavItem to="/admin/simulations" icon={<IconSimulation />} label="Simulations" onNavigate={onNavigate} />
       <NavItem to="/stores" icon={<IconStore />} label="Magasins" onNavigate={onNavigate} />
       <NavItem to="/admin/task-templates" icon={<IconTasks />} label="Modèles de tâches" onNavigate={onNavigate} />
       <NavItem to="/admin/tasks" icon={<IconTasks />} label="Suivi des travaux" onNavigate={onNavigate} />

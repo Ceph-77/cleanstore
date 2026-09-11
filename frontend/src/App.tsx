@@ -60,6 +60,7 @@ const ContributionsPage = lazy(() =>
   import("./routes/admin/ContributionsPage").then(named("ContributionsPage")),
 );
 const ClanSharesPage = lazy(() => import("./routes/admin/ClanSharesPage").then(named("ClanSharesPage")));
+const SimulationsPage = lazy(() => import("./routes/admin/SimulationsPage").then(named("SimulationsPage")));
 
 function RouteTracker() {
   const { pathname } = useLocation();
@@ -199,6 +200,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute roles={["admin", "inspecteur"]}>
               <ClanSharesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/simulations"
+          element={
+            <ProtectedRoute roles={["admin"]}>
+              <SimulationsPage />
             </ProtectedRoute>
           }
         />

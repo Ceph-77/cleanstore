@@ -20,6 +20,15 @@ export function IconStore(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function IconSimulation(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M10 8.5 16 12l-6 3.5Z" />
+    </svg>
+  );
+}
+
 export function IconTasks(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...base} {...props}>
