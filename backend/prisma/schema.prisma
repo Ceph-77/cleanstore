@@ -173,6 +173,7 @@ model User {
   reportedIncidents    Incident[]     @relation("IncidentReportedBy")
   assignedIncidents    Incident[]     @relation("IncidentAssignedTo")
   incidentNotes        IncidentNote[]
+  contributions        Contribution[]
   passwordResetTokens  PasswordResetToken[]
   workerEarnings       WorkerEarning[]
   withdrawals          Withdrawal[]
@@ -1116,4 +1117,35 @@ model IncidentNote {
 
   @@index([incidentId, createdAt])
   @@map("incident_notes")
+}
+
+enum ContributionStatus {
+  soumise
+  a_l_etude
+  adoptee
+  rejetee
+}
+
+/// Idée/amélioration soumise par n'importe qui (Q57) — `createdAt` sert de
+/// preuve d'antériorité. Adoptée => mention au registre (auteur + date) et
+/// récompense au cas par cas : `pointsAwarded`, s'il est posé, crée un
+/// PointEntry classique (kind "contribution_reward") — pas de prime $
+/// automatique (Q55-57 : aucun bonus $ automatique, la prime manuelle du
+/// Lot 5 couvre l'exceptionnel, pas encore construite).
+model Contribution {
+  id            String             @id @default(uuid())
+  title         String
+  description   String
+  category      String?
+  submittedById String?            @map("submitted_by")
+  status        ContributionStatus @default(soumise)
+  decisionNote  String?            @map("decision_note")
+  pointsAwarded Int?               @map("points_awarded")
+  createdAt     DateTime           @default(now()) @map("created_at")
+  updatedAt     DateTime           @updatedAt @map("updated_at")
+
+  submittedBy User? @relation(fields: [submittedById], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@map("contributions")
 }

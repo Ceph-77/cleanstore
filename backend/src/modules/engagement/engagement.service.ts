@@ -8,6 +8,7 @@ import {
 } from "../../utils/week";
 import { sendMomentEmail } from "../../utils/email";
 import { POINTS, type PointKind, type MomentType } from "./points";
+import { computeRewardMetrics, computeBadges, type BadgeKey } from "../rewards/rewards.service";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -645,6 +646,7 @@ export interface LeaderboardRow {
   avgQuality: number | null;
   tasksThisMonth: number;
   rank: number;
+  badges: BadgeKey[];
 }
 
 export async function getLeaderboard(): Promise<LeaderboardRow[]> {
@@ -701,6 +703,12 @@ export async function getLeaderboard(): Promise<LeaderboardRow[]> {
     qualityByWorker.set(wid, arr);
   }
 
+  const badgesByWorker = new Map(
+    await Promise.all(
+      workers.map(async (w) => [w.id, computeBadges(await computeRewardMetrics(w.id))] as const),
+    ),
+  );
+
   const rows = workers.map((w) => {
     const completed = completedByWorker.get(w.id) ?? 0;
     const onTime = onTimeByWorker.get(w.id) ?? 0;
@@ -714,6 +722,7 @@ export async function getLeaderboard(): Promise<LeaderboardRow[]> {
       avgQuality: scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null,
       tasksThisMonth: completed,
       rank: 0,
+      badges: badgesByWorker.get(w.id) ?? [],
     };
   });
 

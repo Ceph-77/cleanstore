@@ -496,6 +496,13 @@ export interface DayTasks {
   tasks: DayTask[];
 }
 
+export type BadgeKey = "fiable" | "ponctuel" | "qualite" | "veteran" | "polyvalent" | "sur_la_cible" | "habitue";
+
+export interface Badge {
+  key: BadgeKey;
+  label: string;
+}
+
 export interface LeaderboardRow {
   workerId: string;
   fullName: string | null;
@@ -505,6 +512,37 @@ export interface LeaderboardRow {
   avgQuality: number | null;
   tasksThisMonth: number;
   rank: number;
+  badges: BadgeKey[];
+}
+
+export interface RewardMetrics {
+  reliability: number | null;
+  punctuality: number | null;
+  quality: number | null;
+  experience: { tasksCompleted: number; categoryVariety: number };
+  seniorityDays: number;
+  targetHitRate: number | null;
+}
+
+export interface RewardSummary {
+  metrics: RewardMetrics;
+  badges: Badge[];
+}
+
+export type ContributionStatus = "soumise" | "a_l_etude" | "adoptee" | "rejetee";
+
+export interface Contribution {
+  id: string;
+  title: string;
+  description: string;
+  category: string | null;
+  submittedById: string | null;
+  status: ContributionStatus;
+  decisionNote: string | null;
+  pointsAwarded: number | null;
+  createdAt: string;
+  updatedAt: string;
+  submittedBy: { id: string; fullName: string | null; email: string } | null;
 }
 
 export interface AuditEntry {

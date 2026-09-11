@@ -7,6 +7,7 @@ import { useAuth } from "../context/AuthContext";
 import * as authApi from "../api/auth";
 import { ApiError } from "../api/client";
 import { ProgressCard } from "../components/engagement/ProgressCard";
+import { RewardBadges } from "../components/engagement/RewardBadges";
 
 export function ProfilePage() {
   const { user, updateProfile } = useAuth();
@@ -68,6 +69,7 @@ export function ProfilePage() {
       <p className="mt-1 text-sm text-canvas-600">{user?.email}</p>
 
       <ProgressCard />
+      <RewardBadges />
 
       <form
         onSubmit={handleProfileSubmit}

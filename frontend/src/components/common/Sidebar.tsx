@@ -127,6 +127,7 @@ function AdminNav({
       <NavItem to="/admin/ledger" icon={<IconWallet />} label="Grand livre" onNavigate={onNavigate} />
       <NavItem to="/admin/feedback" icon={<IconFeedback />} label="Feedback" onNavigate={onNavigate} />
       <NavItem to="/admin/incidents" icon={<IconInspection />} label="Incidents" onNavigate={onNavigate} />
+      <NavItem to="/admin/contributions" icon={<IconTrophy />} label="Contributions" onNavigate={onNavigate} />
       <NavItem to="/leaderboard" icon={<IconTrophy />} label="Classement" onNavigate={onNavigate} />
       <NavItem to="/admin/journal" icon={<IconNote />} label="Journal d'audit" onNavigate={onNavigate} />
       <NavItem to="/admin/analytics" icon={<IconFile />} label="Parcours" onNavigate={onNavigate} />
@@ -269,6 +270,7 @@ function SidebarContent({ onNavigate, onCloseButton }: { onNavigate?: () => void
 
       <nav className="mt-10 flex-1 space-y-1">
         <NavItem to="/messages" icon={<IconChat />} label="Messages" onNavigate={onNavigate} />
+        <NavItem to="/rewards" icon={<IconTrophy />} label="Rewards" onNavigate={onNavigate} />
         {has("admin") ? (
           <AdminNav
             onNavigate={onNavigate}

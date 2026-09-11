@@ -4,19 +4,28 @@ import { sendClaimDecisionEmail } from "../../utils/email";
 import { startOfCurrentWeek } from "../../utils/week";
 import { pageArgs, toPage, type PageParams } from "../../utils/pagination";
 import { assertCanEditTask } from "../taskInstructions/taskInstructions.service";
+import { hasPriorityAccess, PRIORITY_WINDOW_MINUTES } from "../rewards/rewards.service";
 import type { ClaimStatus } from "@prisma/client";
 
 /** A worker may submit at most this many task claims per store per calendar week. */
 export const MAX_CLAIMS_PER_STORE_PER_WEEK = 3;
 
-export async function listMarketplaceTasks(page: PageParams) {
+/**
+ * `workerId` optionnel : quand fourni, un travailleur avec assez de badges
+ * (Q55, "accès prioritaire") voit les tâches PRIORITY_WINDOW_MINUTES avant
+ * tout le monde — élargit qui peut voir une tâche, ne retire jamais rien.
+ */
+export async function listMarketplaceTasks(page: PageParams, workerId?: string) {
+  const cutoff = workerId && (await hasPriorityAccess(workerId))
+    ? new Date(Date.now() + PRIORITY_WINDOW_MINUTES * 60_000)
+    : new Date();
   const rows = await prisma.task.findMany({
     where: {
       status: "open",
       isPublished: true,
       // Fenêtre de 15 h : une tâche n'apparaît qu'à partir de son heure de visibilité
       // (NULL = pas de fenêtre, tâche héritée d'avant la mise en place -> visible).
-      OR: [{ visibleFrom: null }, { visibleFrom: { lte: new Date() } }],
+      OR: [{ visibleFrom: null }, { visibleFrom: { lte: cutoff } }],
       store: { assignedSubcontractorId: { not: null }, isActive: true },
     },
     orderBy: [{ createdAt: "desc" }, { id: "desc" }],
@@ -49,8 +58,8 @@ export async function listMarketplaceTasks(page: PageParams) {
   return toPage(rows, page.limit);
 }
 
-export async function listMarketplaceTasksWithUrls(page: PageParams) {
-  const { items, nextCursor } = await listMarketplaceTasks(page);
+export async function listMarketplaceTasksWithUrls(page: PageParams, workerId?: string) {
+  const { items, nextCursor } = await listMarketplaceTasks(page, workerId);
   const withUrls = await Promise.all(
     items.map(async (task) => ({
       ...task,

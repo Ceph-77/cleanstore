@@ -34,6 +34,8 @@ import { inventoryRouter } from "./modules/inventory/inventory.routes";
 import { negotiationsWorkerRouter, negotiationsAdminRouter } from "./modules/negotiations/negotiations.routes";
 import { messagesRouter, messagesAdminRouter } from "./modules/messages/messages.routes";
 import { incidentsRouter } from "./modules/incidents/incidents.routes";
+import { rewardsRouter } from "./modules/rewards/rewards.routes";
+import { contributionsRouter } from "./modules/contributions/contributions.routes";
 import { requireAuth, requireRole } from "./modules/auth/auth.middleware";
 import { notFound } from "./middleware/notFound";
 import { errorHandler } from "./middleware/errorHandler";
@@ -111,6 +113,8 @@ app.use("/api/negotiations", requireAuth, negotiationsAdminRouter);
 app.use("/api/messages", requireAuth, messagesRouter);
 app.use("/api/messages/admin", requireAuth, messagesAdminRouter);
 app.use("/api/incidents", requireAuth, incidentsRouter);
+app.use("/api/rewards", requireAuth, rewardsRouter);
+app.use("/api/contributions", requireAuth, contributionsRouter);
 app.use("/api/store-claims", storeClaimsAdminRouter);
 app.use("/api/task-claims", taskClaimsAdminRouter);
 

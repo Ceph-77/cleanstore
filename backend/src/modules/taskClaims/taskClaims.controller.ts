@@ -9,7 +9,10 @@ import { logAudit } from "../audit/audit.service";
 export async function listMarketplace(req: Request, res: Response) {
   const page = pageParamsSchema.safeParse(req.query);
   if (!page.success) return res.status(400).json({ error: page.error.flatten() });
-  const { items, nextCursor } = await taskClaimsService.listMarketplaceTasksWithUrls(page.data);
+  const { items, nextCursor } = await taskClaimsService.listMarketplaceTasksWithUrls(
+    page.data,
+    req.session.userId,
+  );
   res.json({ tasks: items, nextCursor });
 }
 

@@ -1,5 +1,16 @@
 import { AppLayout } from "../components/common/AppLayout";
 import { useLeaderboard } from "../hooks/useEngagement";
+import type { BadgeKey } from "../types";
+
+const BADGE_LABELS: Record<BadgeKey, string> = {
+  fiable: "Fiable",
+  ponctuel: "Ponctuel",
+  qualite: "Qualité",
+  veteran: "Vétéran",
+  polyvalent: "Polyvalent",
+  sur_la_cible: "Sur la cible",
+  habitue: "Habitué",
+};
 
 function medal(rank: number) {
   if (rank === 1) return "🥇";
@@ -39,6 +50,7 @@ export function LeaderboardPage() {
                 <th className="px-4 py-3 text-right font-semibold">Tâches</th>
                 <th className="px-4 py-3 text-right font-semibold">À l'heure</th>
                 <th className="px-4 py-3 text-right font-semibold">Qualité moy.</th>
+                <th className="px-4 py-3 font-semibold">Badges</th>
               </tr>
             </thead>
             <tbody>
@@ -54,6 +66,19 @@ export function LeaderboardPage() {
                   </td>
                   <td className="px-4 py-3 text-right text-canvas-600">
                     {r.avgQuality == null ? "—" : `${r.avgQuality}/100`}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-1">
+                      {r.badges.map((b) => (
+                        <span
+                          key={b}
+                          className="rounded-full bg-flow-100 px-2 py-0.5 text-[11px] font-medium text-flow-700"
+                        >
+                          {BADGE_LABELS[b]}
+                        </span>
+                      ))}
+                      {r.badges.length === 0 && <span className="text-xs text-canvas-400">—</span>}
+                    </div>
                   </td>
                 </tr>
               ))}
