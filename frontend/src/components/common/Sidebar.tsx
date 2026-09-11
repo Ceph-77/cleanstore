@@ -92,10 +92,12 @@ function NavItem({
 }
 
 /**
- * Groupe repliable de la barre latérale admin — repris de la structure
- * d'origine ("Gestion des X", "Gestion des Y"...) que Céphas décrivait au
- * tout début de la refonte console, plutôt qu'une seule longue liste plate
- * "Gestion" (19 entrées à la fin des Lots 0-8, devenue trop dense).
+ * Groupe repliable de la barre latérale admin — repris de la structure par
+ * domaine ("Magasins", "Modèles de tâches"...) que Céphas décrivait au tout
+ * début de la refonte console, plutôt qu'une seule longue liste plate
+ * "Gestion" (19 entrées à la fin des Lots 0-8, devenue trop dense). Le mot
+ * "Gestion" n'est pas répété dans chaque libellé — il chapeaute déjà tout
+ * le bloc (voir <p>Gestion</p> juste au-dessus dans AdminNav).
  * Replié par défaut, s'ouvre tout seul si la page courante est dedans.
  */
 function NavGroup({
@@ -154,16 +156,16 @@ function AdminNav({
     <>
       <p className="px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/30">Gestion</p>
 
-      <NavGroup label="Gestion des magasins" paths={["/stores"]}>
+      <NavGroup label="Magasins" paths={["/stores"]}>
         <NavItem to="/stores" icon={<IconStore />} label="Magasins" onNavigate={onNavigate} />
       </NavGroup>
 
-      <NavGroup label="Gestion des modèles de tâches" paths={["/admin/task-templates", "/admin/recurrences"]}>
+      <NavGroup label="Modèles de tâches" paths={["/admin/task-templates", "/admin/recurrences"]}>
         <NavItem to="/admin/task-templates" icon={<IconTasks />} label="Modèles de tâches" onNavigate={onNavigate} />
         <NavItem to="/admin/recurrences" icon={<IconTasks />} label="Récurrences" onNavigate={onNavigate} />
       </NavGroup>
 
-      <NavGroup label="Gestion du markettask" paths={["/admin/tasks", "/admin/claims"]} badge={pendingClaims}>
+      <NavGroup label="Markettask" paths={["/admin/tasks", "/admin/claims"]} badge={pendingClaims}>
         <NavItem to="/admin/tasks" icon={<IconTasks />} label="Suivi des travaux" onNavigate={onNavigate} />
         <NavItem
           to="/admin/claims"
@@ -189,7 +191,7 @@ function AdminNav({
         />
       </NavGroup>
 
-      <NavGroup label="Gestion des équipements / stock" paths={["/admin/inventory"]} badge={lowStock}>
+      <NavGroup label="Équipements / stock" paths={["/admin/inventory"]} badge={lowStock}>
         <NavItem
           to="/admin/inventory"
           icon={<IconInventory />}
@@ -199,15 +201,15 @@ function AdminNav({
         />
       </NavGroup>
 
-      <NavGroup label="Gestion du portefeuille / finances" paths={["/admin/ledger"]}>
+      <NavGroup label="Portefeuille / finances" paths={["/admin/ledger"]}>
         <NavItem to="/admin/ledger" icon={<IconWallet />} label="Grand livre" onNavigate={onNavigate} />
       </NavGroup>
 
-      <NavGroup label="Gestion des feedback" paths={["/admin/feedback"]}>
+      <NavGroup label="Feedback" paths={["/admin/feedback"]}>
         <NavItem to="/admin/feedback" icon={<IconFeedback />} label="Feedback" onNavigate={onNavigate} />
       </NavGroup>
 
-      <NavGroup label="Gestion des rewards / performance" paths={["/admin/contributions", "/leaderboard"]}>
+      <NavGroup label="Rewards / performance" paths={["/admin/contributions", "/leaderboard"]}>
         <NavItem to="/admin/contributions" icon={<IconTrophy />} label="Contributions" onNavigate={onNavigate} />
         <NavItem to="/leaderboard" icon={<IconTrophy />} label="Classement" onNavigate={onNavigate} />
       </NavGroup>
@@ -361,7 +363,7 @@ function SidebarContent({ onNavigate, onCloseButton }: { onNavigate?: () => void
         )}
       </div>
 
-      <nav className="mt-10 flex-1 space-y-1">
+      <nav className="mt-10 min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
         <NavItem to="/messages" icon={<IconChat />} label="Messages" onNavigate={onNavigate} />
         <NavItem to="/rewards" icon={<IconTrophy />} label="Rewards" onNavigate={onNavigate} />
         {has("admin") ? (
