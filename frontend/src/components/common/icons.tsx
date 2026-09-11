@@ -168,6 +168,15 @@ export function IconFeedback(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function IconChat(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="M20 12a7 7 0 0 1-7 7H8l-4 3v-4.2A7 7 0 0 1 6 5h7a7 7 0 0 1 7 7Z" />
+      <path d="M9 10h6M9 13h4" />
+    </svg>
+  );
+}
+
 export function IconTrophy(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...base} {...props}>

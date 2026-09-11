@@ -566,6 +566,39 @@ export interface TaskNegotiationOffer {
   createdAt: string;
 }
 
+export type MessageThreadKind = "task" | "clan" | "global_jazzette" | "global_annonces" | "adhoc";
+
+export interface MessageAuthor {
+  id: string;
+  fullName: string | null;
+  email: string;
+}
+
+export interface Message {
+  id: string;
+  threadId: string;
+  authorId: string | null;
+  body: string;
+  editedAt: string | null;
+  createdAt: string;
+  author: MessageAuthor | null;
+}
+
+export interface MessageThread {
+  id: string;
+  kind: MessageThreadKind;
+  taskId: string | null;
+  clanId: string | null;
+  title: string | null;
+  createdById: string | null;
+  createdAt: string;
+  updatedAt: string;
+  task?: { id: string; description: string; storeId: string } | null;
+  clan?: { id: string; name: string } | null;
+  messages?: { body: string; createdAt: string; authorId: string | null }[];
+  _count?: { messages: number };
+}
+
 export interface TaskNegotiation {
   id: string;
   taskId: string;

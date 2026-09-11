@@ -32,6 +32,7 @@ import { clansRouter } from "./modules/clans/clans.routes";
 import { ledgerRouter } from "./modules/ledger/ledger.routes";
 import { inventoryRouter } from "./modules/inventory/inventory.routes";
 import { negotiationsWorkerRouter, negotiationsAdminRouter } from "./modules/negotiations/negotiations.routes";
+import { messagesRouter, messagesAdminRouter } from "./modules/messages/messages.routes";
 import { requireAuth, requireRole } from "./modules/auth/auth.middleware";
 import { notFound } from "./middleware/notFound";
 import { errorHandler } from "./middleware/errorHandler";
@@ -106,6 +107,8 @@ app.use("/api/clans", requireAuth, clansRouter);
 app.use("/api/ledger", requireAuth, ledgerRouter);
 app.use("/api/inventory", requireAuth, inventoryRouter);
 app.use("/api/negotiations", requireAuth, negotiationsAdminRouter);
+app.use("/api/messages", requireAuth, messagesRouter);
+app.use("/api/messages/admin", requireAuth, messagesAdminRouter);
 app.use("/api/store-claims", storeClaimsAdminRouter);
 app.use("/api/task-claims", taskClaimsAdminRouter);
 

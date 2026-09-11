@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { AppLayout } from "../../components/common/AppLayout";
 import { Button } from "../../components/common/Button";
 import { Field } from "../../components/common/Field";
 import { Input } from "../../components/common/Input";
+import { IconChat } from "../../components/common/icons";
 import { ApiError } from "../../api/client";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -41,17 +43,25 @@ function ClanCard({ clan, meId }: { clan: Clan; meId: string }) {
             Code d'invitation : <span className="font-mono font-semibold text-canvas-800">{clan.inviteCode}</span>
           </p>
         </div>
-        <Button
-          variant="danger"
-          disabled={leave.isPending}
-          onClick={() => {
-            if (confirm(`Quitter le clan « ${clan.name} » ? Tu gardes tout ton acquis.`)) {
-              leave.mutate(clan.id);
-            }
-          }}
-        >
-          Quitter
-        </Button>
+        <div className="flex shrink-0 gap-2">
+          <Link
+            to={`/messages?clan=${clan.id}`}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-canvas-300 px-3 py-2 text-sm font-medium text-canvas-700 hover:bg-canvas-50"
+          >
+            <IconChat className="h-4 w-4" /> Discuter
+          </Link>
+          <Button
+            variant="danger"
+            disabled={leave.isPending}
+            onClick={() => {
+              if (confirm(`Quitter le clan « ${clan.name} » ? Tu gardes tout ton acquis.`)) {
+                leave.mutate(clan.id);
+              }
+            }}
+          >
+            Quitter
+          </Button>
+        </div>
       </div>
 
       <ul className="mt-3 space-y-1">

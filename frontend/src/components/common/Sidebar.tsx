@@ -16,6 +16,7 @@ import {
   IconFile,
   IconNote,
   IconTrophy,
+  IconChat,
   IconX,
 } from "./icons";
 import { useUnseenDecisionsCount } from "../../hooks/useNotifications";
@@ -121,6 +122,7 @@ function AdminNav({
         badge={pendingClaims}
       />
       <NavItem to="/admin/negotiations" icon={<IconWallet />} label="Négociations" onNavigate={onNavigate} />
+      <NavItem to="/admin/messages" icon={<IconChat />} label="Messagerie (modération)" onNavigate={onNavigate} />
       <NavItem to="/admin/users" icon={<IconUser />} label="Utilisateurs & équipes" onNavigate={onNavigate} />
       <NavItem to="/admin/ledger" icon={<IconWallet />} label="Grand livre" onNavigate={onNavigate} />
       <NavItem to="/admin/feedback" icon={<IconFeedback />} label="Feedback" onNavigate={onNavigate} />
@@ -259,6 +261,7 @@ function SidebarContent({ onNavigate, onCloseButton }: { onNavigate?: () => void
       </div>
 
       <nav className="mt-10 flex-1 space-y-1">
+        <NavItem to="/messages" icon={<IconChat />} label="Messages" onNavigate={onNavigate} />
         {has("admin") ? (
           <AdminNav
             onNavigate={onNavigate}

@@ -50,6 +50,10 @@ const InventoryAlertsPage = lazy(() =>
   import("./routes/admin/InventoryAlertsPage").then(named("InventoryAlertsPage")),
 );
 const NegotiationsPage = lazy(() => import("./routes/admin/NegotiationsPage").then(named("NegotiationsPage")));
+const MessagesPage = lazy(() => import("./routes/MessagesPage").then(named("MessagesPage")));
+const MessagesAdminPage = lazy(() =>
+  import("./routes/admin/MessagesAdminPage").then(named("MessagesAdminPage")),
+);
 
 function RouteTracker() {
   const { pathname } = useLocation();
@@ -181,6 +185,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute roles={["admin", "inspecteur"]}>
               <NegotiationsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/messages"
+          element={
+            <ProtectedRoute roles={["admin"]}>
+              <MessagesAdminPage />
             </ProtectedRoute>
           }
         />
@@ -336,6 +348,22 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/messages"
+          element={
+            <ProtectedRoute>
+              <MessagesPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/messages/:threadId"
+          element={
+            <ProtectedRoute>
+              <MessagesPage />
             </ProtectedRoute>
           }
         />

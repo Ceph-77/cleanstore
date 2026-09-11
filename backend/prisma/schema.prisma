@@ -116,6 +116,20 @@ enum NegotiationStatus {
   cancelled
 }
 
+/// Type de fil de messagerie (Lot 4b). `task`/`clan` = 1 fil par tâche/clan
+/// (taskId/clanId uniques ci-dessous). `global_jazzette` (ouvert, tout le
+/// monde écrit) et `global_annonces` (tout le monde lit, admin seul écrit)
+/// sont des SINGLETONS identifiés par un id fixe (voir messages.service
+/// `ensureGlobalThread`), pas par une contrainte DB. `adhoc` = fil libre
+/// entre les participants choisis à la création.
+enum MessageThreadKind {
+  task
+  clan
+  global_jazzette
+  global_annonces
+  adhoc
+}
+
 model Role {
   id        Int        @id @default(autoincrement())
   key       RoleKey    @unique
@@ -152,6 +166,9 @@ model User {
   storeClaimsRequested StoreClaim[]
   taskClaims           TaskClaim[]
   taskNegotiations     TaskNegotiation[]
+  createdMessageThreads       MessageThread[]            @relation("MessageThreadCreatedBy")
+  messageThreadParticipations MessageThreadParticipant[]
+  messages                    Message[]                  @relation("MessageAuthor")
   passwordResetTokens  PasswordResetToken[]
   workerEarnings       WorkerEarning[]
   withdrawals          Withdrawal[]
@@ -337,6 +354,7 @@ model Task {
   ledgerEntries      LedgerEntry[]
   inventoryMovements InventoryMovement[]
   negotiations       TaskNegotiation[]
+  messageThread      MessageThread?
   claims         TaskClaim[]
   inspection     TaskInspection?
   expectedPhotos TaskExpectedPhoto[]
@@ -796,6 +814,7 @@ model Clan {
   invites       ClanInvite[]
   taskClaims    TaskClaim[]
   negotiations  TaskNegotiation[]
+  messageThread MessageThread?
   reservedTasks Task[]       @relation("ClanReservedTasks")
 
   @@index([founderId])
@@ -943,4 +962,61 @@ model TaskNegotiationOffer {
 
   @@index([negotiationId])
   @@map("task_negotiation_offers")
+}
+
+/// Fil de messagerie (Lot 4b). `task`/`clan` : 1 fil par tâche/clan (créé à la
+/// demande — voir messages.service getOrCreateTaskThread/ClanThread), taskId/
+/// clanId uniques. Les 2 fils globaux sont créés avec un id FIXE (pas de
+/// contrainte DB de singleton, juste une convention appliquée par le service).
+model MessageThread {
+  id          String            @id @default(uuid())
+  kind        MessageThreadKind
+  taskId      String?           @unique @map("task_id")
+  clanId      String?           @unique @map("clan_id")
+  title       String?
+  createdById String?           @map("created_by")
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+
+  task         Task?                      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  clan         Clan?                      @relation(fields: [clanId], references: [id], onDelete: Cascade)
+  createdBy    User?                      @relation("MessageThreadCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  participants MessageThreadParticipant[]
+  messages     Message[]
+
+  @@index([kind])
+  @@map("message_threads")
+}
+
+/// Membres d'un fil `adhoc` (les autres types dérivent leur appartenance de
+/// Task.assignedToId / ClanMember / "tout le monde" — pas besoin d'une ligne
+/// ici pour eux).
+model MessageThreadParticipant {
+  threadId String   @map("thread_id")
+  userId   String   @map("user_id")
+  joinedAt DateTime @default(now()) @map("joined_at")
+
+  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([threadId, userId])
+  @@index([userId])
+  @@map("message_thread_participants")
+}
+
+/// Message — conservé indéfiniment, jamais supprimé (Q65). `editedAt` non nul
+/// = modifié dans la fenêtre d'édition (voir MESSAGE_EDIT_WINDOW_MINUTES).
+model Message {
+  id        String    @id @default(uuid())
+  threadId  String    @map("thread_id")
+  authorId  String?   @map("author_id")
+  body      String
+  editedAt  DateTime? @map("edited_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  thread MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  author User?         @relation("MessageAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([threadId, createdAt])
+  @@map("messages")
 }

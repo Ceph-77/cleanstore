@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AppLayout } from "../../components/common/AppLayout";
 import { Button } from "../../components/common/Button";
 import { TaskStatusBadge } from "../../components/tasks/TaskStatusBadge";
 import { TaskCountdown } from "../../components/tasks/TaskCountdown";
-import { IconTasks, IconMapPin, IconFile } from "../../components/common/icons";
+import { IconTasks, IconMapPin, IconFile, IconChat } from "../../components/common/icons";
 import {
   useMyTasks,
   useUpdateMyTaskStatus,
@@ -244,6 +245,12 @@ function TaskRow({ task }: { task: Task }) {
               {showInspection ? "Masquer l'inspection" : "Voir l'inspection"}
             </Button>
           )}
+          <Link
+            to={`/messages?task=${task.id}`}
+            className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border border-canvas-300 px-3 py-2 text-sm font-medium text-canvas-700 hover:bg-canvas-50 sm:w-auto"
+          >
+            <IconChat className="h-4 w-4" /> Discuter
+          </Link>
         </div>
       </div>
 
