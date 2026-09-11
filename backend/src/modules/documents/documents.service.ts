@@ -27,7 +27,7 @@ function date(d: Date): string {
 }
 
 /** Rend un PDFKit.PDFDocument en Buffer — la seule pièce générique de ce fichier. */
-function renderPdf(draw: (doc: PDFDoc) => void): Promise<Buffer> {
+function renderPdf(draw: (doc: PDFDoc) => void, footerNote?: string): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ size: "LETTER", margin: 54 });
     const chunks: Buffer[] = [];
@@ -36,7 +36,7 @@ function renderPdf(draw: (doc: PDFDoc) => void): Promise<Buffer> {
     doc.on("error", reject);
     header(doc);
     draw(doc);
-    footer(doc);
+    footer(doc, footerNote);
     doc.end();
   });
 }
@@ -51,16 +51,13 @@ function header(doc: PDFDoc): void {
   doc.fillColor("#000").font("Helvetica");
 }
 
-function footer(doc: PDFDoc): void {
+const FINANCIAL_FOOTER_NOTE =
+  "Petits fournisseurs — TPS/TVQ non applicables, sous réserve de la situation fiscale du travailleur. " +
+  "Ce document est généré automatiquement et sert de référence ; il ne remplace pas les registres officiels de Stripe.";
+
+function footer(doc: PDFDoc, note: string = FINANCIAL_FOOTER_NOTE): void {
   doc.moveDown(2);
-  doc
-    .fontSize(8)
-    .fillColor("#7a7362")
-    .text(
-      "Petits fournisseurs — TPS/TVQ non applicables, sous réserve de la situation fiscale du travailleur. " +
-        "Ce document est généré automatiquement et sert de référence ; il ne remplace pas les registres officiels de Stripe.",
-      { align: "left" },
-    );
+  doc.fontSize(8).fillColor("#7a7362").text(note, { align: "left" });
 }
 
 /**
@@ -181,4 +178,74 @@ export async function buildMonthlyStatement(workerId: string, year: number, mont
     doc.text(`Retiré ce mois (net, après commission) : ${money(totals.retraits)}`);
     doc.font("Helvetica").fontSize(10);
   });
+}
+
+const INCIDENT_TYPE_LABELS: Record<string, string> = {
+  blessure: "Blessure",
+  degat: "Dégât matériel",
+  vol: "Vol",
+  incendie: "Incendie",
+  sante: "Problème de santé",
+  autre: "Autre",
+};
+
+const INCIDENT_STATUS_LABELS: Record<string, string> = {
+  ouverte: "Ouverte",
+  en_traitement: "En traitement",
+  resolue: "Résolue",
+};
+
+/**
+ * Rapport d'incident imprimable (Q41-43, "Générer le rapport" — utile pour
+ * l'assurance). Ne dépend pas du push/VAPID (encore absent) : c'est juste
+ * une mise en forme de ce qui est déjà consigné sur l'incident.
+ */
+export async function buildIncidentReport(incidentId: string): Promise<Buffer> {
+  const incident = await prisma.incident.findUniqueOrThrow({
+    where: { id: incidentId },
+    include: {
+      store: { select: { id: true, name: true, address: true, city: true } },
+      task: { select: { id: true, description: true } },
+      reportedBy: { select: { fullName: true, email: true } },
+      assignedTo: { select: { fullName: true, email: true } },
+      notes: { orderBy: { createdAt: "asc" }, include: { author: { select: { fullName: true, email: true } } } },
+    },
+  });
+
+  return renderPdf((doc) => {
+    doc.fontSize(14).text("Rapport d'incident");
+    doc.moveDown(0.2);
+    doc.fontSize(10).fillColor("#555").text(`Généré le ${date(new Date())}`);
+    doc.moveDown(1.2);
+    doc.fillColor("#000").fontSize(11);
+
+    doc.text(`Type : ${INCIDENT_TYPE_LABELS[incident.type] ?? incident.type}`);
+    doc.text(`Gravité : ${incident.severity}`);
+    doc.text(`Statut : ${INCIDENT_STATUS_LABELS[incident.status] ?? incident.status}`);
+    doc.text(`Signalé le : ${date(incident.createdAt)}`);
+    if (incident.store) doc.text(`Magasin : ${incident.store.name}${incident.store.city ? ` (${incident.store.city})` : ""}`);
+    if (incident.task) doc.text(`Tâche liée : ${incident.task.description}`);
+    doc.text(`Signalé par : ${incident.reportedBy?.fullName ?? incident.reportedBy?.email ?? "Anonyme"}`);
+    if (incident.assignedTo) {
+      doc.text(`Assigné à : ${incident.assignedTo.fullName ?? incident.assignedTo.email}`);
+    }
+    doc.moveDown();
+
+    doc.font("Helvetica-Bold").text("Description");
+    doc.font("Helvetica").text(incident.description, { width: 480 });
+    doc.moveDown();
+
+    doc.font("Helvetica-Bold").text("Notes de suivi");
+    doc.font("Helvetica").fontSize(10);
+    if (incident.notes.length === 0) {
+      doc.fillColor("#777").text("Aucune note de suivi.");
+      doc.fillColor("#000");
+    } else {
+      for (const n of incident.notes) {
+        doc.text(`${date(n.createdAt)} — ${n.author?.fullName ?? n.author?.email ?? "—"} : ${n.body}`, {
+          width: 480,
+        });
+      }
+    }
+  }, "Ce rapport reflète les informations consignées dans l'application au moment de sa génération et sert de référence pour un dossier d'assurance ou de suivi interne.");
 }

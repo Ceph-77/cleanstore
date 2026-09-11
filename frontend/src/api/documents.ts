@@ -14,3 +14,5 @@ export const openWithdrawalReceipt = (withdrawalId: string) =>
 
 export const openMonthlyStatement = (workerId: string, year: number, month: number) =>
   openPdf(`/documents/workers/${workerId}/statement.pdf?year=${year}&month=${month}`);
+
+export const openIncidentReport = (incidentId: string) => openPdf(`/documents/incidents/${incidentId}/report.pdf`);

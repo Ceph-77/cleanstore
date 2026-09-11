@@ -4,6 +4,7 @@ import { AppLayout } from "../../components/common/AppLayout";
 import { Button } from "../../components/common/Button";
 import { LoadMore } from "../../components/common/LoadMore";
 import { useIncidents, useUpdateIncident, useAddIncidentNote } from "../../hooks/useIncidents";
+import { openIncidentReport } from "../../api/documents";
 import type { Incident, IncidentSeverity, IncidentStatus } from "../../types";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -36,6 +37,20 @@ function IncidentRow({ incident }: { incident: Incident }) {
   const addNote = useAddIncidentNote();
   const [note, setNote] = useState("");
   const [expanded, setExpanded] = useState(false);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportError, setReportError] = useState<string | null>(null);
+
+  async function handleReport() {
+    setReportError(null);
+    setReportLoading(true);
+    try {
+      await openIncidentReport(incident.id);
+    } catch (err) {
+      setReportError(err instanceof Error ? err.message : "Impossible de générer le rapport.");
+    } finally {
+      setReportLoading(false);
+    }
+  }
 
   return (
     <div className="rounded-2xl border border-canvas-200 bg-white p-4 shadow-sm shadow-canvas-900/5">
@@ -69,12 +84,22 @@ function IncidentRow({ incident }: { incident: Incident }) {
         </select>
       </div>
 
-      <button
-        className="mt-2 text-xs font-medium text-flow-700 hover:text-flow-900"
-        onClick={() => setExpanded((v) => !v)}
-      >
-        {expanded ? "Masquer les notes" : `Notes (${incident.notes.length})`}
-      </button>
+      <div className="mt-2 flex flex-wrap items-center gap-3">
+        <button
+          className="text-xs font-medium text-flow-700 hover:text-flow-900"
+          onClick={() => setExpanded((v) => !v)}
+        >
+          {expanded ? "Masquer les notes" : `Notes (${incident.notes.length})`}
+        </button>
+        <button
+          className="text-xs font-medium text-flow-700 hover:text-flow-900 disabled:opacity-50"
+          disabled={reportLoading}
+          onClick={handleReport}
+        >
+          {reportLoading ? "Génération..." : "Générer le rapport (PDF)"}
+        </button>
+        {reportError && <span className="text-xs text-red-700">{reportError}</span>}
+      </div>
 
       {expanded && (
         <div className="mt-2 space-y-2 border-t border-canvas-200 pt-2">
