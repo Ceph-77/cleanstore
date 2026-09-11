@@ -2,6 +2,7 @@ import { prisma } from "../../db/prisma";
 import { getInspectionWithUrls } from "../taskInspections/taskInspections.service";
 import { getSignedDownloadUrl } from "../../utils/storage";
 import { createEarningForCompletedTask } from "../payments/payments.service";
+import { decrementForCompletedTask } from "../inventory/inventory.service";
 import {
   haversineMeters,
   DEFAULT_START_RADIUS_M,
@@ -210,6 +211,7 @@ export async function updateMyTaskStatus(
 
   if (nextStatus === "completed") {
     await createEarningForCompletedTask(taskId);
+    void decrementForCompletedTask(taskId, task.storeId, task.consumables);
   }
 
   // Engagement moments — never let them break the core task flow.

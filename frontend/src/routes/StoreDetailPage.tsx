@@ -11,6 +11,7 @@ import { DocumentsTab } from "../components/stores/tabs/DocumentsTab";
 import { NotesTab } from "../components/stores/tabs/NotesTab";
 import { InvoicesTab } from "../components/stores/tabs/InvoicesTab";
 import { InspectionsTab } from "../components/stores/tabs/InspectionsTab";
+import { InventoryTab } from "../components/stores/tabs/InventoryTab";
 
 export function StoreDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -64,6 +65,7 @@ export function StoreDetailPage() {
         {tab === "notes" && <NotesTab storeId={storeId} />}
         {tab === "finances" && <InvoicesTab storeId={storeId} />}
         {tab === "inspections" && <InspectionsTab store={store} />}
+        {tab === "inventaire" && <InventoryTab storeId={storeId} />}
       </div>
     </AppLayout>
   );

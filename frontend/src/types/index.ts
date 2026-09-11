@@ -514,3 +514,42 @@ export interface ClanInviteRow {
   acceptedAt: string | null;
   clan: { id: string; name: string };
 }
+
+export type InventoryKind = "consommable" | "produit_chimique" | "gaz" | "machine";
+
+export interface InventoryItem {
+  id: string;
+  storeId: string;
+  kind: InventoryKind;
+  name: string;
+  unit: string | null;
+  quantity: string;
+  lowThreshold: string | null;
+  expiryDate: string | null;
+  odometer: string | null;
+  lastServiceAt: string | null;
+  nextServiceAt: string | null;
+  condition: string | null;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InventoryMovementRow {
+  id: string;
+  itemId: string;
+  delta: string;
+  reason: string;
+  taskId: string | null;
+  actorId: string | null;
+  createdAt: string;
+}
+
+export interface InventoryAlertItem extends InventoryItem {
+  store: { id: string; name: string };
+}
+
+export interface InventoryAlertItems {
+  lowStock: InventoryAlertItem[];
+  expiringSoon: InventoryAlertItem[];
+}

@@ -30,6 +30,7 @@ import { auditAdminRouter } from "./modules/audit/audit.routes";
 import { consoleRouter } from "./modules/console/console.routes";
 import { clansRouter } from "./modules/clans/clans.routes";
 import { ledgerRouter } from "./modules/ledger/ledger.routes";
+import { inventoryRouter } from "./modules/inventory/inventory.routes";
 import { requireAuth, requireRole } from "./modules/auth/auth.middleware";
 import { notFound } from "./middleware/notFound";
 import { errorHandler } from "./middleware/errorHandler";
@@ -101,6 +102,7 @@ app.use("/api/audit", auditAdminRouter);
 app.use("/api/console", consoleRouter);
 app.use("/api/clans", requireAuth, clansRouter);
 app.use("/api/ledger", requireAuth, ledgerRouter);
+app.use("/api/inventory", requireAuth, inventoryRouter);
 app.use("/api/store-claims", storeClaimsAdminRouter);
 app.use("/api/task-claims", taskClaimsAdminRouter);
 

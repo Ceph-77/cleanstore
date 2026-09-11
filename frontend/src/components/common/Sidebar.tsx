@@ -92,10 +92,12 @@ function AdminNav({
   onNavigate,
   pendingClaims,
   totalAlerts,
+  lowStock,
 }: {
   onNavigate?: () => void;
   pendingClaims?: number;
   totalAlerts?: number;
+  lowStock?: number;
 }) {
   return (
     <>
@@ -125,7 +127,13 @@ function AdminNav({
       <NavItem to="/admin/journal" icon={<IconNote />} label="Journal d'audit" onNavigate={onNavigate} />
       <NavItem to="/admin/analytics" icon={<IconFile />} label="Parcours" onNavigate={onNavigate} />
       <NavItem to="/admin/settings" icon={<IconSettings />} label="Réglages" onNavigate={onNavigate} />
-      <NavItem to="/inventory" icon={<IconInventory />} label="Équipements & stock" disabled />
+      <NavItem
+        to="/admin/inventory"
+        icon={<IconInventory />}
+        label="Équipements & stock"
+        onNavigate={onNavigate}
+        badge={lowStock}
+      />
     </>
   );
 }
@@ -136,7 +144,15 @@ function AdminNav({
  * Journal d'audit. Les autres pages restent admin-only (interfaces dédiées par
  * rôle à venir).
  */
-function ConsoleNav({ sections, onNavigate }: { sections: string[]; onNavigate?: () => void }) {
+function ConsoleNav({
+  sections,
+  onNavigate,
+  lowStock,
+}: {
+  sections: string[];
+  onNavigate?: () => void;
+  lowStock?: number;
+}) {
   return (
     <>
       <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">
@@ -147,6 +163,15 @@ function ConsoleNav({ sections, onNavigate }: { sections: string[]; onNavigate?:
       )}
       {sections.includes("finance") && (
         <NavItem to="/admin/ledger" icon={<IconWallet />} label="Grand livre" onNavigate={onNavigate} />
+      )}
+      {sections.includes("inventory") && (
+        <NavItem
+          to="/admin/inventory"
+          icon={<IconInventory />}
+          label="Équipements & stock"
+          onNavigate={onNavigate}
+          badge={lowStock}
+        />
       )}
     </>
   );
@@ -235,9 +260,10 @@ function SidebarContent({ onNavigate, onCloseButton }: { onNavigate?: () => void
             onNavigate={onNavigate}
             pendingClaims={alerts?.pendingClaims}
             totalAlerts={alerts?.total}
+            lowStock={alerts?.lowStock}
           />
         ) : (alerts?.sections?.length ?? 0) > 0 ? (
-          <ConsoleNav sections={alerts!.sections} onNavigate={onNavigate} />
+          <ConsoleNav sections={alerts!.sections} onNavigate={onNavigate} lowStock={alerts?.lowStock} />
         ) : has("sous_traitant") ? (
           <SousTraitantNav onNavigate={onNavigate} unseenCount={unseenCount} />
         ) : has("travailleur") ? (

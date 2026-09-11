@@ -89,6 +89,13 @@ enum LedgerEntryType {
   ajustement_inspecteur
 }
 
+enum InventoryItemKind {
+  consommable
+  produit_chimique
+  gaz
+  machine
+}
+
 /// Comment une tâche est payée. `fixed` = comportement historique (montant = price).
 /// `metric_prorata` = price × min(1, réalisé/cible). `hourly` = taux × temps réel.
 /// `per_unit` = prix unitaire × nombre réalisé.
@@ -222,6 +229,7 @@ model Store {
   createdBy             User?             @relation("StoreCreatedBy", fields: [createdById], references: [id])
   inspectors            StoreInspector[]
   tasks                 Task[]
+  inventoryItems        StoreInventoryItem[]
   contacts              StoreContact[]
   notes                 StoreNote[]
   documents             StoreDocument[]
@@ -316,6 +324,7 @@ model Task {
   recurringInstances Task[] @relation("TaskRecurrence")
   reservedByClan     Clan?  @relation("ClanReservedTasks", fields: [reservedByClanId], references: [id], onDelete: SetNull)
   ledgerEntries      LedgerEntry[]
+  inventoryMovements InventoryMovement[]
   claims         TaskClaim[]
   inspection     TaskInspection?
   expectedPhotos TaskExpectedPhoto[]
@@ -833,4 +842,51 @@ model LedgerEntry {
   @@index([partyAId, createdAt])
   @@index([taskId])
   @@map("ledger_entries")
+}
+
+/// Article de stock d'un magasin. `machine` utilise les champs dédiés
+/// (odometer/lastServiceAt/nextServiceAt/condition) ; les autres kinds les
+/// laissent nuls. Pas de gestion de bons de commande (décision Q46).
+model StoreInventoryItem {
+  id            String            @id @default(uuid())
+  storeId       String            @map("store_id")
+  kind          InventoryItemKind
+  name          String
+  unit          String?
+  quantity      Decimal           @default(0)
+  lowThreshold  Decimal?          @map("low_threshold")
+  expiryDate    DateTime?         @map("expiry_date") @db.Date
+  odometer      Decimal?
+  lastServiceAt DateTime?         @map("last_service_at") @db.Date
+  nextServiceAt DateTime?         @map("next_service_at") @db.Date
+  condition     String?
+  isActive      Boolean           @default(true) @map("is_active")
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+
+  store     Store               @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  movements InventoryMovement[]
+
+  @@index([storeId])
+  @@index([storeId, isActive])
+  @@map("store_inventory_items")
+}
+
+/// Mouvement de stock, append-only (jamais modifié ni supprimé — une correction
+/// s'écrit comme un nouveau mouvement, pas comme une édition du précédent).
+model InventoryMovement {
+  id        String   @id @default(uuid())
+  itemId    String   @map("item_id")
+  delta     Decimal
+  reason    String
+  taskId    String?  @map("task_id")
+  actorId   String?  @map("actor_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  item StoreInventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  task Task?              @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([itemId, createdAt])
+  @@index([taskId])
+  @@map("inventory_movements")
 }
