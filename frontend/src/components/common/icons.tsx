@@ -9,6 +9,14 @@ const base = {
   viewBox: "0 0 24 24",
 };
 
+export function IconChevronRight(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...props}>
+      <path d="m9 6 6 6-6 6" />
+    </svg>
+  );
+}
+
 export function IconStore(props: SVGProps<SVGSVGElement>) {
   return (
     <svg {...base} {...props}>

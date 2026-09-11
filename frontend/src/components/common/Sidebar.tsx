@@ -1,5 +1,5 @@
-import { useEffect, useRef, type ReactNode } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { playChime } from "../../utils/sound";
 import { useAuth } from "../../context/AuthContext";
 import { Logo } from "./Logo";
@@ -18,6 +18,7 @@ import {
   IconNote,
   IconTrophy,
   IconChat,
+  IconChevronRight,
   IconX,
 } from "./icons";
 import { useUnseenDecisionsCount } from "../../hooks/useNotifications";
@@ -90,58 +91,144 @@ function NavItem({
   );
 }
 
+/**
+ * Groupe repliable de la barre latérale admin — repris de la structure
+ * d'origine ("Gestion des X", "Gestion des Y"...) que Céphas décrivait au
+ * tout début de la refonte console, plutôt qu'une seule longue liste plate
+ * "Gestion" (19 entrées à la fin des Lots 0-8, devenue trop dense).
+ * Replié par défaut, s'ouvre tout seul si la page courante est dedans.
+ */
+function NavGroup({
+  label,
+  paths,
+  badge,
+  children,
+}: {
+  label: string;
+  paths: string[];
+  badge?: number;
+  children: ReactNode;
+}) {
+  const location = useLocation();
+  const isActiveGroup = paths.some((p) => location.pathname.startsWith(p));
+  const [open, setOpen] = useState(isActiveGroup);
+
+  useEffect(() => {
+    if (isActiveGroup) setOpen(true);
+  }, [isActiveGroup]);
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wider text-canvas-0/45 transition-colors hover:text-canvas-0/70"
+      >
+        <span className="flex items-center gap-1.5">
+          <IconChevronRight className={`h-3 w-3 transition-transform ${open ? "rotate-90" : ""}`} />
+          {label}
+        </span>
+        {!!badge && (
+          <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-linen-400 px-1 text-[10px] font-semibold text-linen-900">
+            {badge}
+          </span>
+        )}
+      </button>
+      {open && <div className="space-y-1 pb-1">{children}</div>}
+    </div>
+  );
+}
+
 function AdminNav({
   onNavigate,
   pendingClaims,
-  totalAlerts,
+  openIncidents,
   lowStock,
 }: {
   onNavigate?: () => void;
   pendingClaims?: number;
-  totalAlerts?: number;
+  openIncidents?: number;
   lowStock?: number;
 }) {
   return (
     <>
-      <p className="flex items-center justify-between px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/35">
-        <span>Gestion</span>
-        {!!totalAlerts && (
-          <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-linen-400 px-1 text-[10px] font-semibold text-linen-900">
-            {totalAlerts}
-          </span>
-        )}
-      </p>
-      <NavItem to="/admin/simulations" icon={<IconSimulation />} label="Simulations" onNavigate={onNavigate} />
-      <NavItem to="/stores" icon={<IconStore />} label="Magasins" onNavigate={onNavigate} />
-      <NavItem to="/admin/task-templates" icon={<IconTasks />} label="Modèles de tâches" onNavigate={onNavigate} />
-      <NavItem to="/admin/tasks" icon={<IconTasks />} label="Suivi des travaux" onNavigate={onNavigate} />
-      <NavItem to="/admin/recurrences" icon={<IconTasks />} label="Récurrences" onNavigate={onNavigate} />
-      <NavItem
-        to="/admin/claims"
-        icon={<IconInspection />}
-        label="Demandes"
-        onNavigate={onNavigate}
-        badge={pendingClaims}
-      />
-      <NavItem to="/admin/negotiations" icon={<IconWallet />} label="Négociations" onNavigate={onNavigate} />
-      <NavItem to="/admin/clan-shares" icon={<IconUser />} label="Parts de clan" onNavigate={onNavigate} />
-      <NavItem to="/admin/messages" icon={<IconChat />} label="Messagerie (modération)" onNavigate={onNavigate} />
-      <NavItem to="/admin/users" icon={<IconUser />} label="Utilisateurs & équipes" onNavigate={onNavigate} />
-      <NavItem to="/admin/ledger" icon={<IconWallet />} label="Grand livre" onNavigate={onNavigate} />
-      <NavItem to="/admin/feedback" icon={<IconFeedback />} label="Feedback" onNavigate={onNavigate} />
-      <NavItem to="/admin/incidents" icon={<IconInspection />} label="Incidents" onNavigate={onNavigate} />
-      <NavItem to="/admin/contributions" icon={<IconTrophy />} label="Contributions" onNavigate={onNavigate} />
-      <NavItem to="/leaderboard" icon={<IconTrophy />} label="Classement" onNavigate={onNavigate} />
-      <NavItem to="/admin/journal" icon={<IconNote />} label="Journal d'audit" onNavigate={onNavigate} />
-      <NavItem to="/admin/analytics" icon={<IconFile />} label="Parcours" onNavigate={onNavigate} />
-      <NavItem to="/admin/settings" icon={<IconSettings />} label="Réglages" onNavigate={onNavigate} />
-      <NavItem
-        to="/admin/inventory"
-        icon={<IconInventory />}
-        label="Équipements & stock"
-        onNavigate={onNavigate}
-        badge={lowStock}
-      />
+      <p className="px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-canvas-0/30">Gestion</p>
+
+      <NavGroup label="Gestion des magasins" paths={["/stores"]}>
+        <NavItem to="/stores" icon={<IconStore />} label="Magasins" onNavigate={onNavigate} />
+      </NavGroup>
+
+      <NavGroup label="Gestion des modèles de tâches" paths={["/admin/task-templates", "/admin/recurrences"]}>
+        <NavItem to="/admin/task-templates" icon={<IconTasks />} label="Modèles de tâches" onNavigate={onNavigate} />
+        <NavItem to="/admin/recurrences" icon={<IconTasks />} label="Récurrences" onNavigate={onNavigate} />
+      </NavGroup>
+
+      <NavGroup label="Gestion du markettask" paths={["/admin/tasks", "/admin/claims"]} badge={pendingClaims}>
+        <NavItem to="/admin/tasks" icon={<IconTasks />} label="Suivi des travaux" onNavigate={onNavigate} />
+        <NavItem
+          to="/admin/claims"
+          icon={<IconInspection />}
+          label="Demandes"
+          onNavigate={onNavigate}
+          badge={pendingClaims}
+        />
+      </NavGroup>
+
+      <NavGroup label="Négociation & messagerie" paths={["/admin/negotiations", "/admin/messages"]}>
+        <NavItem to="/admin/negotiations" icon={<IconWallet />} label="Négociations" onNavigate={onNavigate} />
+        <NavItem to="/admin/messages" icon={<IconChat />} label="Messagerie (modération)" onNavigate={onNavigate} />
+      </NavGroup>
+
+      <NavGroup label="Alertes accident / incidents" paths={["/admin/incidents"]} badge={openIncidents}>
+        <NavItem
+          to="/admin/incidents"
+          icon={<IconInspection />}
+          label="Incidents"
+          onNavigate={onNavigate}
+          badge={openIncidents}
+        />
+      </NavGroup>
+
+      <NavGroup label="Gestion des équipements / stock" paths={["/admin/inventory"]} badge={lowStock}>
+        <NavItem
+          to="/admin/inventory"
+          icon={<IconInventory />}
+          label="Équipements & stock"
+          onNavigate={onNavigate}
+          badge={lowStock}
+        />
+      </NavGroup>
+
+      <NavGroup label="Gestion du portefeuille / finances" paths={["/admin/ledger"]}>
+        <NavItem to="/admin/ledger" icon={<IconWallet />} label="Grand livre" onNavigate={onNavigate} />
+      </NavGroup>
+
+      <NavGroup label="Gestion des feedback" paths={["/admin/feedback"]}>
+        <NavItem to="/admin/feedback" icon={<IconFeedback />} label="Feedback" onNavigate={onNavigate} />
+      </NavGroup>
+
+      <NavGroup label="Gestion des rewards / performance" paths={["/admin/contributions", "/leaderboard"]}>
+        <NavItem to="/admin/contributions" icon={<IconTrophy />} label="Contributions" onNavigate={onNavigate} />
+        <NavItem to="/leaderboard" icon={<IconTrophy />} label="Classement" onNavigate={onNavigate} />
+      </NavGroup>
+
+      <NavGroup
+        label="Utilisateurs & équipes"
+        paths={["/admin/users", "/admin/clan-shares"]}
+      >
+        <NavItem to="/admin/users" icon={<IconUser />} label="Utilisateurs & équipes" onNavigate={onNavigate} />
+        <NavItem to="/admin/clan-shares" icon={<IconUser />} label="Parts de clan" onNavigate={onNavigate} />
+      </NavGroup>
+
+      <NavGroup
+        label="Système"
+        paths={["/admin/simulations", "/admin/journal", "/admin/analytics", "/admin/settings"]}
+      >
+        <NavItem to="/admin/simulations" icon={<IconSimulation />} label="Simulations" onNavigate={onNavigate} />
+        <NavItem to="/admin/journal" icon={<IconNote />} label="Journal d'audit" onNavigate={onNavigate} />
+        <NavItem to="/admin/analytics" icon={<IconFile />} label="Parcours" onNavigate={onNavigate} />
+        <NavItem to="/admin/settings" icon={<IconSettings />} label="Réglages" onNavigate={onNavigate} />
+      </NavGroup>
     </>
   );
 }
@@ -281,7 +368,7 @@ function SidebarContent({ onNavigate, onCloseButton }: { onNavigate?: () => void
           <AdminNav
             onNavigate={onNavigate}
             pendingClaims={alerts?.pendingClaims}
-            totalAlerts={alerts?.total}
+            openIncidents={alerts?.openIncidents}
             lowStock={alerts?.lowStock}
           />
         ) : (alerts?.sections?.length ?? 0) > 0 ? (
