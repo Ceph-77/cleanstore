@@ -169,6 +169,10 @@ model User {
   createdMessageThreads       MessageThread[]            @relation("MessageThreadCreatedBy")
   messageThreadParticipations MessageThreadParticipant[]
   messages                    Message[]                  @relation("MessageAuthor")
+  assignedFeedback     Feedback[]     @relation("FeedbackAssignedTo")
+  reportedIncidents    Incident[]     @relation("IncidentReportedBy")
+  assignedIncidents    Incident[]     @relation("IncidentAssignedTo")
+  incidentNotes        IncidentNote[]
   passwordResetTokens  PasswordResetToken[]
   workerEarnings       WorkerEarning[]
   withdrawals          Withdrawal[]
@@ -264,6 +268,7 @@ model Store {
   invoices              StoreInvoice[]
   claims                StoreClaim[]
   inspections           StoreInspection[]
+  incidents             Incident[]
 
   @@index([name])
   @@index([isActive])
@@ -355,6 +360,7 @@ model Task {
   inventoryMovements InventoryMovement[]
   negotiations       TaskNegotiation[]
   messageThread      MessageThread?
+  incidents          Incident[]
   claims         TaskClaim[]
   inspection     TaskInspection?
   expectedPhotos TaskExpectedPhoto[]
@@ -667,10 +673,29 @@ model Feedback {
   isMulti   Boolean  @default(false) @map("is_multi")
   createdAt DateTime @default(now()) @map("created_at")
 
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  // Triage (Lot 7a, Q53-54) — tout par défaut à une valeur qui préserve le
+  // comportement actuel (liste plate, tout "non_lu") pour les entrées passées.
+  status           FeedbackStatus @default(non_lu)
+  isImportant      Boolean        @default(false) @map("is_important")
+  assignedToId     String?        @map("assigned_to")
+  assignedCategory String?        @map("assigned_category") // finance / technique / operations, texte libre
+  convertedIncidentId String?     @unique @map("converted_incident_id")
+
+  user             User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  assignedTo       User?     @relation("FeedbackAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+  convertedIncident Incident? @relation(fields: [convertedIncidentId], references: [id], onDelete: SetNull)
 
   @@index([createdAt])
+  @@index([status])
   @@map("feedback_entries")
+}
+
+enum FeedbackStatus {
+  non_lu
+  lu
+  en_traitement
+  resolu
+  ignore
 }
 
 /// Product-analytics events (page views, funnel steps, server milestones).
@@ -1019,4 +1044,76 @@ model Message {
 
   @@index([threadId, createdAt])
   @@map("messages")
+}
+
+/// `police`/`incendie`/`santé`/`vol` sont des TYPES d'incident, jamais des
+/// rôles ni du feedback (Q41-43/Q53).
+enum IncidentType {
+  blessure
+  degat
+  vol
+  incendie
+  sante
+  autre
+}
+
+enum IncidentSeverity {
+  mineur
+  majeur
+  urgence
+}
+
+enum IncidentStatus {
+  ouverte
+  en_traitement
+  resolue
+}
+
+/// Signalement d'incident (Lot 7b). Le rappel "appelle les secours toi-même"
+/// et le blocage du gain sur urgence/majeur (Q41-43) restent des décisions
+/// d'interface/produit — cette tranche pose le cycle de vie (statut,
+/// assignation, notes horodatées) sans toucher au paiement (voir mémoire :
+/// coupler incident->gain suspendu est ambigu avec le "disputed" déjà utilisé
+/// pour un score d'inspection bas, laissé à trancher par Céphas) ni au push
+/// (VAPID pas fourni) ni au PDF (pas fait).
+model Incident {
+  id           String           @id @default(uuid())
+  type         IncidentType
+  severity     IncidentSeverity
+  description  String
+  storeId      String?          @map("store_id")
+  taskId       String?          @map("task_id")
+  reportedById String?          @map("reported_by")
+  assignedToId String?          @map("assigned_to")
+  status       IncidentStatus   @default(ouverte)
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+
+  store          Store?         @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  task           Task?          @relation(fields: [taskId], references: [id], onDelete: SetNull)
+  reportedBy     User?          @relation("IncidentReportedBy", fields: [reportedById], references: [id], onDelete: SetNull)
+  assignedTo     User?          @relation("IncidentAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+  notes          IncidentNote[]
+  sourceFeedback Feedback?
+
+  @@index([status])
+  @@index([severity])
+  @@index([storeId])
+  @@index([taskId])
+  @@map("incidents")
+}
+
+/// Journal de suivi d'un incident, append-only (jamais modifié/supprimé).
+model IncidentNote {
+  id         String   @id @default(uuid())
+  incidentId String   @map("incident_id")
+  authorId   String?  @map("author_id")
+  body       String
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  author   User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([incidentId, createdAt])
+  @@map("incident_notes")
 }

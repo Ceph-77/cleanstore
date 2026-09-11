@@ -377,6 +377,8 @@ export interface WorkerEarning {
   task?: { id: string; description: string; store: { name: string } };
 }
 
+export type FeedbackStatus = "non_lu" | "lu" | "en_traitement" | "resolu" | "ignore";
+
 export interface Feedback {
   id: string;
   userId: string | null;
@@ -387,7 +389,46 @@ export interface Feedback {
   note: string;
   isMulti: boolean;
   createdAt: string;
+  status: FeedbackStatus;
+  isImportant: boolean;
+  assignedToId: string | null;
+  assignedCategory: string | null;
+  convertedIncidentId: string | null;
   user?: { id: string; fullName: string | null; email: string } | null;
+  assignedTo?: { id: string; fullName: string | null; email: string } | null;
+  convertedIncident?: { id: string; status: IncidentStatus } | null;
+}
+
+export type IncidentType = "blessure" | "degat" | "vol" | "incendie" | "sante" | "autre";
+export type IncidentSeverity = "mineur" | "majeur" | "urgence";
+export type IncidentStatus = "ouverte" | "en_traitement" | "resolue";
+
+export interface IncidentNote {
+  id: string;
+  incidentId: string;
+  authorId: string | null;
+  body: string;
+  createdAt: string;
+  author: { id: string; fullName: string | null; email: string } | null;
+}
+
+export interface Incident {
+  id: string;
+  type: IncidentType;
+  severity: IncidentSeverity;
+  description: string;
+  storeId: string | null;
+  taskId: string | null;
+  reportedById: string | null;
+  assignedToId: string | null;
+  status: IncidentStatus;
+  createdAt: string;
+  updatedAt: string;
+  store: { id: string; name: string } | null;
+  task: { id: string; description: string } | null;
+  reportedBy: { id: string; fullName: string | null; email: string } | null;
+  assignedTo: { id: string; fullName: string | null; email: string } | null;
+  notes: IncidentNote[];
 }
 
 export interface Withdrawal {

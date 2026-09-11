@@ -54,6 +54,7 @@ const MessagesPage = lazy(() => import("./routes/MessagesPage").then(named("Mess
 const MessagesAdminPage = lazy(() =>
   import("./routes/admin/MessagesAdminPage").then(named("MessagesAdminPage")),
 );
+const IncidentsPage = lazy(() => import("./routes/admin/IncidentsPage").then(named("IncidentsPage")));
 
 function RouteTracker() {
   const { pathname } = useLocation();
@@ -193,6 +194,14 @@ function AppRoutes() {
           element={
             <ProtectedRoute roles={["admin"]}>
               <MessagesAdminPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/incidents"
+          element={
+            <ProtectedRoute roles={["admin", "developpeur", "chef_equipe", "inspecteur"]}>
+              <IncidentsPage />
             </ProtectedRoute>
           }
         />

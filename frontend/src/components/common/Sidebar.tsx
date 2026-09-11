@@ -126,6 +126,7 @@ function AdminNav({
       <NavItem to="/admin/users" icon={<IconUser />} label="Utilisateurs & équipes" onNavigate={onNavigate} />
       <NavItem to="/admin/ledger" icon={<IconWallet />} label="Grand livre" onNavigate={onNavigate} />
       <NavItem to="/admin/feedback" icon={<IconFeedback />} label="Feedback" onNavigate={onNavigate} />
+      <NavItem to="/admin/incidents" icon={<IconInspection />} label="Incidents" onNavigate={onNavigate} />
       <NavItem to="/leaderboard" icon={<IconTrophy />} label="Classement" onNavigate={onNavigate} />
       <NavItem to="/admin/journal" icon={<IconNote />} label="Journal d'audit" onNavigate={onNavigate} />
       <NavItem to="/admin/analytics" icon={<IconFile />} label="Parcours" onNavigate={onNavigate} />
@@ -169,6 +170,12 @@ function ConsoleNav({
       )}
       {sections.includes("markettask") && (
         <NavItem to="/admin/negotiations" icon={<IconWallet />} label="Négociations" onNavigate={onNavigate} />
+      )}
+      {sections.includes("feedback") && (
+        <>
+          <NavItem to="/admin/feedback" icon={<IconFeedback />} label="Feedback" onNavigate={onNavigate} />
+          <NavItem to="/admin/incidents" icon={<IconInspection />} label="Incidents" onNavigate={onNavigate} />
+        </>
       )}
       {sections.includes("inventory") && (
         <NavItem

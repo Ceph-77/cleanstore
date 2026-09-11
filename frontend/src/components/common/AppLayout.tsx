@@ -4,6 +4,7 @@ import { Logo } from "./Logo";
 import { IconMenu } from "./icons";
 import { ImpersonationBanner } from "./ImpersonationBanner";
 import { FeedbackButton } from "../feedback/FeedbackButton";
+import { IncidentButton } from "../incidents/IncidentButton";
 import { CelebrationModal } from "../engagement/CelebrationModal";
 
 export function AppLayout({ children }: { children: ReactNode }) {
@@ -12,6 +13,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen bg-canvas-50">
       <FeedbackButton />
+      <IncidentButton />
       <CelebrationModal />
       <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
 
