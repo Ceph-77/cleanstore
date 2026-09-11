@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { AppLayout } from "../../components/common/AppLayout";
+import { MarketTaskTabs } from "../../components/admin/MarketTaskTabs";
 import { Button } from "../../components/common/Button";
 import { LoadMore } from "../../components/common/LoadMore";
 import { useIncidents, useUpdateIncident, useAddIncidentNote } from "../../hooks/useIncidents";
@@ -155,6 +156,8 @@ export function IncidentsPage() {
       <p className="mt-1 text-sm text-canvas-600">
         Blessure, dégât, vol, incendie, santé — signalés par n'importe qui, n'importe quand.
       </p>
+
+      <MarketTaskTabs active="incidents" />
 
       <div className="mt-4 flex gap-2 overflow-x-auto">
         {(["ouverte", "en_traitement", "resolue", "all"] as const).map((s) => (

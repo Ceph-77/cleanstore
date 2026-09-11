@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { AppLayout } from "../../components/common/AppLayout";
+import { MarketTaskTabs } from "../../components/admin/MarketTaskTabs";
 import { Button } from "../../components/common/Button";
 import { LoadMore } from "../../components/common/LoadMore";
 import {
@@ -187,6 +188,8 @@ export function NegotiationsPage() {
         Fils offre / contre-offre sur le prix des tâches négociables. Un accord fige le prix et attribue la
         tâche au travailleur (ou au clan).
       </p>
+
+      <MarketTaskTabs active="negotiations" />
 
       <div className="mt-4 flex gap-2 overflow-x-auto">
         {STATUS_FILTERS.map((f) => (

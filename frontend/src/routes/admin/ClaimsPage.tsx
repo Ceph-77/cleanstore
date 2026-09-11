@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { AppLayout } from "../../components/common/AppLayout";
+import { MarketTaskTabs } from "../../components/admin/MarketTaskTabs";
 import { Button } from "../../components/common/Button";
 import { LoadMore } from "../../components/common/LoadMore";
 import {
@@ -183,6 +184,8 @@ export function ClaimsPage() {
       <p className="mt-1 text-sm text-canvas-600">
         Approuve ou refuse les demandes des sous-traitants (magasins) et travailleurs autonomes (tâches).
       </p>
+
+      <MarketTaskTabs active="claims" />
 
       <h2 className="mt-8 text-sm font-semibold uppercase tracking-wide text-canvas-600">Magasins</h2>
       <div className="mt-3 space-y-3">

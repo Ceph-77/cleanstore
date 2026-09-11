@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { AppLayout } from "../../components/common/AppLayout";
+import { MarketTaskTabs } from "../../components/admin/MarketTaskTabs";
 import { LoadMore } from "../../components/common/LoadMore";
 import { TaskStatusBadge } from "../../components/tasks/TaskStatusBadge";
 import { TaskCountdown } from "../../components/tasks/TaskCountdown";
@@ -28,6 +29,8 @@ export function TasksDashboardPage() {
       <p className="mt-1 text-sm text-canvas-600">
         Toutes les tâches en cours ou terminées, tous magasins confondus.
       </p>
+
+      <MarketTaskTabs active="tasks" />
 
       <div className="mt-4 flex gap-2 overflow-x-auto">
         {FILTERS.map((f) => (
