@@ -130,6 +130,22 @@ export async function ledgerSummary() {
   };
 }
 
+/**
+ * Toutes les écritures où `workerId` est une des deux parties, sur une
+ * fenêtre de dates — sert au relevé mensuel (Q58-60) : gains, primes,
+ * pénalités, transferts de clan reçus/donnés, dans l'ordre chronologique.
+ */
+export function listLedgerForParty(partyId: string, from: Date, to: Date) {
+  return prisma.ledgerEntry.findMany({
+    where: {
+      createdAt: { gte: from, lt: to },
+      OR: [{ partyAId: partyId }, { partyBId: partyId }],
+    },
+    include: { task: { select: { id: true, description: true } } },
+    orderBy: { createdAt: "asc" },
+  });
+}
+
 export function toCsv(rows: Record<string, unknown>[]): string {
   if (rows.length === 0) return "";
   const headers = Object.keys(rows[0]);

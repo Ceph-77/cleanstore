@@ -2,8 +2,11 @@ import { useState } from "react";
 import { AppLayout } from "../components/common/AppLayout";
 import { Button } from "../components/common/Button";
 import { StatCard } from "../components/common/StatCard";
+import { MonthlyStatementPicker } from "../components/common/MonthlyStatementPicker";
 import { IconWallet } from "../components/common/icons";
 import { useWalletBalance, useWalletHistory, useConnectOnboard, useWithdraw } from "../hooks/usePayments";
+import { useAuth } from "../context/AuthContext";
+import { openWithdrawalReceipt } from "../api/documents";
 import { ApiError } from "../api/client";
 
 function formatMoney(value: string | number) {
@@ -28,12 +31,26 @@ const WITHDRAWAL_LABELS: Record<string, { label: string; className: string }> = 
 };
 
 export function WalletPage() {
+  const { user } = useAuth();
   const { data: balance, isLoading: balanceLoading } = useWalletBalance();
   const { data: history } = useWalletHistory();
   const connectOnboard = useConnectOnboard();
   const withdraw = useWithdraw();
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [receiptLoadingId, setReceiptLoadingId] = useState<string | null>(null);
+
+  async function handleReceipt(withdrawalId: string) {
+    setError(null);
+    setReceiptLoadingId(withdrawalId);
+    try {
+      await openWithdrawalReceipt(withdrawalId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Impossible de générer le reçu.");
+    } finally {
+      setReceiptLoadingId(null);
+    }
+  }
 
   async function handleConnect() {
     setError(null);
@@ -162,15 +179,29 @@ export function WalletPage() {
                     </p>
                     <p className="text-xs text-canvas-600">{formatDate(w.createdAt)}</p>
                   </div>
-                  <span className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium ${status.className}`}>
-                    {status.label}
-                  </span>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <button
+                      className="text-xs font-medium text-flow-700 hover:text-flow-900 disabled:opacity-50"
+                      disabled={receiptLoadingId === w.id}
+                      onClick={() => handleReceipt(w.id)}
+                    >
+                      {receiptLoadingId === w.id ? "..." : "Reçu"}
+                    </button>
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${status.className}`}>
+                      {status.label}
+                    </span>
+                  </div>
                 </div>
               );
             })}
           </div>
         </>
       )}
+
+      <h2 className="mt-10 text-sm font-semibold uppercase tracking-wide text-canvas-600">Relevé mensuel</h2>
+      <div className="mt-3 rounded-2xl border border-canvas-200 bg-white p-4">
+        {user && <MonthlyStatementPicker workerId={user.id} />}
+      </div>
     </AppLayout>
   );
 }

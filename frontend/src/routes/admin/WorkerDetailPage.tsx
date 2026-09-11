@@ -19,6 +19,7 @@ import {
   useDeletePastTask,
 } from "../../hooks/useEngagement";
 import { StreakHistory } from "../../components/engagement/StreakHistory";
+import { MonthlyStatementPicker } from "../../components/common/MonthlyStatementPicker";
 import type { DayTask, Organization, RoleKey } from "../../types";
 
 const todayKey = () => {
@@ -472,6 +473,11 @@ export function WorkerDetailPage() {
           ))}
         </div>
       )}
+
+      <h2 className="mt-8 text-sm font-semibold text-canvas-900">Relevé mensuel</h2>
+      <div className="mt-2 rounded-2xl border border-canvas-200 bg-white p-4 shadow-sm shadow-canvas-900/5">
+        <MonthlyStatementPicker workerId={id} />
+      </div>
 
       <h2 className="mt-8 text-sm font-semibold text-canvas-900">Série</h2>
       <div className="mt-2 rounded-2xl border border-canvas-200 bg-white p-4 shadow-sm shadow-canvas-900/5">
