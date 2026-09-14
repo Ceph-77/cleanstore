@@ -30,6 +30,11 @@ const envSchema = z.object({
   CRON_SECRET: z.string().optional(),
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  // Absent in an environment that hasn't generated a VAPID keypair yet — push
+  // sending is then a no-op (pushService.isPushConfigured() guards every call).
+  VAPID_PUBLIC_KEY: z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
+  VAPID_SUBJECT: z.string().default("mailto:support@kleanstor.org"),
   // Read directly in src/instrument.ts (before this file parses); listed here for docs.
   SENTRY_DSN: z.string().optional(),
 });

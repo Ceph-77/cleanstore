@@ -1,6 +1,7 @@
 import { prisma } from "../../db/prisma";
 import { can } from "../auth/permissions";
 import { pageArgs, toPage, type PageParams } from "../../utils/pagination";
+import { sendPushToUsers } from "../push/push.service";
 import type { MessageThread, RoleKey } from "@prisma/client";
 
 /** Un message reste modifiable un court moment après l'envoi (Q65), jamais après. */
@@ -169,6 +170,46 @@ function canPostToThread(thread: MessageThread, roleKeys: readonly RoleKey[]): b
   return true;
 }
 
+/**
+ * Qui recevoir une notification push pour un nouveau message. `global_jazzette`
+ * (clavardage libre, tout le monde) est exclu — trop bruyant pour un push par
+ * message ; `global_annonces` (admin seulement) vise tout le monde puisque c'est
+ * rare et pertinent pour tous.
+ */
+async function getPushRecipientIds(thread: MessageThread, authorId: string): Promise<string[]> {
+  switch (thread.kind) {
+    case "task": {
+      if (!thread.taskId) return [];
+      const task = await prisma.task.findUnique({ where: { id: thread.taskId }, select: { assignedToId: true } });
+      return task?.assignedToId && task.assignedToId !== authorId ? [task.assignedToId] : [];
+    }
+    case "clan": {
+      if (!thread.clanId) return [];
+      const members = await prisma.clanMember.findMany({
+        where: { clanId: thread.clanId, userId: { not: authorId } },
+        select: { userId: true },
+      });
+      return members.map((m) => m.userId);
+    }
+    case "adhoc": {
+      const participants = await prisma.messageThreadParticipant.findMany({
+        where: { threadId: thread.id, userId: { not: authorId } },
+        select: { userId: true },
+      });
+      return participants.map((p) => p.userId);
+    }
+    case "global_annonces": {
+      const users = await prisma.user.findMany({
+        where: { isActive: true, id: { not: authorId } },
+        select: { id: true },
+      });
+      return users.map((u) => u.id);
+    }
+    default:
+      return [];
+  }
+}
+
 export async function listMessages(threadId: string, userId: string, roleKeys: readonly RoleKey[], page: PageParams) {
   const thread = await prisma.messageThread.findUnique({ where: { id: threadId } });
   if (!thread) throw new Error("Discussion introuvable.");
@@ -205,6 +246,18 @@ export async function postMessage(
     }),
     prisma.messageThread.update({ where: { id: threadId }, data: { updatedAt: new Date() } }),
   ]);
+
+  const recipientIds = await getPushRecipientIds(thread, userId);
+  if (recipientIds.length > 0) {
+    const preview = body.length > 120 ? `${body.slice(0, 117)}...` : body;
+    await sendPushToUsers(recipientIds, {
+      title: message.author?.fullName ?? "Nouveau message",
+      body: preview,
+      url: `/messages/${threadId}`,
+      tag: `message-thread-${threadId}`,
+    }).catch(() => {});
+  }
+
   return message;
 }
 

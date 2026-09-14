@@ -34,3 +34,9 @@ export async function triggerMonthlyRecap(req: Request, res: Response) {
   const result = await engagementService.runMonthlyRecap();
   res.json(result);
 }
+
+export async function triggerTaskReminders(req: Request, res: Response) {
+  if (!checkSecret(req, res)) return;
+  const result = await tasksService.sendDueTaskReminders();
+  res.json(result);
+}

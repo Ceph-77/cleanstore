@@ -1,5 +1,6 @@
 import { prisma } from "../../db/prisma";
 import { sendClaimDecisionEmail } from "../../utils/email";
+import { sendPush } from "../push/push.service";
 import { pageArgs, toPage, type PageParams } from "../../utils/pagination";
 import type { ClaimStatus } from "@prisma/client";
 
@@ -102,6 +103,16 @@ export async function decideClaim(id: string, status: "approved" | "rejected", r
     itemLabel: decided.store.name,
     status,
     reason: decided.decisionReason,
+  }).catch(() => {});
+
+  await sendPush(decided.requestedById, {
+    title: status === "approved" ? "Demande approuvée" : "Demande refusée",
+    body:
+      status === "approved"
+        ? `Ta demande pour « ${decided.store.name} » a été approuvée.`
+        : `Ta demande pour « ${decided.store.name} » a été refusée.`,
+    url: "/markettask/stores",
+    tag: `store-claim-${decided.id}`,
   }).catch(() => {});
 
   return decided;

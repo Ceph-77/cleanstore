@@ -4,6 +4,8 @@ import { Prisma, type TaskStatus } from "@prisma/client";
 import type { taskCreateSchema, taskUpdateSchema } from "./tasks.schema";
 import { pageArgs, toPage, type PageParams } from "../../utils/pagination";
 import { todayAtHour, recurrenceRunsOn, type Recurrence } from "../../utils/week";
+import { sendPush, sendPushToUsers } from "../push/push.service";
+import { startOfCurrentDay } from "../../utils/week";
 
 /** Heure (locale Montréal) avant laquelle les tâches du jour ne sont pas visibles. */
 const VISIBILITY_HOUR = 15;
@@ -62,7 +64,36 @@ export async function publishTask(id: string) {
     }
   }
 
-  return prisma.task.update({ where: { id }, data });
+  const updated = await prisma.task.update({
+    where: { id },
+    data,
+    include: { store: { select: { assignedSubcontractorId: true } } },
+  });
+
+  // Visible immédiatement (hors fenêtre 15 h) : notifie tout de suite. Publiée
+  // avant 15 h, `visibleFrom` la rendra visible plus tard — pas de push encore
+  // pertinent puisque personne ne peut la voir/réclamer avant cette heure-là.
+  if (!beforeWindow && updated.status === "open" && updated.store.assignedSubcontractorId) {
+    const workers = await prisma.userRole.findMany({
+      where: {
+        organizationId: updated.store.assignedSubcontractorId,
+        role: { key: "travailleur" },
+        user: { isActive: true },
+      },
+      select: { userId: true },
+    });
+    await sendPushToUsers(
+      workers.map((w) => w.userId),
+      {
+        title: "Nouvelle tâche disponible",
+        body: updated.description,
+        url: "/markettask/tasks",
+        tag: `task-published-${updated.id}`,
+      },
+    ).catch(() => {});
+  }
+
+  return updated;
 }
 
 export function unpublishTask(id: string) {
@@ -70,6 +101,46 @@ export function unpublishTask(id: string) {
     where: { id },
     data: { isPublished: false },
   });
+}
+
+/**
+ * Rappel push, une fois par jour (appelé par le cron), pour les tâches dues
+ * aujourd'hui, assignées, pas encore démarrées. Idempotent en pratique : si
+ * une tâche est démarrée ou complétée, elle sort du filtre `startedAt: null`
+ * / `status` avant le prochain passage.
+ */
+export async function sendDueTaskReminders() {
+  const today = startOfCurrentDay();
+  const tasks = await prisma.task.findMany({
+    where: {
+      assignedToId: { not: null },
+      status: { in: ["claimed", "in_progress"] },
+      dueDate: today,
+      startedAt: null,
+    },
+    select: { description: true, assignedToId: true },
+  });
+
+  const byWorker = new Map<string, string[]>();
+  for (const task of tasks) {
+    const descriptions = byWorker.get(task.assignedToId!) ?? [];
+    descriptions.push(task.description);
+    byWorker.set(task.assignedToId!, descriptions);
+  }
+
+  await Promise.all(
+    [...byWorker.entries()].map(([workerId, descriptions]) =>
+      sendPush(workerId, {
+        title:
+          descriptions.length > 1 ? `${descriptions.length} tâches prévues aujourd'hui` : "Tâche prévue aujourd'hui",
+        body: descriptions.slice(0, 3).join(" · "),
+        url: "/markettask/my-tasks",
+        tag: "task-reminder-today",
+      }).catch(() => {}),
+    ),
+  );
+
+  return { workersNotified: byWorker.size, tasksChecked: tasks.length };
 }
 
 export async function listAllTasksForDashboard(page: PageParams, status?: TaskStatus) {

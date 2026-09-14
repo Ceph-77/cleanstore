@@ -1,6 +1,7 @@
 import { prisma } from "../../db/prisma";
 import { getSignedDownloadUrl } from "../../utils/storage";
 import { sendClaimDecisionEmail } from "../../utils/email";
+import { sendPush } from "../push/push.service";
 import { startOfCurrentWeek } from "../../utils/week";
 import { pageArgs, toPage, type PageParams } from "../../utils/pagination";
 import { assertCanEditTask } from "../taskInstructions/taskInstructions.service";
@@ -272,6 +273,16 @@ export async function decideClaim(id: string, status: "approved" | "rejected", r
     itemLabel: decided.task.description,
     status,
     reason: decided.decisionReason,
+  }).catch(() => {});
+
+  await sendPush(decided.workerId, {
+    title: status === "approved" ? "Demande approuvée" : "Demande refusée",
+    body:
+      status === "approved"
+        ? `Ta demande pour « ${decided.task.description} » a été approuvée.`
+        : `Ta demande pour « ${decided.task.description} » a été refusée.`,
+    url: "/markettask/my-tasks",
+    tag: `task-claim-${decided.id}`,
   }).catch(() => {});
 
   return decided;

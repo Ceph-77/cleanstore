@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect } from "react";
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./queryClient";
 import { track } from "./analytics";
@@ -67,6 +67,22 @@ function RouteTracker() {
   useEffect(() => {
     track("page_view");
   }, [pathname]);
+  return null;
+}
+
+/** Clic sur une notification push -> navigation dans l'app déjà ouverte (voir public/push-sw.js). */
+function PushNavigator() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    const onMessage = (event: MessageEvent) => {
+      if (event.data?.type === "push-notification-click" && typeof event.data.url === "string") {
+        navigate(event.data.url);
+      }
+    };
+    navigator.serviceWorker.addEventListener("message", onMessage);
+    return () => navigator.serviceWorker.removeEventListener("message", onMessage);
+  }, [navigate]);
   return null;
 }
 
@@ -442,6 +458,7 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <RouteTracker />
+          <PushNavigator />
           <AppRoutes />
         </AuthProvider>
       </BrowserRouter>

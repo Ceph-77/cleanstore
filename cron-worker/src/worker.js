@@ -3,9 +3,10 @@
 // free, and independent of the backend's lifecycle.
 //
 // It only pokes the already-existing, cron-secret-guarded endpoints:
-//   POST /api/system/recurrence     — clone due recurring tasks
-//   POST /api/system/payout-sweep   — release due earnings / charge subcontractors
-//   POST /api/system/monthly-recap  — worker monthly recap
+//   POST /api/system/recurrence      — clone due recurring tasks
+//   POST /api/system/payout-sweep    — release due earnings / charge subcontractors
+//   POST /api/system/monthly-recap   — worker monthly recap
+//   POST /api/system/task-reminders  — push reminder for tasks due today
 
 const API_BASE = "https://api.kleanstor.org";
 
@@ -17,6 +18,7 @@ function jobsFor(date) {
   if (h === 5) jobs.push("/api/system/recurrence"); // once a day
   if (h % 6 === 0) jobs.push("/api/system/payout-sweep"); // 00:00, 06:00, 12:00, 18:00
   if (day <= 3 && h === 8) jobs.push("/api/system/monthly-recap"); // early each month
+  if (h === 11) jobs.push("/api/system/task-reminders"); // ~7h EDT / 6h EST, once a day
   return jobs;
 }
 

@@ -8,6 +8,44 @@ import * as authApi from "../api/auth";
 import { ApiError } from "../api/client";
 import { ProgressCard } from "../components/engagement/ProgressCard";
 import { RewardBadges } from "../components/engagement/RewardBadges";
+import { usePush } from "../hooks/usePush";
+
+function pushStatusLabel(supportState: ReturnType<typeof usePush>["supportState"]) {
+  switch (supportState) {
+    case "granted":
+      return "Autorisées sur cet appareil.";
+    case "denied":
+      return "Bloquées dans les réglages de ton navigateur/téléphone — réactive-les là-bas d'abord.";
+    case "unsupported":
+      return "Non disponibles sur ce navigateur.";
+    default:
+      return "Pas encore activées sur cet appareil.";
+  }
+}
+
+function NotificationsCard() {
+  const { supportState, subscribed, busy, error, enable, disable } = usePush();
+
+  return (
+    <div className="mt-6 space-y-3 rounded-2xl border border-canvas-200 bg-white p-6 shadow-sm shadow-canvas-900/5">
+      <h2 className="text-sm font-semibold text-canvas-900">Notifications push</h2>
+      <p className="text-sm text-canvas-600">{pushStatusLabel(supportState)}</p>
+      {supportState !== "unsupported" && supportState !== "denied" && (
+        <div className="flex justify-end">
+          <Button
+            type="button"
+            variant="accent"
+            disabled={busy}
+            onClick={subscribed ? disable : enable}
+          >
+            {busy ? "..." : subscribed ? "Désactiver" : "Activer les notifications"}
+          </Button>
+        </div>
+      )}
+      {error && <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+    </div>
+  );
+}
 
 export function ProfilePage() {
   const { user, updateProfile } = useAuth();
@@ -142,6 +180,8 @@ export function ProfilePage() {
           </Button>
         </div>
       </form>
+
+      <NotificationsCard />
     </AppLayout>
   );
 }

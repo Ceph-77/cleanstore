@@ -23,6 +23,7 @@ import { taskTemplatesRouter } from "./modules/taskTemplates/taskTemplates.route
 import { systemRouter } from "./modules/system/system.routes";
 import { paymentsRouter, paymentsWebhookRouter } from "./modules/payments/payments.routes";
 import { notificationsRouter } from "./modules/notifications/notifications.routes";
+import { pushRouter } from "./modules/push/push.routes";
 import { feedbackRouter } from "./modules/feedback/feedback.routes";
 import { engagementRouter } from "./modules/engagement/engagement.routes";
 import { analyticsRouter, analyticsAdminRouter } from "./modules/analytics/analytics.routes";
@@ -101,6 +102,7 @@ app.use("/api/task-templates", requireAuth, taskTemplatesRouter);
 app.use("/api/system", systemRouter);
 app.use("/api/payments", requireAuth, paymentsRouter);
 app.use("/api/notifications", requireAuth, notificationsRouter);
+app.use("/api/notifications/push", requireAuth, pushRouter);
 app.use("/api/feedback", requireAuth, feedbackRouter);
 app.use("/api/engagement", requireAuth, engagementRouter);
 // Event ingest is open (pre-login funnel steps); reads are admin-only.

@@ -36,6 +36,10 @@ export default defineConfig({
         // API lives on another origin, so it's never precached or intercepted here.
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         cleanupOutdatedCaches: true,
+        // Adds our push/notificationclick listeners to the Workbox-generated
+        // sw.js via a plain importScripts() — avoids switching to the
+        // injectManifest strategy just for this.
+        importScripts: ['push-sw.js'],
       },
       devOptions: { enabled: false },
     }),

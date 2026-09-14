@@ -184,8 +184,28 @@ model User {
   workerMoments        WorkerMoment[]
   foundedClans         Clan[]               @relation("ClanFounder")
   clanMemberships      ClanMember[]
+  pushSubscriptions    PushSubscription[]
 
   @@map("users")
+}
+
+/// Un abonnement push par (utilisateur, navigateur/appareil) — un même
+/// utilisateur peut en avoir plusieurs (téléphone + ordi). `endpoint` est
+/// unique : le navigateur le régénère si sa subscription expire, donc un
+/// re-subscribe avec un nouvel endpoint crée simplement une nouvelle ligne.
+model PushSubscription {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }
 
 model UserRole {
@@ -1092,7 +1112,8 @@ enum IncidentStatus {
 /// assignation, notes horodatées) sans toucher au paiement (voir mémoire :
 /// coupler incident->gain suspendu est ambigu avec le "disputed" déjà utilisé
 /// pour un score d'inspection bas, laissé à trancher par Céphas) ni au push
-/// (VAPID pas fourni) ni au PDF (pas fait).
+/// (l'infra existe depuis [[push notifications]], juste pas branchée ici) ni
+/// au PDF (pas fait).
 model Incident {
   id           String           @id @default(uuid())
   type         IncidentType
