@@ -42,6 +42,7 @@ import { documentsRouter } from "./modules/documents/documents.routes";
 import { requireAuth, requireRole } from "./modules/auth/auth.middleware";
 import { notFound } from "./middleware/notFound";
 import { errorHandler } from "./middleware/errorHandler";
+import { securityHeaders, apiLimiter, uploadLimiter } from "./middleware/security";
 
 const PgSession = connectPgSimple(session);
 const sessionPool = new Pool({ connectionString: env.DATABASE_URL });
@@ -51,6 +52,8 @@ export const app = express();
 // Render (and most PaaS) terminate TLS before the app; without this, Express
 // doesn't know the original connection was HTTPS, and secure cookies break.
 app.set("trust proxy", 1);
+app.disable("x-powered-by");
+app.use(securityHeaders);
 
 // No auth, no session, no CORS needed -- a free external pinger hits this every
 // ~10 min to keep Render's free tier from sleeping (which is what actually causes
@@ -65,6 +68,10 @@ app.use(cors({ origin: env.FRONTEND_URLS, credentials: true }));
 
 // Mounted before express.json() — Stripe webhook signature verification needs the raw body.
 app.use("/api/payments", paymentsWebhookRouter);
+
+// After health + Stripe webhook so neither the uptime pinger nor Stripe retries
+// can be throttled.
+app.use("/api", apiLimiter, uploadLimiter);
 
 app.use(express.json());
 app.use(

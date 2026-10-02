@@ -1,0 +1,477 @@
+<title>Conformité Québec</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap');
+
+  :root {
+    --flow-900: #1c3a4a;
+    --flow-700: #2d5871;
+    --flow-500: #4a7a94;
+    --flow-100: #e4edf1;
+    --linen-700: #a86f24;
+    --linen-500: #e3a94c;
+    --linen-100: #faf1de;
+    --canvas-0: #fdfcf9;
+    --canvas-50: #f8f6f0;
+    --canvas-100: #f0ede3;
+    --canvas-200: #e2ddce;
+    --canvas-600: #6b6455;
+    --canvas-700: #524c40;
+    --canvas-900: #2c2820;
+    --ok-fg: #2b6b4f;
+    --ok-bg: #e5f3ec;
+    --ok-ring: #b9dfcb;
+    --warn-fg: #92600f;
+    --warn-bg: #fbf0dc;
+    --warn-ring: #f0d69f;
+    --gray-fg: #4a4560;
+    --gray-bg: #ece9f5;
+    --gray-ring: #d3cce9;
+    --border: var(--canvas-200);
+    --shadow: 0 1px 2px rgba(44,40,32,.04), 0 8px 24px -12px rgba(44,40,32,.12);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--canvas-50);
+    color: var(--canvas-900);
+    font-family: 'Inter', system-ui, sans-serif;
+    line-height: 1.55;
+  }
+  h1, h2, h3, .display { font-family: 'Sora', 'Inter', sans-serif; text-wrap: balance; }
+
+  .wrap { max-width: 840px; margin: 0 auto; padding: 48px 24px 96px; }
+
+  header.top {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 28px;
+    margin-bottom: 36px;
+  }
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--flow-700);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--linen-500); }
+  h1 {
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--flow-900);
+    margin: 10px 0 8px;
+    letter-spacing: -.01em;
+  }
+  .meta { font-size: 14px; color: var(--canvas-600); }
+  .meta b { color: var(--canvas-700); font-weight: 600; }
+
+  .disclaimer {
+    margin-top: 22px;
+    background: var(--canvas-0);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--flow-700);
+    border-radius: 10px;
+    padding: 16px 18px;
+    font-size: 14px;
+    color: var(--canvas-700);
+  }
+  .disclaimer strong { color: var(--flow-900); }
+
+  .toc {
+    margin-top: 28px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px 20px;
+  }
+  .toc a {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 13.5px;
+    color: var(--canvas-700);
+    text-decoration: none;
+    padding: 7px 0;
+    border-bottom: 1px dotted var(--canvas-200);
+  }
+  .toc a:hover { color: var(--flow-700); }
+  .toc .num { font-family: 'JetBrains Mono', monospace; color: var(--canvas-600); font-size: 12px; }
+
+  section.item {
+    margin-top: 40px;
+    scroll-margin-top: 20px;
+  }
+  .item-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .item-title { display: flex; align-items: baseline; gap: 10px; }
+  .item-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--canvas-600);
+  }
+  h2 { font-size: 19px; font-weight: 700; color: var(--flow-900); margin: 0; }
+  .law-ref { font-size: 12.5px; color: var(--canvas-600); margin-top: 3px; }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .pill.ok { background: var(--ok-bg); color: var(--ok-fg); border-color: var(--ok-ring); }
+  .pill.warn { background: var(--warn-bg); color: var(--warn-fg); border-color: var(--warn-ring); }
+  .pill.gray { background: var(--gray-bg); color: var(--gray-fg); border-color: var(--gray-ring); }
+  .pill svg { width: 12px; height: 12px; }
+
+  .card {
+    margin-top: 16px;
+    background: var(--canvas-0);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .row {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--canvas-100);
+  }
+  .row:last-child { border-bottom: none; }
+  .row .label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--canvas-600);
+    margin-bottom: 6px;
+  }
+  .row p { margin: 0; font-size: 14.5px; color: var(--canvas-800, #3a3527); }
+  .row ul { margin: 6px 0 0; padding-left: 18px; }
+  .row li { font-size: 14.5px; margin-bottom: 4px; }
+  .row.found .label { color: var(--flow-700); }
+  .row.gap .label { color: var(--warn-fg); }
+  .row.action .label { color: var(--linen-700); }
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    background: var(--canvas-100);
+    padding: 1px 6px;
+    border-radius: 5px;
+  }
+
+  .sources {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--canvas-600);
+  }
+  .sources a { color: var(--flow-500); }
+
+  footer {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--canvas-600);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --canvas-0: #211f1a;
+      --canvas-50: #1a1815;
+      --canvas-100: #2a2721;
+      --canvas-200: #3a362d;
+      --canvas-600: #a39a86;
+      --canvas-700: #c4bba5;
+      --canvas-900: #f2ede0;
+      --flow-100: #223440;
+      --flow-900: #cfe3ec;
+      --flow-700: #7fb2cc;
+      --flow-500: #6a9fb8;
+      --ok-bg: #16332570; --ok-fg: #8fd4ae; --ok-ring: #2c5541;
+      --warn-bg: #3a2c1170; --warn-fg: #f0c778; --warn-ring: #5c4620;
+      --gray-bg: #29253c70; --gray-fg: #c2b8ea; --gray-ring: #433c66;
+      --border: var(--canvas-200);
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="dark"] {
+    --canvas-0: #211f1a;
+    --canvas-50: #1a1815;
+    --canvas-100: #2a2721;
+    --canvas-200: #3a362d;
+    --canvas-600: #a39a86;
+    --canvas-700: #c4bba5;
+    --canvas-900: #f2ede0;
+    --flow-100: #223440;
+    --flow-900: #cfe3ec;
+    --flow-700: #7fb2cc;
+    --flow-500: #6a9fb8;
+    --ok-bg: #16332570; --ok-fg: #8fd4ae; --ok-ring: #2c5541;
+    --warn-bg: #3a2c1170; --warn-fg: #f0c778; --warn-ring: #5c4620;
+    --gray-bg: #29253c70; --gray-fg: #c2b8ea; --gray-ring: #433c66;
+    --border: var(--canvas-200);
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px -12px rgba(0,0,0,.5);
+  }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow"><span class="dot"></span> KLEAN'STOR — Mémo interne</p>
+    <h1>Conformité au droit québécois</h1>
+    <p class="meta">Préparé le <b>11 septembre 2026</b> · portée : Québec seulement, à revoir si l'activité s'étend hors Québec</p>
+
+    <div class="disclaimer">
+      <strong>Ce que ce document est — et n'est pas.</strong> C'est une revue de ce que l'application et les
+      pratiques de KLEAN'STOR font réellement aujourd'hui, comparé à ce que j'ai trouvé dans les lois et sources
+      publiques citées plus bas. Ce n'est <strong>pas un avis juridique</strong> — je ne suis pas avocat, et le
+      point le plus sensible (le statut travailleur autonome / salarié) ne peut être tranché avec certitude que par
+      un avocat en droit du travail regardant le fonctionnement réel de la plateforme.
+    </div>
+
+    <nav class="toc">
+      <a href="#statut"><span>1. Statut travailleur autonome</span><span class="num">risque</span></a>
+      <a href="#fiscalite"><span>2. Fiscalité (TPS/TVQ)</span><span class="num">conforme</span></a>
+      <a href="#loi25"><span>3. Loi 25 — vie privée</span><span class="num">à compléter</span></a>
+      <a href="#loi96"><span>4. Loi 96 — langue française</span><span class="num">conforme</span></a>
+      <a href="#sst"><span>5. Santé-sécurité (CNESST)</span><span class="num">à compléter</span></a>
+      <a href="#paiements"><span>6. Paiements (Stripe)</span><span class="num">conforme</span></a>
+      <a href="#contrat"><span>7. Contrat écrit</span><span class="num">manquant</span></a>
+    </nav>
+  </header>
+
+  <section class="item" id="statut">
+    <div class="item-head">
+      <div class="item-title">
+        <span class="item-num">01</span>
+        <h2>Statut travailleur autonome vs salarié</h2>
+      </div>
+      <span class="pill gray">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+        Zone grise — avis juridique requis
+      </span>
+    </div>
+    <p class="law-ref">Test de subordination — Code civil du Québec, critères CNESST</p>
+
+    <div class="card">
+      <div class="row found">
+        <p class="label">Déjà en place, en faveur du statut autonome</p>
+        <ul>
+          <li>Les conditions d'utilisation nient explicitement tout lien d'emploi ou de subordination (section 2).</li>
+          <li>Le travailleur choisit les tâches qu'il réclame (modèle marketplace) et peut en refuser sans pénalité.</li>
+          <li>Le blocage géographique strict au démarrage d'une tâche a été retiré (assouplissement du 7-8 sept.) — l'app enregistre une note pour l'assurance qualité mais ne bloque plus.</li>
+          <li>Le vocabulaire directif a été adouci (« comment faire » → « précisions du client », « étapes » → « points de contrôle »).</li>
+          <li>Le travailleur porte un risque financier réel : commission prélevée seulement au retrait, délai de 24 h, gain suspendable sur inspection ou incident.</li>
+          <li>Le système de clans permet de partager/déléguer une partie du travail — proche d'un droit de substitution.</li>
+        </ul>
+      </div>
+      <div class="row gap">
+        <p class="label">Signaux qui restent à évaluer</p>
+        <ul>
+          <li>Un outil de <code>pénalité</code> manuelle existe (réduction du gain pour une raison choisie par l'admin) — le pouvoir de sanctionner la rémunération est un des critères classiques de subordination.</li>
+          <li>Le prix de la plupart des tâches est fixé unilatéralement par la plateforme (la négociation existe mais reste optionnelle, activée tâche par tâche).</li>
+          <li>Un accès prioritaire aux tâches est accordé selon des critères de performance (badges) — proche des systèmes de notation des plateformes de type Uber, dont le statut fait débat ailleurs, sans jurisprudence québécoise tranchée à ma connaissance.</li>
+        </ul>
+      </div>
+      <div class="row action">
+        <p class="label">Action recommandée</p>
+        <p>Faire réviser le fonctionnement réel (pas juste le texte des conditions) par un avocat en droit du travail — c'est le risque déjà identifié comme prioritaire lors d'une analyse antérieure, en partie réduit depuis, jamais éliminé. Aucune quantité de code ne peut trancher ce point à la place d'un professionnel.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="item" id="fiscalite">
+    <div class="item-head">
+      <div class="item-title">
+        <span class="item-num">02</span>
+        <h2>Fiscalité — TPS/TVQ des petits fournisseurs</h2>
+      </div>
+      <span class="pill ok">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Conforme
+      </span>
+    </div>
+    <p class="law-ref">Revenu Québec — inscription TPS/TVQ, seuil des petits fournisseurs</p>
+
+    <div class="card">
+      <div class="row found">
+        <p class="label">Déjà en place</p>
+        <ul>
+          <li>Les documents financiers générés (reçus, relevés) portent la mention « Petits fournisseurs — TPS/TVQ non applicables, sous réserve de la situation du travailleur ».</li>
+          <li>Les conditions d'utilisation placent explicitement la responsabilité fiscale (déclaration, perception, remise) sur chaque utilisateur, pas sur KLEAN'STOR.</li>
+        </ul>
+      </div>
+      <div class="row gap">
+        <p class="label">Confirmé par la recherche</p>
+        <p>Seuil inchangé : inscription obligatoire à 30 000 $ de revenus taxables sur 4 trimestres consécutifs (ou un seul trimestre) ; en dessous, inscription facultative. Le calcul se fait sur le chiffre d'affaires brut, avant dépenses.</p>
+      </div>
+      <div class="row action">
+        <p class="label">Action recommandée</p>
+        <p>Rien d'urgent côté application. À surveiller pour ta propre entreprise si ton chiffre d'affaires facturé dépasse 30 000 $/an (déjà noté dans une session antérieure).</p>
+      </div>
+    </div>
+    <p class="sources">Sources : <a href="https://www.revenuquebec.ca/fr/citoyens/taxes/biens-et-services-taxables-detaxes-ou-exoneres/tps-et-tvq/autres-situations/particularites-concernant-le-petit-fournisseur/" target="_blank" rel="noopener">Revenu Québec — petit fournisseur</a></p>
+  </section>
+
+  <section class="item" id="loi25">
+    <div class="item-head">
+      <div class="item-title">
+        <span class="item-num">03</span>
+        <h2>Loi 25 — protection des renseignements personnels</h2>
+      </div>
+      <span class="pill warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+        Majoritairement conforme — 2 lacunes mineures
+      </span>
+    </div>
+    <p class="law-ref">Loi sur la protection des renseignements personnels dans le secteur privé (Loi 25)</p>
+
+    <div class="card">
+      <div class="row found">
+        <p class="label">Déjà en place</p>
+        <ul>
+          <li>Politique de confidentialité publiée (<code>/privacy</code>), citant explicitement la Loi 25.</li>
+          <li>Droits d'accès, de rectification et de suppression décrits, avec une adresse de contact dédiée.</li>
+          <li>Fournisseurs tiers listés (Stripe, Cloudflare, Resend, Render, Neon) avec mention que certains traitent des données hors Canada.</li>
+          <li>La position GPS n'est utilisée qu'au moment de la vérification, jamais suivie en continu — bonne pratique de minimisation.</li>
+        </ul>
+      </div>
+      <div class="row gap">
+        <p class="label">Deux lacunes trouvées</p>
+        <ul>
+          <li>La loi exige la publication du <strong>nom et du titre</strong> de la personne responsable de la protection des renseignements personnels (par défaut, le dirigeant principal, sauf délégation) — la page actuelle donne seulement une adresse courriel générique.</li>
+          <li>Aucun <strong>calendrier de conservation</strong> concret par catégorie de donnée — la politique reste au général (« aussi longtemps que nécessaire »).</li>
+        </ul>
+      </div>
+      <div class="row action">
+        <p class="label">Action recommandée</p>
+        <p>Ajouter ton nom/titre comme responsable sur <code>/privacy</code>, et fixer des durées de conservation concrètes par type de donnée (ex. photos d'inspection : X mois après la fin du contrat ; position GPS : jamais conservée, déjà le cas). Modification de texte seulement, pas de code.</p>
+      </div>
+    </div>
+    <p class="sources">Sources : <a href="https://loi25simple.ca/loi-25/obligations-entreprises" target="_blank" rel="noopener">Loi25simple — obligations clés</a>, <a href="https://digitad.ca/loi-25/" target="_blank" rel="noopener">Guide Loi 25</a></p>
+  </section>
+
+  <section class="item" id="loi96">
+    <div class="item-head">
+      <div class="item-title">
+        <span class="item-num">04</span>
+        <h2>Loi 96 — Charte de la langue française</h2>
+      </div>
+      <span class="pill ok">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Conforme
+      </span>
+    </div>
+    <p class="law-ref">Charte de la langue française, modifiée par la Loi 96 (2022)</p>
+
+    <div class="card">
+      <div class="row found">
+        <p class="label">Déjà en place</p>
+        <p>L'application, ses documents commerciaux (factures, relevés, rapports) et ses communications sont entièrement en français. La loi exige que le français soit <strong>nettement prédominant</strong> pour toute application/site visant une clientèle québécoise — c'est déjà le cas partout, aucune version anglaise n'existe qui pourrait diluer cette prédominance.</p>
+      </div>
+      <div class="row action">
+        <p class="label">Action recommandée</p>
+        <p>Rien à faire maintenant. Si une version anglaise est ajoutée un jour (ex. pour une grande compagnie hors Québec), le français devra rester la version par défaut/prédominante.</p>
+      </div>
+    </div>
+    <p class="sources">Source : <a href="https://maximecollins.ca/blog/lois-linguistique-quebec-sites-web/" target="_blank" rel="noopener">Sites Web et lois linguistiques du Québec</a></p>
+  </section>
+
+  <section class="item" id="sst">
+    <div class="item-head">
+      <div class="item-title">
+        <span class="item-num">05</span>
+        <h2>Santé et sécurité au travail</h2>
+      </div>
+      <span class="pill warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+        À compléter
+      </span>
+    </div>
+    <p class="law-ref">CNESST — couverture des travailleurs autonomes</p>
+
+    <div class="card">
+      <div class="row found">
+        <p class="label">Déjà en place</p>
+        <p>Le signalement d'incident (Lot 7) rappelle explicitement à l'utilisateur d'appeler les secours lui-même — la plateforme ne se présente pas comme gestionnaire direct de la sécurité sur place, ce qui est cohérent avec le statut d'intermédiaire technologique.</p>
+      </div>
+      <div class="row gap">
+        <p class="label">Lacune</p>
+        <p>Un travailleur autonome au Québec n'est <strong>pas automatiquement couvert</strong> par la CNESST (contrairement à un salarié) — il doit s'inscrire volontairement à une protection personnelle s'il veut être couvert en cas d'accident. Rien dans les conditions actuelles ne le rappelle explicitement.</p>
+      </div>
+      <div class="row action">
+        <p class="label">Action recommandée</p>
+        <p>Ajouter une clause aux conditions d'utilisation rappelant à chaque travailleur autonome qu'il est responsable de sa propre couverture d'assurance/CNESST — renforce à la fois la clarté pour le travailleur et le dossier du statut d'indépendance.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="item" id="paiements">
+    <div class="item-head">
+      <div class="item-title">
+        <span class="item-num">06</span>
+        <h2>Paiements — Stripe Connect</h2>
+      </div>
+      <span class="pill ok">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>
+        Conforme
+      </span>
+    </div>
+    <p class="law-ref">Aucun agrément d'entreprise de services monétaires requis — KLEAN'STOR ne détient jamais les fonds (Stripe Connect Express)</p>
+
+    <div class="card">
+      <div class="row found">
+        <p class="label">Déjà en place</p>
+        <ul>
+          <li>Stripe Connect Express — les fonds transitent par Stripe, jamais détenus par KLEAN'STOR elle-même.</li>
+          <li>Commission (5 %) prélevée seulement au retrait réel, jamais sur un solde non retiré.</li>
+          <li>Toute écriture financière est tracée dans un grand livre <em>append-only</em> (jamais modifiée ni supprimée) — bonne pratique de piste d'audit.</li>
+          <li>Reçus et relevés PDF disponibles pour chaque travailleur.</li>
+        </ul>
+      </div>
+      <div class="row action">
+        <p class="label">Action recommandée</p>
+        <p>Rien côté conformité légale. Le webhook Stripe (<code>STRIPE_WEBHOOK_SECRET</code>) reste à configurer, mais c'est opérationnel, pas une exigence légale.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="item" id="contrat">
+    <div class="item-head">
+      <div class="item-title">
+        <span class="item-num">07</span>
+        <h2>Contrat écrit de sous-traitance</h2>
+      </div>
+      <span class="pill warn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+        Manquant
+      </span>
+    </div>
+    <p class="law-ref">Renforce le statut d'indépendance — pas une obligation légale en soi, mais une pièce utile au dossier</p>
+
+    <div class="card">
+      <div class="row gap">
+        <p class="label">Constat</p>
+        <p>Tu avais toi-même identifié le besoin d'un contrat de sous-traitance écrit par membre d'équipe (25 août) — jamais construit dans l'application. Les conditions d'utilisation couvrent le cadre général, mais un contrat individuel signé, décrivant explicitement l'autonomie de chaque travailleur (propres outils, liberté de servir d'autres clients, risque financier propre), donne une pièce concrète en cas de contestation du statut.</p>
+      </div>
+      <div class="row action">
+        <p class="label">Action recommandée</p>
+        <p>Faire rédiger un contrat-type par un avocat, puis l'intégrer comme document à signer électroniquement à l'inscription ou avant la première tâche — un futur module de signature, pas juste un texte statique.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p><strong>En résumé</strong> : la fiscalité, la langue française et les paiements sont solides. La vie privée (Loi 25) et la santé-sécurité ont des lacunes mineures et concrètes, faciles à combler. Le seul point qui reste une vraie zone grise — et qui le restera tant qu'un avocat ne l'aura pas regardé — est le statut travailleur autonome / salarié : l'application a déjà été construite en gardant ce risque à l'esprit, mais aucun audit de code ne peut le certifier à ta place.</p>
+  </footer>
+</div>

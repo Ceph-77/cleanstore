@@ -1,0 +1,17 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1440, "h": 1060, "title": "Console — Vue d'ensemble (vivante)" },
+    { "file": "Simulations.dc.html", "x": 1560, "y": 0, "w": 1440, "h": 1060, "title": "Console — Simulations gestes & erreurs" },
+    { "file": "MobileConsole.dc.html", "x": 3120, "y": 0, "w": 390, "h": 844, "title": "Console — mobile (tiroir)" },
+    { "file": "Journal.dc.html", "x": 0, "y": 1300, "w": 1440, "h": 900, "title": "Console — Journal d'audit" },
+    { "file": "RoleComptable.dc.html", "x": 1560, "y": 1300, "w": 1440, "h": 900, "title": "Console — menu filtré (comptable)" }
+  ],
+  "annotations": [
+    { "id": "note-main", "x": 0, "y": -172, "w": 640, "text": "Coquille vivante — Lot 0. Fonds en dégradés translucides qui dérivent lentement, cartes en verre dépoli, chiffres qui chatoient, badges d'alerte qui pulsent. Le bandeau « En ce moment sur le terrain » anime les 3 machines les plus réservées (récureuse, polisseuse, balai) en boucle calme ; le détail correct/erreur vit dans Simulations." },
+    { "id": "note-sim", "x": 1560, "y": -172, "w": 660, "text": "Simulations — formation passive. Chaque machine joue en boucle (~12 s) : démarrage, bon geste, puis l'erreur courante et sa conséquence, étiquetée. Récureuse = raclette relevée / eau non aspirée. Polisseuse à propane = machine laissée en place / marque de brûlure. Vadrouille à plat = soulevée en fin de passe / la poussière ramassée retombe. Aucune interaction : à force de voir, le geste s'apprend." },
+    { "id": "note-mobile", "x": 3120, "y": -172, "w": 380, "text": "Mobile : tiroir de navigation en verre dépoli translucide, une vignette animée « en ce moment » dans le contenu." },
+    { "id": "note-journal", "x": 0, "y": 1150, "w": 640, "text": "Journal d'audit : point d'enregistrement qui pulse, ligne la plus récente qui s'illumine par intermittence. Contenu inchangé — acteur, action, entité, avant → après, non modifiable, export CSV." },
+    { "id": "note-comptable", "x": 1560, "y": 1150, "w": 640, "text": "Même coquille vivante vue par un comptable : menu filtré par can(user, section, action), sections en lecture seule taguées « lecture », Finances en accès complet." }
+  ],
+  "launch": { "view": "canvas" }
+}
